@@ -52,7 +52,7 @@ main_df = load_data()
 
 # --- Sidebar ---
 with st.sidebar:
-    st.header("📈 資金與統計中心")
+    st.header("💰 資金與統計中心")
 
     idx = all_reports.index(st.session_state.current_db) if st.session_state.current_db in all_reports else 0
     selected_db = st.selectbox("切換報表", all_reports, index=idx)
