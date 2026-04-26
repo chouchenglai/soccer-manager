@@ -91,11 +91,7 @@ st.markdown(
 if main_df.empty:
     st.subheader("初始化報表")
 
-    init_cap_str = st.text_input("起始本金", "60,000")
-    try:
-        init_cap = int(init_cap_str.replace(",", ""))
-    except:
-        init_cap = 0
+    init_cap = st.number_input("起始本金", value=60000, step=1000)
 
     if st.button("建立"):
         now = datetime.now()
@@ -103,9 +99,9 @@ if main_df.empty:
             "日期": now.strftime("%Y-%m-%d %H:%M"),
             "賽事項目": "初始",
             "類型": "初始",
-            "金額": init_cap,
+            "金額": int(init_cap),
             "盈虧金額": 0,
-            "結算總分": init_cap
+            "結算總分": int(init_cap)
         }
         save_data(pd.DataFrame([row]))
         st.rerun()
@@ -121,10 +117,11 @@ else:
         if "bet_val" not in st.session_state:
             st.session_state.bet_val = 5000
 
+        # 加入提示文字
         m_info = st.text_area("賽事資訊", placeholder="例如：英超 阿仙奴 vs 車路士")
 
         colb = st.columns(4)
-        if colb[0].button("🔵 5,000"): st.session_state.bet_val = 5000
+        if colb[0].button("🔵5,000"): st.session_state.bet_val = 5000
         if colb[1].button("🟢 10,000"): st.session_state.bet_val = 10000
         if colb[2].button("🟡 15,000"): st.session_state.bet_val = 15000
         if colb[3].button("🔴 20,000"): st.session_state.bet_val = 20000
@@ -132,21 +129,18 @@ else:
         c1, c2 = st.columns(2)
 
         with c1:
-            bet_amt_str = st.text_input("下注金額", f"{st.session_state.bet_val:,}")
-            try:
-                bet_amt = int(bet_amt_str.replace(",", ""))
-            except:
-                bet_amt = 0
-
+            bet_amt = st.number_input("下注金額", 0, balance, int(st.session_state.bet_val))
         with c2:
-            gain_amt_str = st.text_input("盈利金額", "")
-            try:
-                gain_amt = int(gain_amt_str.replace(",", "")) if gain_amt_str else 0
-            except:
-                gain_amt = 0
+            gain_amt = st.number_input(
+                "盈利金額",
+                min_value=0,
+                max_value=999999999,
+                value=None,
+                placeholder="請輸入盈利金額"
+            )
 
         st.session_state.bet_val = bet_amt
-        st.session_state.gain_val = gain_amt
+        st.session_state.gain_val = gain_amt if gain_amt else 0
 
         can = balance > 0 and bet_amt > 0 and bet_amt <= balance
 
@@ -189,7 +183,7 @@ else:
             color_profit, subset=['盈虧金額']
         ).format({
             "金額": "{:,}",
-            "盈虧金額": "{:+,}",
+            "盈虧金額": "{:+,.0f}",
             "結算總分": "{:,}"
         })
 
@@ -207,11 +201,7 @@ else:
     # --- TAB4 ---
     with tab4:
         with st.expander("補倉"):
-            val_str = st.text_input("金額", "30,000")
-            try:
-                val = int(val_str.replace(",", ""))
-            except:
-                val = 0
+            val = st.number_input("金額", 0, 999999999, 30000)
             if st.button("補"):
                 bal = int(main_df["結算總分"].iloc[-1])
                 new = {
@@ -229,4 +219,14 @@ else:
             name = st.text_input("名稱")
             if st.button("建立報表"):
                 if name:
-                    pd
+                    pd.DataFrame(columns=COLUMNS).to_csv(f"{name}.csv", index=False)
+                    st.rerun()
+
+        with st.expander("刪除報表"):
+            deletable = [f for f in all_reports if f != DEFAULT_DB]
+            if deletable:
+                target = st.selectbox("選擇", deletable)
+                if st.button("刪除"):
+                    os.remove(target)
+                    st.session_state.current_db = DEFAULT_DB
+                    st.rerun()
