@@ -52,7 +52,7 @@ main_df = load_data()
 
 # --- Sidebar ---
 with st.sidebar:
-    st.header("📊 帳戶統計中心")
+    st.header("📈 資金與統計中心")
 
     idx = all_reports.index(st.session_state.current_db) if st.session_state.current_db in all_reports else 0
     selected_db = st.selectbox("切換報表", all_reports, index=idx)
@@ -108,7 +108,7 @@ if main_df.empty:
 
 # --- 主功能 ---
 else:
-    tab1, tab2, tab3, tab4 = st.tabs(["投注下單", "歷史記錄", "統計圖表", "報表管理"])
+    tab1, tab2, tab3, tab4 = st.tabs(["💰投注下單", "📋歷史記錄", "📊統計圖表", "📈報表管理"])
 
     # --- TAB1 ---
     with tab1:
@@ -121,10 +121,10 @@ else:
         m_info = st.text_area("賽事資訊", placeholder="例如：英超 阿仙奴 vs 車路士")
 
         colb = st.columns(4)
-        if colb[0].button("5K"): st.session_state.bet_val = 5000
-        if colb[1].button("10K"): st.session_state.bet_val = 10000
-        if colb[2].button("15K"): st.session_state.bet_val = 15000
-        if colb[3].button("20K"): st.session_state.bet_val = 20000
+        if colb[0].button("🔵5,000"): st.session_state.bet_val = 5000
+        if colb[1].button("🟢 10,000"): st.session_state.bet_val = 10000
+        if colb[2].button("🟡 15,000"): st.session_state.bet_val = 15000
+        if colb[3].button("🔴 20,000"): st.session_state.bet_val = 20000
 
         c1, c2 = st.columns(2)
 
@@ -146,7 +146,7 @@ else:
 
         cw, cl = st.columns(2)
 
-        if cw.button("贏", disabled=not can and not gain_amt):
+        if cw.button("✅過關 (贏)", disabled=not can and not gain_amt):
             new = {
                 "日期": datetime.now().strftime("%Y-%m-%d %H:%M"),
                 "賽事項目": m_info,
@@ -158,7 +158,7 @@ else:
             save_data(pd.concat([main_df, pd.DataFrame([new])], ignore_index=True))
             st.rerun()
 
-        if cl.button("輸", disabled=not can):
+        if cl.button("❌ 未過關 (輸)", disabled=not can):
             new = {
                 "日期": datetime.now().strftime("%Y-%m-%d %H:%M"),
                 "賽事項目": m_info,
