@@ -173,7 +173,6 @@ else:
             st.components.v1.html("<script>window.parent.playAlert();</script>", height=0)
             confirm_all_in()
 
-        # 6. 下注與盈利輸入區
         c1, c2 = st.columns(2)
         with c1:
             bet_amt = st.number_input("下注金額", 0, max(1000000, balance), int(st.session_state.bet_val))
@@ -182,25 +181,37 @@ else:
 
         st.write("") # 增加間距
 
-        # 7. 提交執行區 (含防呆與過關/未過關音效)
+        # 7. 提交執行區 (過關按鈕就在這裡！)
         can_submit = balance > 0 and bet_amt > 0 and bet_amt <= balance
         cw, cl = st.columns(2)
 
-        if cl.button("❌ 未過關 (輸)", use_container_width=True, disabled=not can_submit):
-            st.components.v1.html("<script>window.parent.playLose();</script>", height=0)
-            # ... (原本的邏輯代碼) ...
+        if cw.button("✅ 過關 (贏)", use_container_width=True, disabled=not can_submit or gain_amt is None):
+            st.components.v1.html("<script>window.parent.playWin();</script>", height=0)
+            new_row = {
+                "日期": get_now_time(), "賽事項目": m_info, "類型": "贏 (+)",
+                "金額": int(gain_amt), "盈虧金額": int(gain_amt), "結算總分": balance + int(gain_amt)
+            }
+            save_data(pd.concat([main_df, pd.DataFrame([new_row])], ignore_index=True))
             st.rerun()
 
-        # --- 測試按鈕請放在這裡 ---
-        st.markdown("---") # 畫一條小橫線區隔
-        if st.button("📢 測試所有音效 (點擊此處解鎖權限)"):
+        if cl.button("❌ 未過關 (輸)", use_container_width=True, disabled=not can_submit):
+            st.components.v1.html("<script>window.parent.playLose();</script>", height=0)
+            new_row = {
+                "日期": get_now_time(), "賽事項目": m_info, "類型": "輸 (-)",
+                "金額": int(bet_amt), "盈虧金額": -int(bet_amt), "結算總分": balance - int(bet_amt)
+            }
+            save_data(pd.concat([main_df, pd.DataFrame([new_row])], ignore_index=True))
+            st.rerun()
+
+        # --- 測試按鈕請放在「最外面」，不要縮進到按鈕裡面 ---
+        st.markdown("---") 
+        if st.button("📢 點擊此處解鎖權限並測試音效"):
+            # 這裡使用一段更強制的腳本來測試
             st.components.v1.html("""
                 <script>
-                    console.log("開始測試音效...");
-                    window.parent.playClick();
-                    setTimeout(function(){ window.parent.playAlert(); }, 500);
-                    setTimeout(function(){ window.parent.playWin(); }, 1000);
-                    setTimeout(function(){ window.parent.playLose(); }, 1500);
+                    console.log("正在嘗試播放音效...");
+                    window.parent.playWin(); 
+                    alert("如果沒聽到聲音，請檢查 Chrome 地址欄左側的鎖頭是否已開啟『音訊』允許");
                 </script>
             """, height=0)
 
