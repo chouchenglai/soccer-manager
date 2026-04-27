@@ -132,8 +132,8 @@ else:
         if colb[1].button("🟢 10,000"): st.session_state.bet_val = 10000
         if colb[2].button("🟡 15,000"): st.session_state.bet_val = 15000
         if colb[3].button("🔴 20,000"): st.session_state.bet_val = 20000
-         if colb[4].button("💎 全額下注"):st.session_state.bet_val = balance
-            st.rerun()
+        if colb[4].button("💎 全額下注"):st.session_state.bet_val = balance
+           st.rerun()
 
         c1, c2 = st.columns(2)
 
