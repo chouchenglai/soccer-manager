@@ -219,21 +219,25 @@ else:
             st.metric("勝率", f"{win/len(data)*100:.1f}%")
 
     # --- TAB4 ---
-    with tab4:
-        with st.expander("補倉"):
-            val = st.number_input("金額", 0, 999999999, 30000)
-            if st.button("補"):
-                bal = int(main_df["結算總分"].iloc[-1])
-                new = {
-                    "日期":get_now_time(),
-                    "賽事項目": "補倉",
-                    "類型": "手動補倉",
-                    "金額": val,
-                    "盈虧金額": 0,
-                    "結算總分": bal + val
-                }
-                save_data(pd.concat([main_df, pd.DataFrame([new])], ignore_index=True))
-                st.rerun()
+    with st.expander("補倉"):
+    val_str = st.text_input("金額", "30,000")  # 改成文字輸入框，預設顯示千分位
+    try:
+        val = int(val_str.replace(",", ""))  # 移除逗號後轉成整數
+    except:
+        val = 0
+
+    if st.button("補") and val > 0:
+        bal = int(main_df["結算總分"].iloc[-1]) if not main_df.empty else 0
+        new = {
+            "日期": now_taipei().strftime("%Y-%m-%d %H:%M"),  # 使用台北時區時間
+            "賽事項目": "補倉",
+            "類型": "手動補倉",
+            "金額": val,
+            "盈虧金額": 0,
+            "結算總分": bal + val
+        }
+        save_data(pd.concat([main_df, pd.DataFrame([new])], ignore_index=True))
+        st.rerun()
 
         with st.expander("新增報表"):
             name = st.text_input("名稱")
