@@ -162,24 +162,7 @@ else:
             can_submit = False
         elif not m_info.strip():
             can_submit = False
-
-        cw, cl = st.columns(2)
-        if cw.button("✅ 贏 (+)", use_container_width=True, type="primary", disabled=not can_submit):
-            new_row = {
-                "日期": get_now_time(), "賽事項目": m_info, "類型": "贏 (+)",
-                "金額": int(gain_amt), "盈虧金額": int(gain_amt), "結算總分": balance + int(gain_amt)
-            }
-            save_data(pd.concat([main_df, pd.DataFrame([new_row])], ignore_index=True))
-            st.rerun()
-
-        if cl.button("❌ 輸 (-)", use_container_width=True, disabled=not can_submit):
-            new_row = {
-                "日期": get_now_time(), "賽事項目": m_info, "類型": "輸 (-)",
-                "金額": int(bet_amt), "盈虧金額": -int(bet_amt), "結算儲分": balance - int(bet_amt)
-            }
-            save_data(pd.concat([main_df, pd.DataFrame([new_row])], ignore_index=True))
-            st.rerun()
-
+        
         c1, c2 = st.columns(2)
 
         with c1:
