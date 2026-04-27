@@ -166,7 +166,7 @@ else:
                 placeholder="請輸入盈利金額"
             )
 
-                 st.write("")
+        st.write("")
 
         # 3. 提交按鈕區
         can_submit = balance > 0 and bet_amt > 0 and bet_amt <= balance
