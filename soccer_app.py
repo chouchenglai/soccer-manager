@@ -101,7 +101,6 @@ if main_df.empty:
     init_cap = st.number_input("起始本金", value=60000, step=1000)
 
     if st.button("建立"):
-        now = datetime.now()
         row = {
             "日期": get_now_time(),
             "賽事項目": "初始",
@@ -124,7 +123,6 @@ else:
         if "bet_val" not in st.session_state:
             st.session_state.bet_val = 5000
 
-        # 加入提示文字
         m_info = st.text_area("賽事資訊", placeholder="例如：英超 阿仙奴 vs 車路士")
 
         colb = st.columns(4)
@@ -179,30 +177,20 @@ else:
 
     # --- TAB2 ---
     with tab2:
-        # 1. 定義顏色規則函數
         def color_row(row):
-            # 建立一個清單，預設所有格子都是黑色
             style = ['color: black'] * len(row)
-            
-            # 判斷邏輯：根據「盈虧金額」來決定顏色
             if row['盈虧金額'] > 0:
                 target_color = 'color: green'
             elif row['盈虧金額'] < 0:
                 target_color = 'color: red'
             else:
                 target_color = 'color: black'
-            
-            # 2. 找到「類型」與「盈虧金額」所在的欄位索引
             type_idx = row.index.get_loc('類型')
             profit_idx = row.index.get_loc('盈虧金額')
-            
-            # 3. 把這兩個位置塗上顏色
             style[type_idx] = target_color
             style[profit_idx] = target_color
-            
             return style
 
-        # 4. 顯示表格：應用樣式並設定數字格式
         st.dataframe(
             main_df.iloc[::-1].style.apply(color_row, axis=1)
             .format({"金額": "{:,}", "盈虧金額": "{:+,.0f}", "結算總分": "{:,}"}), 
@@ -212,7 +200,6 @@ else:
     # --- TAB3 ---
     with tab3:
         st.line_chart(main_df["結算總分"])
-
         data = main_df[main_df['類型'].isin(['贏 (+)', '輸 (-)'])]
         if not data.empty:
             win = len(data[data['類型'] == '贏 (+)'])
@@ -220,33 +207,13 @@ else:
 
     # --- TAB4 ---
     with tab4:
+        # 修正後的補倉功能：破產後仍可使用
         with st.expander("補倉"):
-            val = st.number_input("金額", 0, 999999999, 30000)
-            if st.button("補"):
-                bal = int(main_df["結算總分"].iloc[-1])
-                new = {
-                    "日期":get_now_time(),
-                    "賽事項目": "補倉",
-                    "類型": "手動補倉",
-                    "金額": val,
-                    "盈虧金額": 0,
-                    "結算總分": bal + val
-                }
-                save_data(pd.concat([main_df, pd.DataFrame([new])], ignore_index=True))
-                st.rerun()
+            val_str = st.text_input("金額", "30,000")  # 改成文字輸入框
+            try:
+                val = int(val_str.replace(",", ""))
+            except:
+                val = 0
 
-        with st.expander("新增報表"):
-            name = st.text_input("名稱")
-            if st.button("建立報表"):
-                if name:
-                    pd.DataFrame(columns=COLUMNS).to_csv(f"{name}.csv", index=False)
-                    st.rerun()
-
-        with st.expander("刪除報表"):
-            deletable = [f for f in all_reports if f != DEFAULT_DB]
-            if deletable:
-                target = st.selectbox("選擇", deletable)
-                if st.button("刪除"):
-                    os.remove(target)
-                    st.session_state.current_db = DEFAULT_DB
-                    st.rerun()
+            if st.button("補") and val > 0:
+                bal = int(main_df["結算總分"].iloc[-1]) if not main_df
