@@ -223,18 +223,17 @@ else:
             win = len(data[data['類型'] == '贏 (+)'])
             st.metric("勝率", f"{win/len(data)*100:.1f}%")
 
-   # --- TAB4 ---
-with tab4:   # 這裡和 tab1, tab2, tab3 保持同一層
+  # --- TAB4 ---
+with tab4:   # 和 tab1, tab2, tab3 保持同一層
 
     # 補倉功能
     with st.expander("補倉"):   # 再縮排一層
-        val_str = st.text_input("金額", "30,000")  # 再縮排一層
+        val_str = st.text_input("金額", "30,000")
         try:
-            val = int(val_str.replace(",", ""))  # 移除逗號後轉成整數
+            val = int(val_str.replace(",", ""))
         except:
             val = 0
 
-        # 只要 val > 0 就允許補倉，不受 balance 限制
         if st.button("補") and val > 0:
             bal = int(main_df["結算總分"].iloc[-1]) if not main_df.empty else 0
             new = {
@@ -248,12 +247,20 @@ with tab4:   # 這裡和 tab1, tab2, tab3 保持同一層
             save_data(pd.concat([main_df, pd.DataFrame([new])], ignore_index=True))
             st.rerun()
 
-    # 其他功能（新增報表、刪除報表）也放在這裡，和補倉同一層
-    with st.expander("新增報表"):
+    # 新增報表
+    with st.expander("新增報表"):   # 和補倉同一層
         name = st.text_input("名稱")
         if st.button("建立報表"):
             if name:
                 pd.DataFrame(columns=COLUMNS).to_csv(f"{name}.csv", index=False)
                 st.rerun()
 
-    with st.expander("刪除報表"):
+    # 刪除報表
+    with st.expander("刪除報表"):   # 和補倉、新增報表同一層
+        deletable = [f for f in all_reports if f != DEFAULT_DB]
+        if deletable:
+            target = st.selectbox("選擇", deletable)
+            if st.button("刪除"):
+                os.remove(target)
+                st.session_state.current_db = DEFAULT_DB
+                st.rerun()
