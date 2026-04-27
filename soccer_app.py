@@ -224,10 +224,10 @@ else:
             st.metric("勝率", f"{win/len(data)*100:.1f}%")
 
   # --- TAB4 ---
-with tab4:   # 和 tab1, tab2, tab3 保持同一層
+with tab4:   
 
     # 補倉功能
-    with st.expander("補倉"):   # 再縮排一層
+    with st.expander("補倉"):   
         val_str = st.text_input("金額", "30,000")
         try:
             val = int(val_str.replace(",", ""))
@@ -248,7 +248,7 @@ with tab4:   # 和 tab1, tab2, tab3 保持同一層
             st.rerun()
 
     # 新增報表
-    with st.expander("新增報表"):   # 和補倉同一層
+    with st.expander("新增報表"):   
         name = st.text_input("名稱")
         if st.button("建立報表"):
             if name:
@@ -256,7 +256,7 @@ with tab4:   # 和 tab1, tab2, tab3 保持同一層
                 st.rerun()
 
     # 刪除報表
-    with st.expander("刪除報表"):   # 和補倉、新增報表同一層
+    with st.expander("刪除報表"):   
         deletable = [f for f in all_reports if f != DEFAULT_DB]
         if deletable:
             target = st.selectbox("選擇", deletable)
