@@ -186,23 +186,23 @@ else:
         can_submit = balance > 0 and bet_amt > 0 and bet_amt <= balance
         cw, cl = st.columns(2)
 
-        if cw.button("✅ 過關 (贏)", use_container_width=True, disabled=not can_submit or gain_amt is None):
-            st.components.v1.html("<script>window.parent.playWin();</script>", height=0)
-            new_row = {
-                "日期": get_now_time(), "賽事項目": m_info, "類型": "贏 (+)",
-                "金額": int(gain_amt), "盈虧金額": int(gain_amt), "結算總分": balance + int(gain_amt)
-            }
-            save_data(pd.concat([main_df, pd.DataFrame([new_row])], ignore_index=True))
-            st.rerun()
-
         if cl.button("❌ 未過關 (輸)", use_container_width=True, disabled=not can_submit):
             st.components.v1.html("<script>window.parent.playLose();</script>", height=0)
-            new_row = {
-                "日期": get_now_time(), "賽事項目": m_info, "類型": "輸 (-)",
-                "金額": int(bet_amt), "盈虧金額": -int(bet_amt), "結算總分": balance - int(bet_amt)
-            }
-            save_data(pd.concat([main_df, pd.DataFrame([new_row])], ignore_index=True))
+            # ... (原本的邏輯代碼) ...
             st.rerun()
+
+        # --- 測試按鈕請放在這裡 ---
+        st.markdown("---") # 畫一條小橫線區隔
+        if st.button("📢 測試所有音效 (點擊此處解鎖權限)"):
+            st.components.v1.html("""
+                <script>
+                    console.log("開始測試音效...");
+                    window.parent.playClick();
+                    setTimeout(function(){ window.parent.playAlert(); }, 500);
+                    setTimeout(function(){ window.parent.playWin(); }, 1000);
+                    setTimeout(function(){ window.parent.playLose(); }, 1500);
+                </script>
+            """, height=0)
 
     # --- TAB2 ---
     with tab2:
