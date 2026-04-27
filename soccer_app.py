@@ -262,7 +262,6 @@ else:
             save_data(pd.concat([main_df, pd.DataFrame([new])], ignore_index=True))
             st.rerun()
 
-
         with st.expander("新增報表"):
             name = st.text_input("名稱")
             if st.button("建立報表"):
