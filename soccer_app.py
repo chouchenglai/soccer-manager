@@ -223,8 +223,8 @@ else:
             win = len(data[data['類型'] == '贏 (+)'])
             st.metric("勝率", f"{win/len(data)*100:.1f}%")
 
-  # --- TAB4 ---
-with tab4:   
+   # --- TAB4 ---
+    with tab4:   
 
     # 補倉功能
     with st.expander("補倉"):   
