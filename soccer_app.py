@@ -4,6 +4,11 @@ import pandas as pd
 import os
 from datetime import datetime
 
+# --- 時區工具 ---
+def now_taipei():
+    tz = pytz.timezone("Asia/Taipei")
+    return datetime.now(tz)
+
 # --- 基本設定 ---
 DEFAULT_DB = "soccer_master_data.csv"
 COLUMNS = ["日期", "賽事項目", "類型", "金額", "盈虧金額", "結算總分"]
@@ -101,7 +106,7 @@ if main_df.empty:
     init_cap = st.number_input("起始本金", value=60000, step=1000)
 
     if st.button("建立"):
-        now = datetime.now()
+        now = now_taipei()
         row = {
             "日期": get_now_time(),
             "賽事項目": "初始",
@@ -220,16 +225,17 @@ else:
 
     # --- TAB4 ---
     with st.expander("補倉"):
-    val_str = st.text_input("金額", "30,000")  # 改成文字輸入框，預設顯示千分位
+    val_str = st.text_input("金額", "30,000")  # 改成文字輸入框，支援千分位
     try:
         val = int(val_str.replace(",", ""))  # 移除逗號後轉成整數
     except:
         val = 0
 
+    # 只要 val > 0 就允許補倉，不受 balance 限制
     if st.button("補") and val > 0:
         bal = int(main_df["結算總分"].iloc[-1]) if not main_df.empty else 0
         new = {
-            "日期": now_taipei().strftime("%Y-%m-%d %H:%M"),  # 使用台北時區時間
+            "日期": now_taipei().strftime("%Y-%m-%d %H:%M"),
             "賽事項目": "補倉",
             "類型": "手動補倉",
             "金額": val,
@@ -238,6 +244,7 @@ else:
         }
         save_data(pd.concat([main_df, pd.DataFrame([new])], ignore_index=True))
         st.rerun()
+
 
         with st.expander("新增報表"):
             name = st.text_input("名稱")
