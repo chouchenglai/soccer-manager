@@ -223,41 +223,37 @@ else:
             win = len(data[data['類型'] == '贏 (+)'])
             st.metric("勝率", f"{win/len(data)*100:.1f}%")
 
-    # --- TAB4 ---
-    with st.expander("補倉"):
-    val_str = st.text_input("金額", "30,000")  # 改成文字輸入框，支援千分位
-    try:
-        val = int(val_str.replace(",", ""))  # 移除逗號後轉成整數
-    except:
-        val = 0
+   # --- TAB4 ---
+with tab4:   # 這裡和 tab1, tab2, tab3 保持同一層
 
-    # 只要 val > 0 就允許補倉，不受 balance 限制
-    if st.button("補") and val > 0:
-        bal = int(main_df["結算總分"].iloc[-1]) if not main_df.empty else 0
-        new = {
-            "日期": now_taipei().strftime("%Y-%m-%d %H:%M"),
-            "賽事項目": "補倉",
-            "類型": "手動補倉",
-            "金額": val,
-            "盈虧金額": 0,
-            "結算總分": bal + val
-        }
-        save_data(pd.concat([main_df, pd.DataFrame([new])], ignore_index=True))
-        st.rerun()
+    # 補倉功能
+    with st.expander("補倉"):   # 再縮排一層
+        val_str = st.text_input("金額", "30,000")  # 再縮排一層
+        try:
+            val = int(val_str.replace(",", ""))  # 移除逗號後轉成整數
+        except:
+            val = 0
 
+        # 只要 val > 0 就允許補倉，不受 balance 限制
+        if st.button("補") and val > 0:
+            bal = int(main_df["結算總分"].iloc[-1]) if not main_df.empty else 0
+            new = {
+                "日期": now_taipei().strftime("%Y-%m-%d %H:%M"),
+                "賽事項目": "補倉",
+                "類型": "手動補倉",
+                "金額": val,
+                "盈虧金額": 0,
+                "結算總分": bal + val
+            }
+            save_data(pd.concat([main_df, pd.DataFrame([new])], ignore_index=True))
+            st.rerun()
 
-        with st.expander("新增報表"):
-            name = st.text_input("名稱")
-            if st.button("建立報表"):
-                if name:
-                    pd.DataFrame(columns=COLUMNS).to_csv(f"{name}.csv", index=False)
-                    st.rerun()
+    # 其他功能（新增報表、刪除報表）也放在這裡，和補倉同一層
+    with st.expander("新增報表"):
+        name = st.text_input("名稱")
+        if st.button("建立報表"):
+            if name:
+                pd.DataFrame(columns=COLUMNS).to_csv(f"{name}.csv", index=False)
+                st.rerun()
 
-        with st.expander("刪除報表"):
-            deletable = [f for f in all_reports if f != DEFAULT_DB]
-            if deletable:
-                target = st.selectbox("選擇", deletable)
-                if st.button("刪除"):
-                    os.remove(target)
-                    st.session_state.current_db = DEFAULT_DB
-                    st.rerun()
+    with st.expander("刪除報表"):
