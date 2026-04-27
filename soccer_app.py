@@ -242,26 +242,26 @@ else:
             st.metric("勝率", f"{win/len(data)*100:.1f}%")
 
 # --- TAB4 ---
-with tab4:
-    with st.expander("補倉"):
-    val_str = st.text_input("金額", "30,000")  # 預設顯示千分位
-    try:
-        val = int(val_str.replace(",", ""))  # 移除逗號後轉成整數
-    except:
-        val = 0
+with tab4:   # 這裡和 tab1, tab2, tab3 保持同一層
+    with st.expander("補倉"):   # 再縮排一層
+        val_str = st.text_input("金額", "30,000")  # 再縮排一層
+        try:
+            val = int(val_str.replace(",", ""))
+        except:
+            val = 0
 
-    if st.button("補") and val > 0:
-        bal = int(main_df["結算總分"].iloc[-1]) if not main_df.empty else 0
-        new = {
-            "日期": now_taipei().strftime("%Y-%m-%d %H:%M"),
-            "賽事項目": "補倉",
-            "類型": "手動補倉",
-            "金額": val,
-            "盈虧金額": 0,
-            "結算總分": bal + val
-        }
-        save_data(pd.concat([main_df, pd.DataFrame([new])], ignore_index=True))
-        st.rerun()
+        if st.button("補") and val > 0:
+            bal = int(main_df["結算總分"].iloc[-1]) if not main_df.empty else 0
+            new = {
+                "日期": now_taipei().strftime("%Y-%m-%d %H:%M"),
+                "賽事項目": "補倉",
+                "類型": "手動補倉",
+                "金額": val,
+                "盈虧金額": 0,
+                "結算總分": bal + val
+            }
+            save_data(pd.concat([main_df, pd.DataFrame([new])], ignore_index=True))
+            st.rerun()
 
         with st.expander("新增報表"):
             name = st.text_input("名稱")
