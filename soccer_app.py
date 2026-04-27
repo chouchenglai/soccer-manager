@@ -138,7 +138,24 @@ else:
                 function playLose() { document.getElementById('loseSound').play(); }
             </script>
         """
-        st.components.v1.html(sound_html, height=0)
+        st.components.v1.html("""
+            <audio id="winAudio"><source src="https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3" type="audio/mpeg"></audio>
+            <audio id="loseAudio"><source src="https://assets.mixkit.co/active_storage/sfx/2511/2511-preview.mp3" type="audio/mpeg"></audio>
+            <audio id="clickAudio"><source src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3" type="audio/mpeg"></audio>
+            <audio id="alertAudio"><source src="https://assets.mixkit.co/active_storage/sfx/951/951-preview.mp3" type="audio/mpeg"></audio>
+
+            <script>
+                // 建立一個全局播放函數
+                window.parent.playAppSound = function(type) {
+                    var audioId = type + 'Audio';
+                    var audio = document.getElementById(audioId);
+                    if (audio) {
+                        audio.currentTime = 0;
+                        audio.play().catch(e => console.log('播放被攔截:', e));
+                    }
+                };
+            </script>
+        """, height=0)
 
         # 3. 定義全額確認對話框
         @st.dialog("⚠️ ⚠️ ⚠️ 全額下注確認")
