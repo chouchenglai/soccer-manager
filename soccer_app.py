@@ -242,8 +242,8 @@ else:
             st.metric("勝率", f"{win/len(data)*100:.1f}%")
 
 # --- TAB4 ---
-        with tab4:   # 這裡和 tab1, tab2, tab3 保持同樣層級
-            with st.expander("補倉"):   # 再縮排一層
+with tab4:   # 這裡和 tab1, tab2, tab3 保持同樣層級
+    with st.expander("補倉"):   # 再縮排一層
         val_str = st.text_input("金額", "30,000")
         try:
             val = int(val_str.replace(",", ""))
