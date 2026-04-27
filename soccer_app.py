@@ -152,25 +152,27 @@ else:
             can_submit = False
         elif not m_info.strip():
             can_submit = False
+                
+        c1, c2 = st.columns(2) 
         
-        c1, c2 = st.columns(2)
         with c1:
-            # 這裡連結全額按鈕，並加入 max(1, balance) 保護防止 0 元當機
+            # 這裡連結「全額下注」功能
             bet_amt = st.number_input(
                 "下注金額", 
                 0, 
                 max(1, balance), 
                 int(st.session_state.bet_val)
             )
+            
         with c2:
-            # 這裡保留您要的 placeholder 提示文字
+            # 這裡放置您要的 placeholder
             gain_amt = st.number_input(
                 "盈利金額", 
                 min_value=0, 
                 max_value=1000000, 
                 value=None, 
                 placeholder="請輸入盈利金額"
-            )       
+            )
         
         st.session_state.bet_val = bet_amt
         st.session_state.gain_val = gain_amt if gain_amt else 0
