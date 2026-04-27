@@ -140,16 +140,53 @@ else:
 
         c1, c2 = st.columns(2)
 
-        with c1:
-            bet_amt = st.number_input("下注金額", 0, balance, int(st.session_state.bet_val))
-        with c2:
-            gain_amt = st.number_input(
-                "盈利金額",
-                min_value=0,
-                max_value=999999999,
-                value=None,
-                placeholder="請輸入盈利金額"
-            )
+        with tab1:
+        # 1. 取得當前餘額 (避免破產時出錯)
+        current_bal = int(main_df["結算總分"].iloc[-1]) if not main_df.empty else 0
+        
+        m_info = st.text_area("賽事資訊", placeholder="請輸入賽事詳情...")
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            # 【關鍵修復】將 max_value 設為 1,000,000。這樣即便餘額是 0，輸入框也不會崩潰。
+            bet = st.number_input("下注金額", min_value=0, max_value=1000000, value=5000)
+            
+        with col2:
+            gain = st.number_input("預計獲利", min_value=0, max_value=1000000, value=5000)
+        
+        # 2. 判斷是否允許投注 (邏輯檢查，不影響 UI 渲染)
+        can_submit = True
+        if bet > current_bal:
+            st.error(f"⚠️ 餘額不足！目前可用：{current_bal:,}")
+            can_submit = False
+        elif not m_info.strip():
+            can_submit = False
+
+        # 3. 按鈕區 (增加 disabled 屬性，餘額不足時按鈕會變灰，無法點擊)
+        c_w, c_l = st.columns(2)
+        if c_w.button("✅ 贏", use_container_width=True, type="primary", disabled=not can_submit):
+            new = {
+                "日期": get_now_time(),
+                "賽事項目": m_info,
+                "類型": "贏 (+)",
+                "金額": int(gain),
+                "盈虧金額": int(gain),
+                "結算總分": current_bal + int(gain)
+            }
+            save_data(pd.concat([main_df, pd.DataFrame([new])], ignore_index=True))
+            st.rerun()
+
+        if c_l.button("❌ 輸", use_container_width=True, disabled=not can_submit):
+            new = {
+                "日期": get_now_time(),
+                "賽事項目": m_info,
+                "類型": "輸 (-)",
+                "金額": int(bet),
+                "盈虧金額": -int(bet),
+                "結算總分": current_bal - int(bet)
+            }
+            save_data(pd.concat([main_df, pd.DataFrame([new])], ignore_index=True))
+            st.rerun()
 
         st.session_state.bet_val = bet_amt
         st.session_state.gain_val = gain_amt if gain_amt else 0
