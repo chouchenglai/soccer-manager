@@ -232,7 +232,7 @@ else:
                 use_container_width=True
             )
 
-    # --- TAB3 ---
+# --- TAB3 ---
     with tab3:
         st.line_chart(main_df["結算總分"])
 
@@ -241,9 +241,9 @@ else:
             win = len(data[data['類型'] == '贏 (+)'])
             st.metric("勝率", f"{win/len(data)*100:.1f}%")
 
-    # --- TAB4 ---
-   with tab4:
-    with st.expander("補倉"):
+# --- TAB4 ---
+        with tab4:   # 這裡和 tab1, tab2, tab3 保持同樣層級
+            with st.expander("補倉"):   # 再縮排一層
         val_str = st.text_input("金額", "30,000")
         try:
             val = int(val_str.replace(",", ""))
