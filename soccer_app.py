@@ -223,18 +223,24 @@ else:
             win = len(data[data['類型'] == '贏 (+)'])
             st.metric("勝率", f"{win/len(data)*100:.1f}%")
 
-   with tab4:
+       # --- TAB4 ---
+    with tab4:
         with st.expander("補倉"):
             val_str = st.text_input("金額", "30,000")
             try:
+                # 移除逗號並轉為整數
                 val = int(val_str.replace(",", ""))
             except:
                 val = 0
 
             if st.button("補") and val > 0:
-                if not main_df.empty:
-                    bal = int(main_df["結算總分"].iloc[-1])
-                else:
+                # 破產保護邏輯：即便 main_df 是空的或結算總分抓不到，也預設為 0
+                try:
+                    if not main_df.empty:
+                        bal = int(main_df["結算總分"].iloc[-1])
+                    else:
+                        bal = 0
+                except:
                     bal = 0
                 
                 new = {
