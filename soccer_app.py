@@ -119,32 +119,34 @@ else:
 
     # --- TAB1: 快速錄入 ---
     with tab1:
-        # 取得當前餘額 (balance)
-        balance = int(main_df["結算總分"].iloc[-1]) if not main_df.empty else 0
-
-        # 初始化 bet_val 狀態
-        if "bet_val" not in st.session_state:
-            st.session_state.bet_val = 5000
-
-        m_info = st.text_area("賽事資訊", placeholder="例如：英超 阿仙奴 vs 車路士")
-
-        # 1. 籌碼快選區 (5 個欄位垂直對齊)
+        # 1. 這裡定義對話框 (請確保這段在最上面)
+        @st.dialog("⚠️ ⚠️ ⚠️ 全額下注確認")
+        def confirm_all_in():
+            st.warning(f"您確定要將目前的全部餘額 {balance:,} 元一次下注嗎？")
+            col_conf1, col_conf2 = st.columns(2)
+            if col_conf1.button("🔥 確定梭哈", type="primary", use_container_width=True):
+                st.session_state.bet_val = balance
+                st.rerun()
+            if col_conf2.button("取消", use_container_width=True):
+                st.rerun()
+               
         colb = st.columns(5)
+        # 修正：這些按鈕必須在 confirm_all_in 函式外面
         if colb[0].button("🔵 5,000"): 
-            st.session_state.bet_val = 5,000
+            st.session_state.bet_val = 5000
             st.rerun()
         if colb[1].button("🟢 10,000"): 
-            st.session_state.bet_val = 10,000
+            st.session_state.bet_val = 10000
             st.rerun()
         if colb[2].button("🟡 15,000"): 
-            st.session_state.bet_val = 15,000
+            st.session_state.bet_val = 15000
             st.rerun()
         if colb[3].button("🔴 20,000"): 
-            st.session_state.bet_val = 20,000
+            st.session_state.bet_val = 20000
             st.rerun()
         if colb[4].button("💎 全額"): 
-            st.session_state.bet_val = balance
-            st.rerun()
+            # 只有這個按鈕會去呼叫上面的對話框
+            confirm_all_in()
 
         # 2. 數值輸入區 (與 colb 對齊)
         c1, c2 = st.columns(2)
