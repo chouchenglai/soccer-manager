@@ -117,23 +117,68 @@ if main_df.empty:
 else:
     tab1, tab2, tab3, tab4 = st.tabs(["💰投注下單", "📋歷史記錄", "📊統計圖表", "📈報表管理"])
 
-    # --- TAB1 ---
+    # --- TAB1: 快速錄入 ---
     with tab1:
-        balance = int(main_df["結算總分"].iloc[-1])
-
+        # 取得當前餘額
+        balance = int(main_df["結算總分"].iloc[-1]) if not main_df.empty else 0
+        
         if "bet_val" not in st.session_state:
             st.session_state.bet_val = 5000
 
-        # 加入提示文字
-        m_info = st.text_area("賽事資訊", placeholder="例如：英超 阿仙奴 vs 車路士")
+        m_info = st.text_area("賽事資訊", placeholder="請輸入賽事項目...")
 
+        # 籌碼快選區 (修正後的 5 個欄位)
         colb = st.columns(5)
-        if colb[0].button("🔵5,000"): st.session_state.bet_val = 5000
-        if colb[1].button("🟢 10,000"): st.session_state.bet_val = 10000
-        if colb[2].button("🟡 15,000"): st.session_state.bet_val = 15000
-        if colb[3].button("🔴 20,000"): st.session_state.bet_val = 20000
-        if colb[4].button("💎 全額下注"):st.session_state.bet_val = balance
-           st.rerun()
+        if colb[0].button("🔵 5,000"): 
+            st.session_state.bet_val = 5000
+            st.rerun()
+        if colb[1].button("🟢 10,000"): 
+            st.session_state.bet_val = 10000
+            st.rerun()
+        if colb[2].button("🟡 15,000"): 
+            st.session_state.bet_val = 15000
+            st.rerun()
+        if colb[3].button("🔴 20,000"): 
+            st.session_state.bet_val = 20000
+            st.rerun()
+        if colb[4].button("💎 全額"): 
+            st.session_state.bet_val = balance
+            st.rerun()
+
+        c1, c2 = st.columns(2)
+        with c1:
+            # 破產保護：確保 max_value 至少為 1
+            safe_max = max(1000000, balance)
+            bet_amt = st.number_input("下注金額", 0, safe_max, value=int(st.session_state.bet_val))
+        with c2:
+            gain_amt = st.number_input("盈利金額", 0, 1000000, value=5000)
+
+        st.session_state.bet_val = bet_amt
+
+        # 按鈕判斷邏輯
+        can_submit = True
+        if bet_amt > balance:
+            st.error(f"⚠️ 餘額不足！目前可用：{balance:,}")
+            can_submit = False
+        elif not m_info.strip():
+            can_submit = False
+
+        cw, cl = st.columns(2)
+        if cw.button("✅ 贏 (+)", use_container_width=True, type="primary", disabled=not can_submit):
+            new_row = {
+                "日期": get_now_time(), "賽事項目": m_info, "類型": "贏 (+)",
+                "金額": int(gain_amt), "盈虧金額": int(gain_amt), "結算總分": balance + int(gain_amt)
+            }
+            save_data(pd.concat([main_df, pd.DataFrame([new_row])], ignore_index=True))
+            st.rerun()
+
+        if cl.button("❌ 輸 (-)", use_container_width=True, disabled=not can_submit):
+            new_row = {
+                "日期": get_now_time(), "賽事項目": m_info, "類型": "輸 (-)",
+                "金額": int(bet_amt), "盈虧金額": -int(bet_amt), "結算儲分": balance - int(bet_amt)
+            }
+            save_data(pd.concat([main_df, pd.DataFrame([new_row])], ignore_index=True))
+            st.rerun()
 
         c1, c2 = st.columns(2)
 
