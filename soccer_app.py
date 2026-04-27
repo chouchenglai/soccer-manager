@@ -4,11 +4,6 @@ import pandas as pd
 import os
 from datetime import datetime
 
-# --- 時區工具 ---
-def now_taipei():
-    tz = pytz.timezone("Asia/Taipei")
-    return datetime.now(tz)
-
 # --- 基本設定 ---
 DEFAULT_DB = "soccer_master_data.csv"
 COLUMNS = ["日期", "賽事項目", "類型", "金額", "盈虧金額", "結算總分"]
@@ -106,7 +101,7 @@ if main_df.empty:
     init_cap = st.number_input("起始本金", value=60000, step=1000)
 
     if st.button("建立"):
-        now = now_taipei()
+        now = datetime.now()
         row = {
             "日期": get_now_time(),
             "賽事項目": "初始",
@@ -140,53 +135,16 @@ else:
 
         c1, c2 = st.columns(2)
 
-        with tab1:
-        # 1. 取得當前餘額 (避免破產時出錯)
-        current_bal = int(main_df["結算總分"].iloc[-1]) if not main_df.empty else 0
-        
-        m_info = st.text_area("賽事資訊", placeholder="請輸入賽事詳情...")
-        
-        col1, col2 = st.columns(2)
-        with col1:
-            # 【關鍵修復】將 max_value 設為 1,000,000。這樣即便餘額是 0，輸入框也不會崩潰。
-            bet = st.number_input("下注金額", min_value=0, max_value=1000000, value=5000)
-            
-        with col2:
-            gain = st.number_input("預計獲利", min_value=0, max_value=1000000, value=5000)
-        
-        # 2. 判斷是否允許投注 (邏輯檢查，不影響 UI 渲染)
-        can_submit = True
-        if bet > current_bal:
-            st.error(f"⚠️ 餘額不足！目前可用：{current_bal:,}")
-            can_submit = False
-        elif not m_info.strip():
-            can_submit = False
-
-        # 3. 按鈕區 (增加 disabled 屬性，餘額不足時按鈕會變灰，無法點擊)
-        c_w, c_l = st.columns(2)
-        if c_w.button("✅ 贏", use_container_width=True, type="primary", disabled=not can_submit):
-            new = {
-                "日期": get_now_time(),
-                "賽事項目": m_info,
-                "類型": "贏 (+)",
-                "金額": int(gain),
-                "盈虧金額": int(gain),
-                "結算總分": current_bal + int(gain)
-            }
-            save_data(pd.concat([main_df, pd.DataFrame([new])], ignore_index=True))
-            st.rerun()
-
-        if c_l.button("❌ 輸", use_container_width=True, disabled=not can_submit):
-            new = {
-                "日期": get_now_time(),
-                "賽事項目": m_info,
-                "類型": "輸 (-)",
-                "金額": int(bet),
-                "盈虧金額": -int(bet),
-                "結算總分": current_bal - int(bet)
-            }
-            save_data(pd.concat([main_df, pd.DataFrame([new])], ignore_index=True))
-            st.rerun()
+        with c1:
+            bet_amt = st.number_input("下注金額", 0, balance, int(st.session_state.bet_val))
+        with c2:
+            gain_amt = st.number_input(
+                "盈利金額",
+                min_value=0,
+                max_value=999999999,
+                value=None,
+                placeholder="請輸入盈利金額"
+            )
 
         st.session_state.bet_val = bet_amt
         st.session_state.gain_val = gain_amt if gain_amt else 0
@@ -260,29 +218,15 @@ else:
             win = len(data[data['類型'] == '贏 (+)'])
             st.metric("勝率", f"{win/len(data)*100:.1f}%")
 
-       # --- TAB4 ---
+    # --- TAB4 ---
     with tab4:
         with st.expander("補倉"):
-            val_str = st.text_input("金額", "30,000")
-            try:
-                # 移除逗號並轉為整數
-                val = int(val_str.replace(",", ""))
-            except:
-                val = 0
-
-            if st.button("補") and val > 0:
-                # 破產保護邏輯：即便 main_df 是空的或結算總分抓不到，也預設為 0
-                try:
-                    if not main_df.empty:
-                        bal = int(main_df["結算總分"].iloc[-1])
-                    else:
-                        bal = 0
-                except:
-                    bal = 0
-                
+            val = st.number_input("金額", 0, 999999999, 30000)
+            if st.button("補"):
+                bal = int(main_df["結算總分"].iloc[-1])
                 new = {
-                    "日期": get_now_time(),
-                    "賽事項目": "手動補倉",
+                    "日期":get_now_time(),
+                    "賽事項目": "補倉",
                     "類型": "手動補倉",
                     "金額": val,
                     "盈虧金額": 0,
@@ -295,14 +239,13 @@ else:
             name = st.text_input("名稱")
             if st.button("建立報表"):
                 if name:
-                    new_file = f"{name}.csv"
-                    pd.DataFrame(columns=COLUMNS).to_csv(new_file, index=False)
+                    pd.DataFrame(columns=COLUMNS).to_csv(f"{name}.csv", index=False)
                     st.rerun()
 
         with st.expander("刪除報表"):
             deletable = [f for f in all_reports if f != DEFAULT_DB]
             if deletable:
-                target = st.selectbox("選擇刪除對象", deletable)
+                target = st.selectbox("選擇", deletable)
                 if st.button("刪除"):
                     os.remove(target)
                     st.session_state.current_db = DEFAULT_DB
