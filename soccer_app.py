@@ -113,45 +113,32 @@ if main_df.empty:
         save_data(pd.DataFrame([row]))
         st.rerun()
 
-# --- 主功能 ---
-else:
-    tab1, tab2, tab3, tab4 = st.tabs(["💰投注下單", "📋歷史記錄", "📊統計圖表", "📈報表管理"])
-
+# --- TAB1: 快速錄入 ---
     with tab1:
-        # 1. 取得當前總分
+        import time # 確保在開頭導入時間模組
+        
+        # 1. 取得當前餘額
         balance = int(main_df["結算總分"].iloc[-1]) if not main_df.empty else 0
         
         # 初始化下注金額狀態
         if "bet_val" not in st.session_state:
             st.session_state.bet_val = 5000
 
-        # 2. 嵌入音效組件 (四種不同場景音效)
-        sound_html = """
-            <audio id="clickSound" src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3" preload="auto"></audio>
-            <audio id="alertMusic" src="https://assets.mixkit.co/active_storage/sfx/951/951-preview.mp3" preload="auto"></audio>
-            <audio id="winMusic" src="https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3" preload="auto"></audio>
-            <audio id="loseSound" src="https://assets.mixkit.co/active_storage/sfx/2511/2511-preview.mp3" preload="auto"></audio>
-            <script>
-                function playClick() { document.getElementById('clickSound').play(); }
-                function playAlert() { document.getElementById('alertMusic').play(); }
-                function playWin() { document.getElementById('winMusic').play(); }
-                function playLose() { document.getElementById('loseSound').play(); }
-            </script>
-        """
+        # 2. 嵌入加強版音效組件 (JavaScript)
         st.components.v1.html("""
-            <audio id="winAudio"><source src="https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3" type="audio/mpeg"></audio>
-            <audio id="loseAudio"><source src="https://assets.mixkit.co/active_storage/sfx/2511/2511-preview.mp3" type="audio/mpeg"></audio>
-            <audio id="clickAudio"><source src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3" type="audio/mpeg"></audio>
-            <audio id="alertAudio"><source src="https://assets.mixkit.co/active_storage/sfx/951/951-preview.mp3" type="audio/mpeg"></audio>
+            <audio id="winAudio" src="https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3" preload="auto"></audio>
+            <audio id="loseAudio" src="https://assets.mixkit.co/active_storage/sfx/2511/2511-preview.mp3" preload="auto"></audio>
+            <audio id="clickAudio" src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3" preload="auto"></audio>
+            <audio id="alertAudio" src="https://assets.mixkit.co/active_storage/sfx/951/951-preview.mp3" preload="auto"></audio>
 
             <script>
-                // 建立一個全局播放函數
+                // 核心播放函數
                 window.parent.playAppSound = function(type) {
-                    var audioId = type + 'Audio';
-                    var audio = document.getElementById(audioId);
+                    var audio = document.getElementById(type + 'Audio');
                     if (audio) {
+                        audio.pause();
                         audio.currentTime = 0;
-                        audio.play().catch(e => console.log('播放被攔截:', e));
+                        audio.play().catch(e => console.log('Audio error:', e));
                     }
                 };
             </script>
@@ -172,24 +159,25 @@ else:
         # 4. 介面輸入區
         m_info = st.text_area("賽事資訊", placeholder="例如：英超 阿仙奴 vs 車路士")
 
-        # 5. 籌碼快選按鈕 (包含音效觸發)
+        # 5. 籌碼快選按鈕 (含音效與延遲)
         colb = st.columns(5)
         if colb[0].button("🔵 5,000"):
-            st.components.v1.html("<script>window.parent.playClick();</script>", height=0)
-            st.session_state.bet_val = 5000; st.rerun()
+            st.components.v1.html("<script>window.parent.playAppSound('click');</script>", height=0)
+            st.session_state.bet_val = 5000; time.sleep(0.1); st.rerun()
         if colb[1].button("🟢 10,000"):
-            st.components.v1.html("<script>window.parent.playClick();</script>", height=0)
-            st.session_state.bet_val = 10000; st.rerun()
+            st.components.v1.html("<script>window.parent.playAppSound('click');</script>", height=0)
+            st.session_state.bet_val = 10000; time.sleep(0.1); st.rerun()
         if colb[2].button("🟡 15,000"):
-            st.components.v1.html("<script>window.parent.playClick();</script>", height=0)
-            st.session_state.bet_val = 15000; st.rerun()
+            st.components.v1.html("<script>window.parent.playAppSound('click');</script>", height=0)
+            st.session_state.bet_val = 15000; time.sleep(0.1); st.rerun()
         if colb[3].button("🔴 20,000"):
-            st.components.v1.html("<script>window.parent.playClick();</script>", height=0)
-            st.session_state.bet_val = 20000; st.rerun()
+            st.components.v1.html("<script>window.parent.playAppSound('click');</script>", height=0)
+            st.session_state.bet_val = 20000; time.sleep(0.1); st.rerun()
         if colb[4].button("💎 全額"):
-            st.components.v1.html("<script>window.parent.playAlert();</script>", height=0)
+            st.components.v1.html("<script>window.parent.playAppSound('alert');</script>", height=0)
             confirm_all_in()
 
+        # 6. 下注與盈利輸入區
         c1, c2 = st.columns(2)
         with c1:
             bet_amt = st.number_input("下注金額", 0, max(1000000, balance), int(st.session_state.bet_val))
@@ -198,12 +186,13 @@ else:
 
         st.write("") # 增加間距
 
-        # 7. 提交執行區 (過關按鈕就在這裡！)
+        # 7. 提交執行區 (含贏/輸專屬音效)
         can_submit = balance > 0 and bet_amt > 0 and bet_amt <= balance
         cw, cl = st.columns(2)
 
         if cw.button("✅ 過關 (贏)", use_container_width=True, disabled=not can_submit or gain_amt is None):
-            st.components.v1.html("<script>window.parent.playWin();</script>", height=0)
+            st.components.v1.html("<script>window.parent.playAppSound('win');</script>", height=0)
+            time.sleep(0.15) # 給予聲音播放的緩衝時間
             new_row = {
                 "日期": get_now_time(), "賽事項目": m_info, "類型": "贏 (+)",
                 "金額": int(gain_amt), "盈虧金額": int(gain_amt), "結算總分": balance + int(gain_amt)
@@ -212,25 +201,14 @@ else:
             st.rerun()
 
         if cl.button("❌ 未過關 (輸)", use_container_width=True, disabled=not can_submit):
-            st.components.v1.html("<script>window.parent.playLose();</script>", height=0)
+            st.components.v1.html("<script>window.parent.playAppSound('lose');</script>", height=0)
+            time.sleep(0.15) # 給予聲音播放的緩衝時間
             new_row = {
                 "日期": get_now_time(), "賽事項目": m_info, "類型": "輸 (-)",
                 "金額": int(bet_amt), "盈虧金額": -int(bet_amt), "結算總分": balance - int(bet_amt)
             }
             save_data(pd.concat([main_df, pd.DataFrame([new_row])], ignore_index=True))
             st.rerun()
-
-        # --- 測試按鈕請放在「最外面」，不要縮進到按鈕裡面 ---
-        st.markdown("---") 
-        if st.button("📢 點擊此處解鎖權限並測試音效"):
-            # 這裡使用一段更強制的腳本來測試
-            st.components.v1.html("""
-                <script>
-                    console.log("正在嘗試播放音效...");
-                    window.parent.playWin(); 
-                    alert("如果沒聽到聲音，請檢查 Chrome 地址欄左側的鎖頭是否已開啟『音訊』允許");
-                </script>
-            """, height=0)
 
     # --- TAB2 ---
     with tab2:
