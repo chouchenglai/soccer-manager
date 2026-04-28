@@ -120,17 +120,19 @@ else:
     # --- TAB1: 快速錄入 ---
     with tab1:
         import time
-        from datetime import datetime
+        from datetime import datetime  # 關鍵修復：確保在此導入
         
         # 1. 取得當前總分
-        balance = int(main_df["結算總分"].iloc[-1]) if not main_df.empty else 0
+        try:
+            balance = int(main_df["結算總分"].iloc[-1]) if not main_df.empty else 0
+        except:
+            balance = 0
         
         # 初始化下注金額狀態
         if "bet_val" not in st.session_state:
             st.session_state.bet_val = 5000
 
-        # 2. 極簡橫向時鐘與音效組件 (JavaScript)
-        # 移除重複文字，將所有資訊整合在一行
+        # 2. 極簡橫向時鐘與音效組件
         st.components.v1.html("""
             <style>
                 #clock-container {
@@ -140,7 +142,6 @@ else:
                     padding: 8px 15px;
                     border-radius: 6px;
                     border-left: 5px solid #ff4b4b;
-                    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
                     font-family: 'Segoe UI', 'Roboto', 'Monaco', monospace;
                     margin-bottom: 5px;
                 }
@@ -154,7 +155,6 @@ else:
                     font-size: 14px;
                     color: #666;
                     margin-right: 12px;
-                    font-weight: normal;
                 }
             </style>
             
@@ -171,7 +171,6 @@ else:
             <script>
                 function updateClock() {
                     const now = new Date();
-                    // 設定繁體中文格式
                     const y = now.getFullYear();
                     const m = String(now.getMonth() + 1).padStart(2, '0');
                     const d = String(now.getDate()).padStart(2, '0');
@@ -180,8 +179,6 @@ else:
                     const hh = String(now.getHours()).padStart(2, '0');
                     const mm = String(now.getMinutes()).padStart(2, '0');
                     const ss = String(now.getSeconds()).padStart(2, '0');
-                    
-                    // 格式：2026/04/28 (星期二) 08:54:24
                     document.getElementById('clock').textContent = `${y}/${m}/${d} (${dayName}) ${hh}:${mm}:${ss}`;
                 }
                 setInterval(updateClock, 1000);
@@ -217,18 +214,15 @@ else:
 
         # 5. 籌碼快選按鈕
         colb = st.columns(5)
-        if colb[0].button("🔵 5,000"):
-            st.components.v1.html("<script>window.parent.playAppSound('click');</script>", height=0)
-            st.session_state.bet_val = 5000; time.sleep(0.1); st.rerun()
-        if colb[1].button("🟢 10,000"):
-            st.components.v1.html("<script>window.parent.playAppSound('click');</script>", height=0)
-            st.session_state.bet_val = 10000; time.sleep(0.1); st.rerun()
-        if colb[2].button("🟡 15,000"):
-            st.components.v1.html("<script>window.parent.playAppSound('click');</script>", height=0)
-            st.session_state.bet_val = 15000; time.sleep(0.1); st.rerun()
-        if colb[3].button("🔴 20,000"):
-            st.components.v1.html("<script>window.parent.playAppSound('click');</script>", height=0)
-            st.session_state.bet_val = 20000; time.sleep(0.1); st.rerun()
+        btn_data = [("🔵 5,000", 5000), ("🟢 10,000", 10000), ("🟡 15,000", 15000), ("🔴 20,000", 20000)]
+        
+        for i, (label, val) in enumerate(btn_data):
+            if colb[i].button(label):
+                st.components.v1.html("<script>window.parent.playAppSound('click');</script>", height=0)
+                st.session_state.bet_val = val
+                time.sleep(0.1)
+                st.rerun()
+        
         if colb[4].button("💎 全額"):
             st.components.v1.html("<script>window.parent.playAppSound('alert');</script>", height=0)
             confirm_all_in()
@@ -249,8 +243,10 @@ else:
         if cw.button("✅ 過關 (贏)", use_container_width=True, disabled=not can_submit or gain_amt is None):
             st.components.v1.html("<script>window.parent.playAppSound('win');</script>", height=0)
             time.sleep(0.2)
+            # 使用修正後的 datetime
+            now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             new_row = {
-                "日期": datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "賽事項目": m_info, "類型": "贏 (+)",
+                "日期": now_str, "賽事項目": m_info, "類型": "贏 (+)",
                 "金額": int(gain_amt), "盈虧金額": int(gain_amt), "結算總分": balance + int(gain_amt)
             }
             save_data(pd.concat([main_df, pd.DataFrame([new_row])], ignore_index=True))
@@ -259,8 +255,9 @@ else:
         if cl.button("❌ 未過關 (輸)", use_container_width=True, disabled=not can_submit):
             st.components.v1.html("<script>window.parent.playAppSound('lose');</script>", height=0)
             time.sleep(0.2)
+            now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             new_row = {
-                "日期": datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "賽事項目": m_info, "類型": "輸 (-)",
+                "日期": now_str, "賽事項目": m_info, "類型": "輸 (-)",
                 "金額": int(bet_amt), "盈虧金額": -int(bet_amt), "結算總分": balance - int(bet_amt)
             }
             save_data(pd.concat([main_df, pd.DataFrame([new_row])], ignore_index=True))
