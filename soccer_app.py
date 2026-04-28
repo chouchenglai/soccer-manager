@@ -206,6 +206,8 @@ else:
         with c2:
             gain_amt = st.number_input("盈利金額", 0, 1000000, value=None, placeholder="請輸入盈利金額")
 
+        st.write("")
+
         # 7. 提交執行區 (核心修正：統一台北時區)
         tz_taipei = timezone(timedelta(hours=8)) # 強制定義 GMT+8
         
