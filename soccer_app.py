@@ -3,6 +3,7 @@ import streamlit as st
 import pandas as pd
 import os
 from datetime import datetime
+from streamlit_gsheets_connection import GSheetsConnection
 
 # --- 基本設定 ---
 DEFAULT_DB = "soccer_master_data.csv"
