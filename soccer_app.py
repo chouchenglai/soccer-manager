@@ -113,84 +113,94 @@ if main_df.empty:
         save_data(pd.DataFrame([row]))
         st.rerun()
 
-        # --- TAB1: 快速錄入 ---
+# --- 主功能 ---
+else:
+    tab1, tab2, tab3, tab4 = st.tabs(["💰投注下單", "📋歷史記錄", "📊統計圖表", "📈報表管理"])
+
+    # --- TAB1: 快速錄入 ---
     with tab1:
-        import time
-        
-        # 1. 取得當前總分
+        # 1. 取得當前總分 (確保與資料庫同步)
         balance = int(main_df["結算總分"].iloc[-1]) if not main_df.empty else 0
         
-        # 初始化下注金額狀態 (確保 bet_val 存在)
+        # 初始化下注金額狀態
         if "bet_val" not in st.session_state:
             st.session_state.bet_val = 5000
 
-        # 2. 嵌入音效組件
-        st.components.v1.html("""
-            <audio id="winAudio" src="https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3" preload="auto"></audio>
-            <audio id="loseAudio" src="https://assets.mixkit.co/active_storage/sfx/2511/2511-preview.mp3" preload="auto"></audio>
-            <audio id="clickAudio" src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3" preload="auto"></audio>
-            <audio id="alertAudio" src="https://assets.mixkit.co/active_storage/sfx/951/951-preview.mp3" preload="auto"></audio>
+        # 2. 嵌入音效組件 (隱形 JavaScript)
+        sound_html = """
+            <audio id="clickSound" src="https://www.soundjay.com/buttons/sounds/button-16.mp3" preload="auto"></audio>
+            <audio id="alertSound" src="https://www.soundjay.com/buttons/sounds/button-11.mp3" preload="auto"></audio>
             <script>
-                window.parent.playAppSound = function(type) {
-                    var audio = document.getElementById(type + 'Audio');
-                    if (audio) {
-                        audio.pause();
-                        audio.currentTime = 0;
-                        audio.play().catch(e => console.log('音效播放失敗:', e));
-                    }
-                };
+                function playSound() { document.getElementById('clickSound').play(); }
+                function playAlert() { document.getElementById('alertSound').play(); }
             </script>
-        """, height=0)
+        """
+        st.components.v1.html(sound_html, height=0)
 
-        # 3. 定義全額確認對話框
-        @st.dialog("⚠️ ⚠️ ⚠️ 全額下注確認")
+        # 3. 定義全額確認對話框 (確保此函式在最上方定義)
+        @st.dialog("⚠️全額下注確認 ⚠️")
         def confirm_all_in():
             st.warning(f"確定要將全部餘額 {balance:,} 元一次下注嗎？")
             st.write("此操作風險較高，請再次確認。")
             c_conf1, c_conf2 = st.columns(2)
-            if c_conf1.button("🔥 確定梭哈", type="primary", use_container_width=True):
+            if c_conf1.button("💎 確定全額下注", type="primary", use_container_width=True):
                 st.session_state.bet_val = balance
                 st.rerun()
             if c_conf2.button("取消", use_container_width=True):
                 st.rerun()
 
-        # 4. 介面輸入區
-        m_info = st.text_area("賽事資訊", placeholder="例如：英超 阿仙奴 vs 車路士", key="input_info")
+        # 4. 賽事資訊輸入區
+        m_info = st.text_area("賽事資訊", placeholder="例如：英超 阿仙奴 vs 車路士")
 
-        # 5. 籌碼快選按鈕 (修正後的對齊版)
+        # 5. 籌碼快選按鈕 (這五個按鈕現在能獨立運作了)
         colb = st.columns(5)
         if colb[0].button("🔵 5,000"):
-            st.components.v1.html("<script>window.parent.playAppSound('click');</script>", height=0)
-            st.session_state.bet_val = 5000; time.sleep(0.1); st.rerun()
+            st.session_state.bet_val = 5000
+            st.rerun()
         if colb[1].button("🟢 10,000"):
-            st.components.v1.html("<script>window.parent.playAppSound('click');</script>", height=0)
-            st.session_state.bet_val = 10000; time.sleep(0.1); st.rerun()
+            st.session_state.bet_val = 10000
+            st.rerun()
         if colb[2].button("🟡 15,000"):
-            st.components.v1.html("<script>window.parent.playAppSound('click');</script>", height=0)
-            st.session_state.bet_val = 15000; time.sleep(0.1); st.rerun()
+            st.session_state.bet_val = 15000
+            st.rerun()
         if colb[3].button("🔴 20,000"):
-            st.components.v1.html("<script>window.parent.playAppSound('click');</script>", height=0)
-            st.session_state.bet_val = 20000; time.sleep(0.1); st.rerun()
+            st.session_state.bet_val = 20000
+            st.rerun()
         if colb[4].button("💎 全額"):
-            st.components.v1.html("<script>window.parent.playAppSound('alert');</script>", height=0)
+            # 觸發警示音並開啟對話框
+            st.components.v1.html("<script>window.parent.playAlert();</script>", height=0)
             confirm_all_in()
 
         # 6. 下注與盈利輸入區
         c1, c2 = st.columns(2)
         with c1:
-            bet_amt = st.number_input("下注金額", 0, max(1000000, balance), int(st.session_state.bet_val))
+            # 這裡會接收按鈕傳來的金額
+            bet_amt = st.number_input(
+                "下注金額", 
+                0, 
+                max(1000000, balance), 
+                int(st.session_state.bet_val)
+            )
         with c2:
-            gain_amt = st.number_input("盈利金額", 0, 1000000, value=None, placeholder="請輸入盈利金額")
+            # 保留 placeholder 功能
+            gain_amt = st.number_input(
+                "盈利金額", 
+                min_value=0, 
+                max_value=1000000, 
+                value=None, 
+                placeholder="請輸入盈利金額"
+            )
 
-        st.write("") # 間距
+        # 增加美觀間距
+        st.write("")
 
-        # 7. 提交按鈕區
+        # 7. 提交執行區
         can_submit = balance > 0 and bet_amt > 0 and bet_amt <= balance
         cw, cl = st.columns(2)
 
         if cw.button("✅ 過關 (贏)", use_container_width=True, disabled=not can_submit or gain_amt is None):
-            st.components.v1.html("<script>window.parent.playAppSound('win');</script>", height=0)
-            time.sleep(0.2) # 給聲音多一點時間
+            # 播放點擊音效
+            st.components.v1.html("<script>window.parent.playSound();</script>", height=0)
             new_row = {
                 "日期": get_now_time(), "賽事項目": m_info, "類型": "贏 (+)",
                 "金額": int(gain_amt), "盈虧金額": int(gain_amt), "結算總分": balance + int(gain_amt)
@@ -199,8 +209,8 @@ if main_df.empty:
             st.rerun()
 
         if cl.button("❌ 未過關 (輸)", use_container_width=True, disabled=not can_submit):
-            st.components.v1.html("<script>window.parent.playAppSound('lose');</script>", height=0)
-            time.sleep(0.2)
+            # 播放點擊音效
+            st.components.v1.html("<script>window.parent.playSound();</script>", height=0)
             new_row = {
                 "日期": get_now_time(), "賽事項目": m_info, "類型": "輸 (-)",
                 "金額": int(bet_amt), "盈虧金額": -int(bet_amt), "結算總分": balance - int(bet_amt)
