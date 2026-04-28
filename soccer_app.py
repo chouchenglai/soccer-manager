@@ -120,7 +120,7 @@ else:
     # --- TAB1: 快速錄入 ---
     with tab1:
         import time
-        from datetime import datetime
+        from datetime import datetime, timedelta, timezone
         
         # 1. 取得當前總分
         try:
@@ -132,18 +132,13 @@ else:
         if "bet_val" not in st.session_state:
             st.session_state.bet_val = 5000
 
-        # 2. 極簡橫向時鐘與音效組件 (JavaScript)
+        # 2. 極簡橫向時鐘與音效組件
         st.components.v1.html("""
             <style>
                 #clock-container {
-                    display: flex;
-                    align-items: center;
-                    background-color: #f8f9fb;
-                    padding: 8px 15px;
-                    border-radius: 6px;
-                    border-left: 5px solid #ff4b4b;
-                    font-family: 'Segoe UI', 'Roboto', 'Monaco', monospace;
-                    margin-bottom: 5px;
+                    display: flex; align-items: center; background-color: #f8f9fb;
+                    padding: 8px 15px; border-radius: 6px; border-left: 5px solid #ff4b4b;
+                    font-family: 'Segoe UI', 'Roboto', 'Monaco', monospace; margin-bottom: 5px;
                 }
                 #clock { font-size: 15px; font-weight: 600; color: #31333f; letter-spacing: 0.8px; }
                 .prefix { font-size: 14px; color: #666; margin-right: 12px; }
@@ -176,43 +171,30 @@ else:
             </script>
         """, height=52)
 
-        # 3. 定義全額確認對話框 (函式定義區)
+        # 3. 定義全額確認對話框
         @st.dialog("⚠️ ⚠️ ⚠️ 全額下注確認")
         def confirm_all_in():
             st.warning(f"確定要將全部餘額 {balance:,} 元一次下注嗎？")
-            st.write("此操作風險較高，請再次確認。")
             c_conf1, c_conf2 = st.columns(2)
             if c_conf1.button("🔥 確定梭哈", type="primary", use_container_width=True):
+                st.components.v1.html("<script>window.parent.playAppSound('click');</script>", height=0)
                 st.session_state.bet_val = balance
                 st.rerun()
             if c_conf2.button("取消", use_container_width=True):
                 st.rerun()
 
-        # --- 關鍵修正：以下所有內容必須與 @st.dialog 對齊，不能縮排進去 ---
-
-        # 4. 介面標題與輸入區
+        # 4. 介面內容區
         st.subheader("📊 資金與統計中心")
         m_info = st.text_area("賽事資訊", placeholder="例如：英超 阿仙奴 vs 車路士", key="input_info")
 
-        # 5. 籌碼快選按鈕 (修正後的對齊版)
+        # 5. 籌碼快選按鈕
         colb = st.columns(5)
-        # 5K
-        if colb[0].button("🔵 5,000"):
-            st.components.v1.html("<script>window.parent.playAppSound('click');</script>", height=0)
-            st.session_state.bet_val = 5000; time.sleep(0.1); st.rerun()
-        # 10K
-        if colb[1].button("🟢 10,000"):
-            st.components.v1.html("<script>window.parent.playAppSound('click');</script>", height=0)
-            st.session_state.bet_val = 10000; time.sleep(0.1); st.rerun()
-        # 15K
-        if colb[2].button("🟡 15,000"):
-            st.components.v1.html("<script>window.parent.playAppSound('click');</script>", height=0)
-            st.session_state.bet_val = 15000; time.sleep(0.1); st.rerun()
-        # 20K
-        if colb[3].button("🔴 20,000"):
-            st.components.v1.html("<script>window.parent.playAppSound('click');</script>", height=0)
-            st.session_state.bet_val = 20000; time.sleep(0.1); st.rerun()
-        # 全額
+        amounts = [5000, 10000, 15000, 20000]
+        labels = ["🔵 5,000", "🟢 10,000", "🟡 15,000", "🔴 20,000"]
+        for i in range(4):
+            if colb[i].button(labels[i]):
+                st.components.v1.html("<script>window.parent.playAppSound('click');</script>", height=0)
+                st.session_state.bet_val = amounts[i]; time.sleep(0.1); st.rerun()
         if colb[4].button("💎 全額"):
             st.components.v1.html("<script>window.parent.playAppSound('alert');</script>", height=0)
             confirm_all_in()
@@ -224,18 +206,19 @@ else:
         with c2:
             gain_amt = st.number_input("盈利金額", 0, 1000000, value=None, placeholder="請輸入盈利金額")
 
-        st.write("") 
-
-        # 7. 提交執行區
+        # 7. 提交執行區 (核心修正：統一台北時區)
+        tz_taipei = timezone(timedelta(hours=8)) # 強制定義 GMT+8
+        
         can_submit = balance > 0 and bet_amt > 0 and bet_amt <= balance
         cw, cl = st.columns(2)
 
         if cw.button("✅ 過關 (贏)", use_container_width=True, disabled=not can_submit or gain_amt is None):
             st.components.v1.html("<script>window.parent.playAppSound('win');</script>", height=0)
             time.sleep(0.2)
-            now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            # 取得精確台北時間
+            now_taipei = datetime.now(tz_taipei).strftime("%Y-%m-%d %H:%M:%S")
             new_row = {
-                "日期": now_str, "賽事項目": m_info, "類型": "贏 (+)",
+                "日期": now_taipei, "賽事項目": m_info, "類型": "贏 (+)",
                 "金額": int(gain_amt), "盈虧金額": int(gain_amt), "結算總分": balance + int(gain_amt)
             }
             save_data(pd.concat([main_df, pd.DataFrame([new_row])], ignore_index=True))
@@ -244,9 +227,10 @@ else:
         if cl.button("❌ 未過關 (輸)", use_container_width=True, disabled=not can_submit):
             st.components.v1.html("<script>window.parent.playAppSound('lose');</script>", height=0)
             time.sleep(0.2)
-            now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            # 取得精確台北時間
+            now_taipei = datetime.now(tz_taipei).strftime("%Y-%m-%d %H:%M:%S")
             new_row = {
-                "日期": now_str, "賽事項目": m_info, "類型": "輸 (-)",
+                "日期": now_taipei, "賽事項目": m_info, "類型": "輸 (-)",
                 "金額": int(bet_amt), "盈虧金額": -int(bet_amt), "結算總分": balance - int(bet_amt)
             }
             save_data(pd.concat([main_df, pd.DataFrame([new_row])], ignore_index=True))
