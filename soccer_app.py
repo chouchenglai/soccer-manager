@@ -30,16 +30,15 @@ def load_data():
 main_df = load_data()
 
 def save_data(df):
-    
     if "月份" in df.columns:
         df = df.drop(columns=["月份"])
         
     try:        
-        conn.update(worksheet="Sheet1", data=df)                
-        st.cache_data.clear()        
+        conn.update(worksheet="Sheet1", data=df)
+        st.cache_data.clear()
         st.success("✅ 數據已成功同步至 Google Sheets！")
     except Exception as e:
-        st.error(f"❌ 同步失敗，請檢查 Secrets 設定：{e}")
+        st.error(f"❌ 同步失敗，請檢查 Secrets 或網路：{e}")
 
 # --- 初始化 ---
 st.set_page_config(page_title="足球賽事一體化管理系統", layout="wide")
