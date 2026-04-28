@@ -195,7 +195,7 @@ else:
             if colb[i].button(labels[i]):
                 st.components.v1.html("<script>window.parent.playAppSound('click');</script>", height=0)
                 st.session_state.bet_val = amounts[i]; time.sleep(0.1); st.rerun()
-        if colb[4].button("💎 全額"):
+        if colb[4].button("💎 全額（梭哈）"):
             st.components.v1.html("<script>window.parent.playAppSound('alert');</script>", height=0)
             confirm_all_in()
 
