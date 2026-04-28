@@ -25,7 +25,7 @@ def ensure_default_db():
         pd.DataFrame(columns=COLUMNS).to_csv(DEFAULT_DB, index=False)
 
 def load_data():
-    # 這裡使用您改好的英文標籤名稱 Sheet1
+    # 這裡確保使用 Sheet1
     return conn.read(worksheet="Sheet1", ttl=0)
 
 main_df = load_data()
@@ -38,7 +38,7 @@ def save_data(df):
     try:        
         # 將資料更新至 Google Sheets
         conn.update(worksheet="Sheet1", data=df)
-        # 修正原本被切斷的語法，補全括號
+        # 補全之前被切斷的語法
         st.cache_data.clear()
         st.success("✅ 數據已成功同步至 Google Sheets！")
     except Exception as e:
