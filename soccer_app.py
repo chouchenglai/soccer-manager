@@ -129,37 +129,37 @@ else:
         if "bet_val" not in st.session_state:
             st.session_state.bet_val = 5000
 
-        # 2. 精簡版橫向時鐘與音效組件 (JavaScript)
-        # 調整為橫向一列，減少高度佔用
+        # 2. 極簡橫向時鐘與音效組件 (JavaScript)
+        # 移除重複文字，將所有資訊整合在一行
         st.components.v1.html("""
             <style>
                 #clock-container {
                     display: flex;
                     align-items: center;
                     background-color: #f8f9fb;
-                    padding: 5px 15px;
-                    border-radius: 8px;
-                    border-left: 4px solid #ff4b4b;
+                    padding: 8px 15px;
+                    border-radius: 6px;
+                    border-left: 5px solid #ff4b4b;
                     box-shadow: 0 1px 2px rgba(0,0,0,0.05);
                     font-family: 'Segoe UI', 'Roboto', 'Monaco', monospace;
                     margin-bottom: 5px;
                 }
-                .label {
-                    font-size: 14px;
-                    color: #666;
-                    margin-right: 10px;
-                    white-space: nowrap;
-                }
                 #clock {
-                    font-size: 14px;
+                    font-size: 15px;
                     font-weight: 600;
                     color: #31333f;
-                    letter-spacing: 0.5px;
+                    letter-spacing: 0.8px;
+                }
+                .prefix {
+                    font-size: 14px;
+                    color: #666;
+                    margin-right: 12px;
+                    font-weight: normal;
                 }
             </style>
             
             <div id="clock-container">
-                <span class="label">台北標準時間 (GMT+8)</span>
+                <span class="prefix">台北標準時間 (GMT+8) :</span>
                 <span id="clock">載入中...</span>
             </div>
 
@@ -171,17 +171,18 @@ else:
             <script>
                 function updateClock() {
                     const now = new Date();
-                    const options = { 
-                        year: 'numeric', month: '2-digit', day: '2-digit', 
-                        weekday: 'short', hour: '2-digit', minute: '2-digit', 
-                        second: '2-digit', hour12: false 
-                    };
-                    // 格式化為：2026/04/28 (週二) 08:54:24
-                    let parts = now.toLocaleString('zh-TW', options).split(' ');
-                    let dateStr = parts[0];
-                    let weekStr = parts[1];
-                    let timeStr = parts[2] || parts[1]; // 處理不同瀏覽器格式差異
-                    document.getElementById('clock').textContent = dateStr + " (" + weekStr + ") " + timeStr;
+                    // 設定繁體中文格式
+                    const y = now.getFullYear();
+                    const m = String(now.getMonth() + 1).padStart(2, '0');
+                    const d = String(now.getDate()).padStart(2, '0');
+                    const weekDays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+                    const dayName = weekDays[now.getDay()];
+                    const hh = String(now.getHours()).padStart(2, '0');
+                    const mm = String(now.getMinutes()).padStart(2, '0');
+                    const ss = String(now.getSeconds()).padStart(2, '0');
+                    
+                    // 格式：2026/04/28 (星期二) 08:54:24
+                    document.getElementById('clock').textContent = `${y}/${m}/${d} (${dayName}) ${hh}:${mm}:${ss}`;
                 }
                 setInterval(updateClock, 1000);
                 updateClock();
@@ -195,7 +196,7 @@ else:
                     }
                 };
             </script>
-        """, height=50) # 高度從 100 縮減為 50
+        """, height=52)
 
         # 3. 定義全額確認對話框
         @st.dialog("⚠️ ⚠️ ⚠️ 全額下注確認")
@@ -209,7 +210,7 @@ else:
             if c_conf2.button("取消", use_container_width=True):
                 st.rerun()
 
-        # 4. 介面內容區 (緊接在時間條下方)
+        # 4. 介面內容區
         st.subheader("📊 資金與統計中心")
 
         m_info = st.text_area("賽事資訊", placeholder="例如：英超 阿仙奴 vs 車路士", key="input_info")
@@ -251,6 +252,16 @@ else:
             new_row = {
                 "日期": datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "賽事項目": m_info, "類型": "贏 (+)",
                 "金額": int(gain_amt), "盈虧金額": int(gain_amt), "結算總分": balance + int(gain_amt)
+            }
+            save_data(pd.concat([main_df, pd.DataFrame([new_row])], ignore_index=True))
+            st.rerun()
+
+        if cl.button("❌ 未過關 (輸)", use_container_width=True, disabled=not can_submit):
+            st.components.v1.html("<script>window.parent.playAppSound('lose');</script>", height=0)
+            time.sleep(0.2)
+            new_row = {
+                "日期": datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "賽事項目": m_info, "類型": "輸 (-)",
+                "金額": int(bet_amt), "盈虧金額": -int(bet_amt), "結算總分": balance - int(bet_amt)
             }
             save_data(pd.concat([main_df, pd.DataFrame([new_row])], ignore_index=True))
             st.rerun()
