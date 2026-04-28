@@ -122,44 +122,38 @@ else:
         import time
         from datetime import datetime, timedelta, timezone
         
-        # 1. 取得當前總分與時區設定
+        # 1. 取得當前總分與時區
         try:
             balance = int(main_df["結算總分"].iloc[-1]) if not main_df.empty else 0
         except:
             balance = 0
         
-        tz_taipei = timezone(timedelta(hours=8)) # 確保注單時間準確為 GMT+8
+        tz_taipei = timezone(timedelta(hours=8))
         
-        # 初始化下注金額狀態 (session_state)
         if "bet_val" not in st.session_state:
             st.session_state.bet_val = 5000
 
-        # 2. 【核心音效與時間條】組件 (JavaScript)
-        # 放在這裡確保進入 Tab1 就能立即加載並在所有位置呼叫
-        st.components.v1.html("""
+        # 2. 【核心修復】強制重新定義 JavaScript 函數與音效資源
+        # 這裡使用最直接的 HTML 嵌入，確保按鈕點擊時一定能找到 playAppSound
+        sound_logic = """
             <style>
                 #clock-container {
                     display: flex; align-items: center; background-color: #f8f9fb;
                     padding: 8px 15px; border-radius: 6px; border-left: 5px solid #ff4b4b;
                     font-family: 'Segoe UI', 'Roboto', 'Monaco', monospace; margin-bottom: 10px;
-                    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
                 }
                 #clock { font-size: 15px; font-weight: 600; color: #31333f; letter-spacing: 0.8px; }
                 .prefix { font-size: 14px; color: #666; margin-right: 12px; }
             </style>
-            
             <div id="clock-container">
                 <span class="prefix">台北標準時間 (GMT+8) :</span>
                 <span id="clock">載入中...</span>
             </div>
-
             <audio id="winAudio" src="https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3" preload="auto"></audio>
             <audio id="loseAudio" src="https://assets.mixkit.co/active_storage/sfx/2511/2511-preview.mp3" preload="auto"></audio>
             <audio id="clickAudio" src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3" preload="auto"></audio>
             <audio id="alertAudio" src="https://assets.mixkit.co/active_storage/sfx/951/951-preview.mp3" preload="auto"></audio>
-
             <script>
-                // 1. 更新時鐘邏輯
                 function updateClock() {
                     const now = new Date();
                     const y = now.getFullYear();
@@ -171,20 +165,20 @@ else:
                     const ss = String(now.getSeconds()).padStart(2, '0');
                     document.getElementById('clock').textContent = `${y}/${m}/${d} (${weekDays[now.getDay()]}) ${hh}:${mm}:${ss}`;
                 }
-                setInterval(updateClock, 1000);
-                updateClock();
+                setInterval(updateClock, 1000); updateClock();
 
-                // 2. 音效播放函數 (供外層 Python 呼叫)
+                // 強制綁定到 window.parent 確保 Streamlit 按鈕能呼叫
                 window.parent.playAppSound = function(type) {
-                    var audio = document.getElementById(type + 'Audio');
+                    const audio = document.getElementById(type + 'Audio');
                     if (audio) {
                         audio.pause();
                         audio.currentTime = 0;
-                        audio.play().catch(e => console.log('播放攔截:', e));
+                        audio.play().catch(e => console.error('Audio Play Error:', e));
                     }
                 };
             </script>
-        """, height=60)
+        """
+        st.components.v1.html(sound_logic, height=60)
 
         # 3. 定義全額確認對話框
         @st.dialog("⚠️ ⚠️ ⚠️ 全額下注確認")
@@ -198,27 +192,26 @@ else:
             if c_conf2.button("取消", use_container_width=True):
                 st.rerun()
 
-        # 4. 介面內容區
+        # 4. 介面內容
         st.subheader("📊 資金與統計中心")
         m_info = st.text_area("賽事資訊", placeholder="例如：英超 阿仙奴 vs 車路士", key="input_info")
 
-        # 5. 籌碼快選按鈕 (呼叫 JavaScript 音效)
+        # 5. 籌碼快選 (確保每個按鈕都帶有音效觸發腳本)
         colb = st.columns(5)
-        amounts = [5000, 10000, 15000, 20000]
-        labels = ["🔵 5,000", "🟢 10,000", "🟡 15,000", "🔴 20,000"]
+        btn_configs = [("🔵 5,000", 5000), ("🟢 10,000", 10000), ("🟡 15,000", 15000), ("🔴 20,000", 20000)]
         
-        for i in range(4):
-            if colb[i].button(labels[i], use_container_width=True):
+        for i, (label, amt) in enumerate(btn_configs):
+            if colb[i].button(label, use_container_width=True):
                 st.components.v1.html("<script>window.parent.playAppSound('click');</script>", height=0)
-                st.session_state.bet_val = amounts[i]
-                time.sleep(0.1) # 給予音效啟動時間
+                st.session_state.bet_val = amt
+                time.sleep(0.1)
                 st.rerun()
                 
         if colb[4].button("💎 全額", use_container_width=True):
             st.components.v1.html("<script>window.parent.playAppSound('alert');</script>", height=0)
             confirm_all_in()
 
-        # 6. 下注與盈利輸入區
+        # 6. 下注與盈利
         c1, c2 = st.columns(2)
         with c1:
             bet_amt = st.number_input("下注金額", 0, max(1000000, balance), int(st.session_state.bet_val))
@@ -227,13 +220,14 @@ else:
 
         st.write("") 
 
-        # 7. 提交執行區 (正確台北時區錄入)
+        # 7. 提交按鈕
         can_submit = balance > 0 and bet_amt > 0 and bet_amt <= balance
         cw, cl = st.columns(2)
 
         if cw.button("✅ 過關 (贏)", use_container_width=True, disabled=not can_submit or gain_amt is None):
+            # 這裡就是關鍵：錄入數據前必須先呼叫音效腳本
             st.components.v1.html("<script>window.parent.playAppSound('win');</script>", height=0)
-            time.sleep(0.2) # 延遲確保音樂能被聽到
+            time.sleep(0.2)
             now_taipei = datetime.now(tz_taipei).strftime("%Y-%m-%d %H:%M:%S")
             new_row = {
                 "日期": now_taipei, "賽事項目": m_info, "類型": "贏 (+)",
@@ -244,7 +238,7 @@ else:
 
         if cl.button("❌ 未過關 (輸)", use_container_width=True, disabled=not can_submit):
             st.components.v1.html("<script>window.parent.playAppSound('lose');</script>", height=0)
-            time.sleep(0.2) # 延遲確保音樂能被聽到
+            time.sleep(0.2)
             now_taipei = datetime.now(tz_taipei).strftime("%Y-%m-%d %H:%M:%S")
             new_row = {
                 "日期": now_taipei, "賽事項目": m_info, "類型": "輸 (-)",
