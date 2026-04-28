@@ -129,12 +129,38 @@ else:
         if "bet_val" not in st.session_state:
             st.session_state.bet_val = 5000
 
-        # 2. 即時日期時間與音效核心組件 (JavaScript)
-        # 這裡設計了專屬的 CSS 樣式，讓時間顯示在左上角更美觀
+        # 2. 精簡版橫向時鐘與音效組件 (JavaScript)
+        # 調整為橫向一列，減少高度佔用
         st.components.v1.html("""
-            <div id="time-display" style="background-color: #f0f2f6; padding: 10px; border-radius: 5px; border-left: 5px solid #ff4b4b; margin-bottom: 20px;">
-                <div style="font-size: 0.9rem; color: #555;">台北標準時間 (GMT+8)：</div>
-                <div id="clock" style="font-size: 1.2rem; font-weight: bold; color: #31333f; font-family: monospace;">載入中...</div>
+            <style>
+                #clock-container {
+                    display: flex;
+                    align-items: center;
+                    background-color: #f8f9fb;
+                    padding: 5px 15px;
+                    border-radius: 8px;
+                    border-left: 4px solid #ff4b4b;
+                    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+                    font-family: 'Segoe UI', 'Roboto', 'Monaco', monospace;
+                    margin-bottom: 5px;
+                }
+                .label {
+                    font-size: 14px;
+                    color: #666;
+                    margin-right: 10px;
+                    white-space: nowrap;
+                }
+                #clock {
+                    font-size: 14px;
+                    font-weight: 600;
+                    color: #31333f;
+                    letter-spacing: 0.5px;
+                }
+            </style>
+            
+            <div id="clock-container">
+                <span class="label">台北標準時間 (GMT+8)</span>
+                <span id="clock">載入中...</span>
             </div>
 
             <audio id="winAudio" src="https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3" preload="auto"></audio>
@@ -143,21 +169,23 @@ else:
             <audio id="alertAudio" src="https://assets.mixkit.co/active_storage/sfx/951/951-preview.mp3" preload="auto"></audio>
 
             <script>
-                // 即時時鐘邏輯
                 function updateClock() {
                     const now = new Date();
                     const options = { 
-                        year: 'numeric', month: 'long', day: 'numeric', 
-                        weekday: 'long', hour: '2-digit', minute: '2-digit', 
+                        year: 'numeric', month: '2-digit', day: '2-digit', 
+                        weekday: 'short', hour: '2-digit', minute: '2-digit', 
                         second: '2-digit', hour12: false 
                     };
-                    const timeString = now.toLocaleString('zh-TW', options).replace('日', '日，');
-                    document.getElementById('clock').textContent = timeString;
+                    // 格式化為：2026/04/28 (週二) 08:54:24
+                    let parts = now.toLocaleString('zh-TW', options).split(' ');
+                    let dateStr = parts[0];
+                    let weekStr = parts[1];
+                    let timeStr = parts[2] || parts[1]; // 處理不同瀏覽器格式差異
+                    document.getElementById('clock').textContent = dateStr + " (" + weekStr + ") " + timeStr;
                 }
                 setInterval(updateClock, 1000);
                 updateClock();
 
-                // 音效播放邏輯
                 window.parent.playAppSound = function(type) {
                     var audio = document.getElementById(type + 'Audio');
                     if (audio) {
@@ -167,7 +195,7 @@ else:
                     }
                 };
             </script>
-        """, height=100)
+        """, height=50) # 高度從 100 縮減為 50
 
         # 3. 定義全額確認對話框
         @st.dialog("⚠️ ⚠️ ⚠️ 全額下注確認")
@@ -181,9 +209,9 @@ else:
             if c_conf2.button("取消", use_container_width=True):
                 st.rerun()
 
+        # 4. 介面內容區 (緊接在時間條下方)
         st.subheader("📊 資金與統計中心")
 
-        # 4. 介面輸入區
         m_info = st.text_area("賽事資訊", placeholder="例如：英超 阿仙奴 vs 車路士", key="input_info")
 
         # 5. 籌碼快選按鈕
