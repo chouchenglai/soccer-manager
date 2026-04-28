@@ -113,6 +113,8 @@ if main_df.empty:
         save_data(pd.DataFrame([row]))
         st.rerun()
 
+        st.write("")
+
 # --- 主功能 ---
 else:
     tab1, tab2, tab3, tab4 = st.tabs(["💰投注下單", "📋歷史記錄", "📊統計圖表", "📈報表管理"])
