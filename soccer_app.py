@@ -172,11 +172,11 @@ else:
         """, height=52)
 
         # 3. 定義全額確認對話框
-        @st.dialog("⚠️ ⚠️ ⚠️ 全額下注確認")
+        @st.dialog("⚠️全額下注確認⚠️")
         def confirm_all_in():
             st.warning(f"確定要將全部餘額 {balance:,} 元一次下注嗎？")
             c_conf1, c_conf2 = st.columns(2)
-            if c_conf1.button("🔥 確定梭哈", type="primary", use_container_width=True):
+            if c_conf1.button("💎 確定全額下注", type="primary", use_container_width=True):
                 st.components.v1.html("<script>window.parent.playAppSound('click');</script>", height=0)
                 st.session_state.bet_val = balance
                 st.rerun()
