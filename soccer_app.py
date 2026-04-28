@@ -122,36 +122,44 @@ else:
         import time
         from datetime import datetime, timedelta, timezone
         
-        # 1. 取得當前總分
+        # 1. 取得當前總分與時區設定
         try:
             balance = int(main_df["結算總分"].iloc[-1]) if not main_df.empty else 0
         except:
             balance = 0
         
-        # 初始化下注金額狀態
+        tz_taipei = timezone(timedelta(hours=8)) # 確保注單時間準確為 GMT+8
+        
+        # 初始化下注金額狀態 (session_state)
         if "bet_val" not in st.session_state:
             st.session_state.bet_val = 5000
 
-        # 2. 極簡橫向時鐘與音效組件
+        # 2. 【核心音效與時間條】組件 (JavaScript)
+        # 放在這裡確保進入 Tab1 就能立即加載並在所有位置呼叫
         st.components.v1.html("""
             <style>
                 #clock-container {
                     display: flex; align-items: center; background-color: #f8f9fb;
                     padding: 8px 15px; border-radius: 6px; border-left: 5px solid #ff4b4b;
-                    font-family: 'Segoe UI', 'Roboto', 'Monaco', monospace; margin-bottom: 5px;
+                    font-family: 'Segoe UI', 'Roboto', 'Monaco', monospace; margin-bottom: 10px;
+                    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
                 }
                 #clock { font-size: 15px; font-weight: 600; color: #31333f; letter-spacing: 0.8px; }
                 .prefix { font-size: 14px; color: #666; margin-right: 12px; }
             </style>
+            
             <div id="clock-container">
                 <span class="prefix">台北標準時間 (GMT+8) :</span>
                 <span id="clock">載入中...</span>
             </div>
+
             <audio id="winAudio" src="https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3" preload="auto"></audio>
             <audio id="loseAudio" src="https://assets.mixkit.co/active_storage/sfx/2511/2511-preview.mp3" preload="auto"></audio>
             <audio id="clickAudio" src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3" preload="auto"></audio>
             <audio id="alertAudio" src="https://assets.mixkit.co/active_storage/sfx/951/951-preview.mp3" preload="auto"></audio>
+
             <script>
+                // 1. 更新時鐘邏輯
                 function updateClock() {
                     const now = new Date();
                     const y = now.getFullYear();
@@ -163,13 +171,20 @@ else:
                     const ss = String(now.getSeconds()).padStart(2, '0');
                     document.getElementById('clock').textContent = `${y}/${m}/${d} (${weekDays[now.getDay()]}) ${hh}:${mm}:${ss}`;
                 }
-                setInterval(updateClock, 1000); updateClock();
+                setInterval(updateClock, 1000);
+                updateClock();
+
+                // 2. 音效播放函數 (供外層 Python 呼叫)
                 window.parent.playAppSound = function(type) {
                     var audio = document.getElementById(type + 'Audio');
-                    if (audio) { audio.pause(); audio.currentTime = 0; audio.play().catch(e => console.log(e)); }
+                    if (audio) {
+                        audio.pause();
+                        audio.currentTime = 0;
+                        audio.play().catch(e => console.log('播放攔截:', e));
+                    }
                 };
             </script>
-        """, height=52)
+        """, height=60)
 
         # 3. 定義全額確認對話框
         @st.dialog("⚠️ ⚠️ ⚠️ 全額下注確認")
@@ -187,15 +202,19 @@ else:
         st.subheader("📊 資金與統計中心")
         m_info = st.text_area("賽事資訊", placeholder="例如：英超 阿仙奴 vs 車路士", key="input_info")
 
-        # 5. 籌碼快選按鈕
+        # 5. 籌碼快選按鈕 (呼叫 JavaScript 音效)
         colb = st.columns(5)
         amounts = [5000, 10000, 15000, 20000]
         labels = ["🔵 5,000", "🟢 10,000", "🟡 15,000", "🔴 20,000"]
+        
         for i in range(4):
-            if colb[i].button(labels[i]):
+            if colb[i].button(labels[i], use_container_width=True):
                 st.components.v1.html("<script>window.parent.playAppSound('click');</script>", height=0)
-                st.session_state.bet_val = amounts[i]; time.sleep(0.1); st.rerun()
-        if colb[4].button("💎 全額"):
+                st.session_state.bet_val = amounts[i]
+                time.sleep(0.1) # 給予音效啟動時間
+                st.rerun()
+                
+        if colb[4].button("💎 全額", use_container_width=True):
             st.components.v1.html("<script>window.parent.playAppSound('alert');</script>", height=0)
             confirm_all_in()
 
@@ -206,16 +225,15 @@ else:
         with c2:
             gain_amt = st.number_input("盈利金額", 0, 1000000, value=None, placeholder="請輸入盈利金額")
 
-        # 7. 提交執行區 (核心修正：統一台北時區)
-        tz_taipei = timezone(timedelta(hours=8)) # 強制定義 GMT+8
-        
+        st.write("") 
+
+        # 7. 提交執行區 (正確台北時區錄入)
         can_submit = balance > 0 and bet_amt > 0 and bet_amt <= balance
         cw, cl = st.columns(2)
 
         if cw.button("✅ 過關 (贏)", use_container_width=True, disabled=not can_submit or gain_amt is None):
             st.components.v1.html("<script>window.parent.playAppSound('win');</script>", height=0)
-            time.sleep(0.2)
-            # 取得精確台北時間
+            time.sleep(0.2) # 延遲確保音樂能被聽到
             now_taipei = datetime.now(tz_taipei).strftime("%Y-%m-%d %H:%M:%S")
             new_row = {
                 "日期": now_taipei, "賽事項目": m_info, "類型": "贏 (+)",
@@ -226,8 +244,7 @@ else:
 
         if cl.button("❌ 未過關 (輸)", use_container_width=True, disabled=not can_submit):
             st.components.v1.html("<script>window.parent.playAppSound('lose');</script>", height=0)
-            time.sleep(0.2)
-            # 取得精確台北時間
+            time.sleep(0.2) # 延遲確保音樂能被聽到
             now_taipei = datetime.now(tz_taipei).strftime("%Y-%m-%d %H:%M:%S")
             new_row = {
                 "日期": now_taipei, "賽事項目": m_info, "類型": "輸 (-)",
