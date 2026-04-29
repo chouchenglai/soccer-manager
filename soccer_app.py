@@ -70,21 +70,33 @@ with st.sidebar:
 
     st.divider()
 
+    # --- 這裡開始替換：確保縮排與 with st.sidebar 對齊 ---
     if not main_df.empty:
-        balance = int(main_df["結算總分"].iloc[-1])
-        st.metric("目前可用本金", f"{balance:,}")
+        # 1. 顯示目前總餘額
+        current_bal = int(main_df["結算總分"].iloc[-1])
+        st.metric("目前可用本金", f"${current_bal:,}")
 
-        total_investment = main_df[main_df['類型'].isin(['初始', '手動補倉'])]['金額'].sum()
-        real_profit = balance - total_investment
-
-        st.write(f"💼 累計投入: `{total_investment:,}`")
-
+        # 2. 計算累積投入 (包含初始、手動補倉)
+        # 這裡會掃描 CSV 類型欄位，抓取您手動改好的「初始」金額 60000
+        invest_types = ['初始', '手動補倉', '補倉']
+        total_investment = main_df[main_df['類型'].isin(invest_types)]['金額'].sum()
+        
+        st.write(f"💼 累積投入: `${total_investment:,}`")
+        
+        # 3. 計算純獲利
+        real_profit = current_bal - total_investment
+        
         if real_profit >= 0:
-            st.success(f"📈 純獲利: `{real_profit:,}`")
+            st.success(f"📈 純獲利: `${real_profit:,}`")
         else:
-            st.error(f"📉 尚虧: `{abs(real_profit):,}`")
+            st.error(f"📉 尚虧: `${abs(real_profit):,}`")
 
+    # 4. 保留原本的檔案名稱顯示與下載按鈕
     st.write(f"檔案: `{st.session_state.current_db}`")
+    
+    st.divider()
+    csv = main_df.to_csv(index=False).encode('utf-8-sig')
+    st.sidebar.download_button("📥 下載完整紀錄 (CSV)", data=csv, file_name="soccer_backup.csv")
 
 # --- 標題 ---
 st.markdown("<h1 style='text-align: center;'>⚽ 足球賽事管理系統</h1>", unsafe_allow_html=True)
