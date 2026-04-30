@@ -282,25 +282,7 @@ else:
         )
 
     # --- TAB3 ---
-    with tab3:
-    # --- 1. CSS 空間優化與黑金主題注入 ---
-    st.markdown("""
-        <style>
-        /* 強制該分頁背景變黑，並縮減間距以符合視野 */
-        [data-baseweb="tab-panel"] {
-            background-color: #0E1117 !important;
-            color: white !important;
-            padding: 10px 20px !important;
-            border-radius: 15px;
-        }
-        /* 移除多餘空白 */
-        .block-container { padding-top: 1rem !important; }
-        /* 文字強制變白 */
-        h1, h2, h3, p, span, label { color: #ffffff !important; }
-        </style>
-    """, unsafe_allow_html=True)
-
-    # 標題設定
+    with tab3: 
     st.markdown("### 📊 統計圖曲線分析表")
     
     # --- 2. 專業音效腳本 ---
