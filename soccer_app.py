@@ -282,8 +282,7 @@ else:
         )
 
     # --- TAB3 ---
-    with tab3: 
-     if ready:
+    with tab3:     
         if not main_df.empty:
             # 取得即時數據欄位：結算總分
             full_data = main_df["結算總分"].tolist()
