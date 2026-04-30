@@ -301,10 +301,7 @@ else:
                 # 漲綠跌紅邏輯
                 color = "#00FF41" if curr >= prev else "#FF3131"
                 status_txt = "🟢 強勢反彈" if curr >= prev else "🔴 遭遇回撤"                
-                                
-                # 曲線圖繪製 (固定高度 320 避免 F11)
-                chart_placeholder.line_chart(full_data[:i+1], height=320)
-                
+                                                            
                 # 觸發音效
                 st.components.v1.html("<script>window.parent.playTick();</script>", height=0)
                 
