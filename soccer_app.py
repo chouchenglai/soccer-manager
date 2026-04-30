@@ -281,11 +281,11 @@ else:
             use_container_width=True
         )
 
-    # --- TAB3: 統計圖表 (智慧速率優化版) ---
+    # --- TAB3: 統計圖表 ---
     with tab3:
         st.markdown("### 📊 統計圖曲線分析表")
 
-        # 1. 專業音效腳本
+        # 1. 音效腳本
         st.components.v1.html("""
             <audio id="tick_audio" src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3" preload="auto"></audio>
             <audio id="win_audio" src="https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3" preload="auto"></audio>
@@ -297,36 +297,36 @@ else:
             </script>
         """, height=0)
 
-        # 2. 佈局控制
+        # 2. 佈局
         ctrl_col, val_col = st.columns([1, 1.2])
         with ctrl_col:
             st.write("🔧 **演示控制**")
-            ready = st.checkbox("🟢 解鎖音效權限 (啟動智慧播放)", value=False)
+            ready = st.checkbox("🟢 解鎖音效權限 (啟動演示)", value=False)
 
         value_placeholder = val_col.empty()
         chart_placeholder = st.empty()
+        
+        # --- 關鍵美化：建立唯一的狀態容器 ---
+        msg_box = st.empty()
 
         if ready:
             if not main_df.empty:
                 full_data = main_df["結算總分"].tolist()
                 num_records = len(full_data)
                 
-                # --- 核心優化：智慧判斷播放速率 ---
-                # 如果資料太少（少於30筆），固定每筆間隔 0.1 秒，快速跑完
+                # 智慧速率判斷
                 if num_records < 30:
                     delay = 0.1 
-                    st.info(f"⚡ 注單量交易少，啟動「快速掃描模式」... (共 {num_records} 單)")
+                    msg_box.info(f"⚡ 注單量較少，啟動「快速掃描模式」... (共 {num_records} 單)")
                 else:
-                    # 資料多時，按照 2 分鐘比例縮放
                     delay = max(0.01, 120 / num_records)
-                    st.info(f"📈 正在生成每日數據發展演示... (共 {num_records} 單)")
+                    msg_box.info(f"📈 正在生成每日數據發展演示... (共 {num_records} 單)")
                 
                 for i in range(num_records):
                     curr = full_data[i]
                     is_up = True if i == 0 else curr >= full_data[i-1]
                     color = "#00c853" if is_up else "#ff4b4b"
                     
-                    # 更新發光看板
                     value_placeholder.markdown(f"""
                         <div style="text-align: right; padding: 12px; border-right: 6px solid {color}; background-color: #ffffff; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
                             <span style="font-size: 1.0em; color: #555; font-weight: 500;">目前結算總額:</span><br>
@@ -336,29 +336,24 @@ else:
                         </div>
                     """, unsafe_allow_html=True)
                     
-                    # 繪製動態曲線
                     chart_placeholder.line_chart(full_data[:i+1], height=320)
-                    
-                    # 播放音效
                     st.components.v1.html("<script>window.parent.playTick();</script>", height=0)
                     
-                    # 低點警告音
                     if i > 5 and curr == min(full_data[:i+1]):
                         st.components.v1.html("<script>window.parent.playLow();</script>", height=0)
 
                     import time
                     time.sleep(delay)
-                
-                # 結束演示
+                              
+                msg_box.success(f"🏁 曲線圖演示完畢！最終收益：${int(full_data[-1]):,}")
                 st.components.v1.html("<script>window.parent.playWin();</script>", height=0)
                 st.balloons()
-                st.success(f"🏁 曲線圖演示完畢！最終收益：${int(full_data[-1]):,}")
             else:
-                st.error("❌ 尚未讀取到新筆注單")
+                msg_box.error("❌ 尚未讀取到新注單！")
         else:
             if not main_df.empty:
                 chart_placeholder.line_chart(main_df["結算總分"], height=320)
-                st.info("💡 提示：勾選上方「解鎖音效權限」即可啟動智慧動態演示")
+                msg_box.info("💡 提示：勾選上方「解鎖音效權限」即可啟動智慧動態演示")
 
     # --- TAB4 ---
     with tab4:
