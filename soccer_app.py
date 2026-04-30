@@ -330,7 +330,7 @@ else:
     # --- 3. 即時數據播放邏輯 ---
     if ready:
         if not main_df.empty:
-            # 取得即時數據欄位：結算總分[cite: 1, 4]
+            # 取得即時數據欄位：結算總分
             full_data = main_df["結算總分"].tolist()
             num_records = len(full_data)
             
