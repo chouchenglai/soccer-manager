@@ -283,42 +283,103 @@ else:
 
     # --- TAB3 ---
     with tab3:
-        st.line_chart(main_df["結算總分"])
+    # --- 1. CSS 空間優化與黑金主題注入 ---
+    st.markdown("""
+        <style>
+        /* 強制該分頁背景變黑，並縮減間距以符合視野 */
+        [data-baseweb="tab-panel"] {
+            background-color: #0E1117 !important;
+            color: white !important;
+            padding: 10px 20px !important;
+            border-radius: 15px;
+        }
+        /* 移除多餘空白 */
+        .block-container { padding-top: 1rem !important; }
+        /* 文字強制變白 */
+        h1, h2, h3, p, span, label { color: #ffffff !important; }
+        </style>
+    """, unsafe_allow_html=True)
 
-        data = main_df[main_df['類型'].isin(['贏 (+)', '輸 (-)'])]
-        if not data.empty:
-            win = len(data[data['類型'] == '贏 (+)'])
-            st.metric("勝率", f"{win/len(data)*100:.1f}%")
+    # 標題設定
+    st.markdown("### 📊 統計圖曲線分析表")
+    
+    # --- 2. 專業音效腳本 ---
+    st.components.v1.html("""
+        <audio id="tick_audio" src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3" preload="auto"></audio>
+        <audio id="win_audio" src="https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3" preload="auto"></audio>
+        <audio id="low_audio" src="https://assets.mixkit.co/active_storage/sfx/251/251-preview.mp3" preload="auto"></audio>
+        <script>
+            window.parent.playTick = function() { var s = document.getElementById('tick_audio'); s.currentTime = 0; s.play(); }
+            window.parent.playWin = function() { var s = document.getElementById('win_audio'); s.currentTime = 0; s.play(); }
+            window.parent.playLow = function() { var s = document.getElementById('low_audio'); s.currentTime = 0; s.play(); }
+            document.addEventListener('click', function() { console.log("音效權限已準備"); }, {once: true});
+        </script>
+    """, height=0)
 
-    # --- TAB4 ---
-    with tab4:
-        with st.expander("補倉"):
-            val = st.number_input("金額", 0, 999999999, 30000)
-            if st.button("補"):
-                bal = int(main_df["結算總分"].iloc[-1])
-                new = {
-                    "日期":get_now_time(),
-                    "賽事項目": "補倉",
-                    "類型": "手動補倉",
-                    "金額": val,
-                    "盈虧金額": 0,
-                    "結算總分": bal + val
-                }
-                save_data(pd.concat([main_df, pd.DataFrame([new])], ignore_index=True))
-                st.rerun()
+    # 佈局：上方控制區與動態看板
+    ctrl_col, val_col = st.columns([1, 1.2])
+    
+    with ctrl_col:
+        st.write("🔧 **演示控制**")
+        # 勾選即開始演示
+        ready = st.checkbox("🟢 解鎖音效權限 (勾選後即刻開始演示)", value=False)
 
-        with st.expander("新增報表"):
-            name = st.text_input("名稱")
-            if st.button("建立報表"):
-                if name:
-                    pd.DataFrame(columns=COLUMNS).to_csv(f"{name}.csv", index=False)
-                    st.rerun()
+    value_placeholder = val_col.empty()
+    chart_placeholder = st.empty()
 
-        with st.expander("刪除報表"):
-            deletable = [f for f in all_reports if f != DEFAULT_DB]
-            if deletable:
-                target = st.selectbox("選擇", deletable)
-                if st.button("刪除"):
-                    os.remove(target)
-                    st.session_state.current_db = DEFAULT_DB
-                    st.rerun()
+    # --- 3. 真實數據播放邏輯 ---
+    if ready:
+        if not main_df.empty:
+            # 取得即時數據欄位：結算總分[cite: 1, 4]
+            full_data = main_df["結算總分"].tolist()
+            num_records = len(full_data)
+            
+            # 自動限時 120 秒播放完畢
+            TOTAL_LIMIT = 120 
+            delay = max(0.01, TOTAL_LIMIT / num_records)
+            
+            st.info(f"📈 正在生成每日數據發展演示... (共 {num_records} 筆)")
+            
+            for i in range(1, num_records):
+                curr = full_data[i]
+                prev = full_data[i-1]
+                
+                # 漲綠跌紅邏輯
+                color = "#00FF41" if curr >= prev else "#FF3131"
+                status_txt = "🟢 強勢反彈" if curr >= prev else "🔴 遭遇回撤"
+                
+                # 右上角發光看板
+                value_placeholder.markdown(f"""
+                    <div style="text-align: right; padding: 10px; border-right: 8px solid {color}; background-color: #1a1c24; border-radius: 8px; box-shadow: 0 0 15px {color}22;">
+                        <span style="font-size: 0.9em; color: #888;">目前結算總額:</span><br>
+                        <span style="font-size: 3.2em; font-weight: bold; color: {color} !important; font-family: 'Courier New', monospace; text-shadow: 0 0 15px {color}AA;">
+                            ${int(curr):,}
+                        </span><br>
+                        <span style="font-size: 1.2em; color: {color}; font-weight: bold;">{status_txt}</span>
+                    </div>
+                """, unsafe_allow_html=True)
+                
+                # 曲線圖繪製 (固定高度 320 避免 F11)
+                chart_placeholder.line_chart(full_data[:i+1], height=320)
+                
+                # 觸發音效
+                st.components.v1.html("<script>window.parent.playTick();</script>", height=0)
+                
+                # 歷史低點警告
+                if curr == min(full_data[:i+1]) and i > 5:
+                    st.components.v1.html("<script>window.parent.playLow();</script>", height=0)
+
+                import time
+                time.sleep(delay)
+            
+            # 結束儀式
+            st.components.v1.html("<script>window.parent.playWin();</script>", height=0)
+            st.balloons()
+            st.success(f"🏁 數據演示完成！最終盈餘：${int(full_data[-1]):,}")
+        else:
+            st.error("❌ 尚未讀取到數據紀錄，請先前往錄入頁面")
+    else:
+        # 初始狀態顯示靜態圖表與提示
+        if not main_df.empty:
+            chart_placeholder.line_chart(main_df["結算總分"], height=320)
+            st.info("💡 提示：勾選上方「解鎖音效權限」即可開始每日數據發展演示")
