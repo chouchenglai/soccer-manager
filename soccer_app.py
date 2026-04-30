@@ -285,7 +285,7 @@ else:
     with tab3:
         st.markdown("### 📊 統計圖曲線分析表")
 
-        # 1. 音效腳本
+        # 1. 專業音效腳本
         st.components.v1.html("""
             <audio id="tick_audio" src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3" preload="auto"></audio>
             <audio id="win_audio" src="https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3" preload="auto"></audio>
@@ -309,25 +309,25 @@ else:
 
         if ready:
             if not main_df.empty:
-                # 取得數據並確保為數值型態
+                # 確保數據正確轉化為數值[cite: 1]
                 full_data = pd.to_numeric(main_df["結算總分"]).tolist()
                 num_records = len(full_data)
                 
-                # 智慧速率判斷
+                # 智慧速率：筆數少於30則快速通過
                 if num_records < 30:
                     delay = 0.1 
                     msg_box.info(f"⚡ 注單量較少，啟動「快速掃描模式」... (共 {num_records} 單)")
                 else:
-                    delay = max(0.01, 120 / num_records)
+                    delay = max(0.01, 120 / num_records) # 總長120秒
                     msg_box.info(f"📈 正在生成每日數據發展演示... (共 {num_records} 單)")
                 
                 for i in range(num_records):
                     curr = full_data[i]
-                    # 邏輯優化：首筆必綠，其餘比對前一筆
+                    # 邏輯優化：首單必綠，其餘比對前筆
                     is_up = True if i == 0 else curr >= full_data[i-1]
-                    color_code = "#00c853" if is_up else "#ff4b4b"
+                    color_code = "#00c853" if is_up else "#ff4b4b" # 綠升紅跌
                     
-                    # 強化顏色顯示：加入高權重 CSS 確保變色
+                    # 強化數字變色顯示
                     value_placeholder.markdown(f"""
                         <div style="text-align: right; padding: 12px; border-right: 6px solid {color_code}; background-color: #ffffff; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
                             <span style="font-size: 1.0em; color: #555 !important; font-weight: 500;">目前結算總額:</span><br>
@@ -337,18 +337,19 @@ else:
                         </div>
                     """, unsafe_allow_html=True)
                     
-                    # 使用面積圖優化座標軸顯示，並固定高度
-                    chart_placeholder.area_chart(full_data[:i+1], height=320, use_container_width=True)
+                    # 經典折線圖，並固定高度
+                    chart_placeholder.line_chart(full_data[:i+1], height=320)
                     
                     st.components.v1.html("<script>window.parent.playTick();</script>", height=0)
                     
+                    # 歷史低點音效
                     if i > 5 and curr == min(full_data[:i+1]):
                         st.components.v1.html("<script>window.parent.playLow();</script>", height=0)
 
                     import time
                     time.sleep(delay)
                 
-                # 取代訊息
+                # 顯示成功訊息，達成向上移動美化
                 msg_box.success(f"🏁 曲線圖演示完畢！最終收益：${int(full_data[-1]):,}")
                 st.components.v1.html("<script>window.parent.playWin();</script>", height=0)
                 st.balloons()
@@ -356,8 +357,8 @@ else:
                 msg_box.error("❌ 尚未讀取到新注單！")
         else:
             if not main_df.empty:
-                # 初始狀態使用面積圖，維持視覺統一
-                chart_placeholder.area_chart(main_df["結算總分"], height=320, use_container_width=True)                        
+                # 初始狀態靜態折線圖
+                chart_placeholder.line_chart(main_df["結算總分"], height=320)                                       
 
     # --- TAB4 ---
     with tab4:
