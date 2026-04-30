@@ -195,8 +195,7 @@ else:
             if c_conf2.button("取消", use_container_width=True):
                 st.rerun()
 
-        # 4. 介面內容區
-        st.subheader("📊 資金與統計中心")
+        # 4. 介面內容區       
         m_info = st.text_area("賽事資訊", placeholder="例如：英超 阿仙奴 vs 車路士", key="input_info")
 
         # 5. 籌碼快選按鈕
