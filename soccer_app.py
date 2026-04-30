@@ -315,7 +315,7 @@ else:
                 # 如果資料太少（少於30筆），固定每筆間隔 0.1 秒，快速跑完
                 if num_records < 30:
                     delay = 0.1 
-                    st.info(f"⚡ 數據量較少，啟動「快速掃描模式」... (共 {num_records} 筆)")
+                    st.info(f"⚡ 注單量交易少，啟動「快速掃描模式」... (共 {num_records} 單)")
                 else:
                     # 資料多時，按照 2 分鐘比例縮放
                     delay = max(0.01, 120 / num_records)
@@ -352,7 +352,7 @@ else:
                 # 結束演示
                 st.components.v1.html("<script>window.parent.playWin();</script>", height=0)
                 st.balloons()
-                st.success(f"🏁 數據重演完畢！最終餘額：${int(full_data[-1]):,}")
+                st.success(f"🏁 曲線圖演示完畢！最終收益：${int(full_data[-1]):,}")
             else:
                 st.error("❌ 尚未讀取到新筆注單")
         else:
