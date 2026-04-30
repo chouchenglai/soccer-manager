@@ -327,7 +327,7 @@ else:
     value_placeholder = val_col.empty()
     chart_placeholder = st.empty()
 
-    # --- 3. 真實數據播放邏輯 ---
+    # --- 3. 即時數據播放邏輯 ---
     if ready:
         if not main_df.empty:
             # 取得即時數據欄位：結算總分[cite: 1, 4]
@@ -372,7 +372,7 @@ else:
                 import time
                 time.sleep(delay)
             
-            # 結束儀式
+            # 結束演示
             st.components.v1.html("<script>window.parent.playWin();</script>", height=0)
             st.balloons()
             st.success(f"🏁 數據演示完成！最終盈餘：${int(full_data[-1]):,}")
