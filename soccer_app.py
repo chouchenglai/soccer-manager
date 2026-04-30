@@ -281,7 +281,7 @@ else:
             use_container_width=True
         )
 
-    # --- TAB3: 統計圖表 (專業色彩優化版) ---
+    # --- TAB3: 統計圖表 (智慧速率優化版) ---
     with tab3:
         st.markdown("### 📊 統計圖曲線分析表")
 
@@ -301,34 +301,32 @@ else:
         ctrl_col, val_col = st.columns([1, 1.2])
         with ctrl_col:
             st.write("🔧 **演示控制**")
-            ready = st.checkbox("🟢 解鎖音效權限 (開始演示)", value=False)
+            ready = st.checkbox("🟢 解鎖音效權限 (啟動智慧播放)", value=False)
 
         value_placeholder = val_col.empty()
         chart_placeholder = st.empty()
 
-        # 3. 核心演示邏輯
         if ready:
             if not main_df.empty:
                 full_data = main_df["結算總分"].tolist()
                 num_records = len(full_data)
                 
-                # 自動校準 120 秒演示時間
-                delay = max(0.01, 120 / num_records)
-                
-                st.info(f"📈 正在生成每日數據發展演示... (共 {num_records} 筆)")
+                # --- 核心優化：智慧判斷播放速率 ---
+                # 如果資料太少（少於30筆），固定每筆間隔 0.1 秒，快速跑完
+                if num_records < 30:
+                    delay = 0.1 
+                    st.info(f"⚡ 數據量較少，啟動「快速掃描模式」... (共 {num_records} 筆)")
+                else:
+                    # 資料多時，按照 2 分鐘比例縮放
+                    delay = max(0.01, 120 / num_records)
+                    st.info(f"📈 正在生成每日數據發展演示... (共 {num_records} 單)")
                 
                 for i in range(num_records):
                     curr = full_data[i]
-                    # 第一單預設為升(綠色)，其餘與前一單比較
-                    if i == 0:
-                        is_up = True
-                    else:
-                        is_up = curr >= full_data[i-1]
-                    
-                    # 紅綠變色邏輯：綠色升 (#00c853)、紅色跌 (#ff4b4b)
+                    is_up = True if i == 0 else curr >= full_data[i-1]
                     color = "#00c853" if is_up else "#ff4b4b"
                     
-                    # 更新右上角看板 (強化文字發光與邊框)
+                    # 更新發光看板
                     value_placeholder.markdown(f"""
                         <div style="text-align: right; padding: 12px; border-right: 6px solid {color}; background-color: #ffffff; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
                             <span style="font-size: 1.0em; color: #555; font-weight: 500;">目前結算總額:</span><br>
@@ -338,10 +336,10 @@ else:
                         </div>
                     """, unsafe_allow_html=True)
                     
-                    # 繪製動態曲線[cite: 4]
+                    # 繪製動態曲線
                     chart_placeholder.line_chart(full_data[:i+1], height=320)
                     
-                    # 音效回饋
+                    # 播放音效
                     st.components.v1.html("<script>window.parent.playTick();</script>", height=0)
                     
                     # 低點警告音
@@ -354,14 +352,13 @@ else:
                 # 結束演示
                 st.components.v1.html("<script>window.parent.playWin();</script>", height=0)
                 st.balloons()
-                st.success(f"🏁 數據演示完成！最終餘額：${int(full_data[-1]):,}")
+                st.success(f"🏁 數據重演完畢！最終餘額：${int(full_data[-1]):,}")
             else:
-                st.error("❌ 找不到數據紀錄，請先進行下注！")
+                st.error("❌ 尚未讀取到新筆注單")
         else:
-            # 初始狀態顯示靜態圖表
             if not main_df.empty:
                 chart_placeholder.line_chart(main_df["結算總分"], height=320)
-                st.info("💡 提示：勾選上方「解鎖音效權限」即可啟動動態演示")
+                st.info("💡 提示：勾選上方「解鎖音效權限」即可啟動智慧動態演示")
 
     # --- TAB4 ---
     with tab4:
