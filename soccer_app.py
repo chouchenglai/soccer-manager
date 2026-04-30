@@ -281,7 +281,7 @@ else:
             use_container_width=True
         )
 
-    # --- TAB3: 統計圖表 ---
+    # --- TAB3: 統計圖表---
     with tab3:
         st.markdown("### 📊 統計圖曲線分析表")
 
@@ -305,29 +305,31 @@ else:
 
         value_placeholder = val_col.empty()
         chart_placeholder = st.empty()
+        
+        # 建立一個統一的狀態顯示區
         msg_box = st.empty()
 
         if ready:
             if not main_df.empty:
-                # 確保數據正確轉化為數值[cite: 1]
+                # 確保數據正確轉化為數值
                 full_data = pd.to_numeric(main_df["結算總分"]).tolist()
                 num_records = len(full_data)
                 
-                # 智慧速率：筆數少於30則快速通過
+                # --- 智慧速率判斷與新圖示 ---
                 if num_records < 30:
                     delay = 0.1 
-                    msg_box.info(f"⚡ 注單量較少，啟動「快速掃描模式」... (共 {num_records} 單)")
+                    msg_box.info(f"🚀 統計分析中，啟動快速掃描模式... (共 {num_records} 單)")
                 else:
-                    delay = max(0.01, 120 / num_records) # 總長120秒
-                    msg_box.info(f"📈 正在生成每日數據發展演示... (共 {num_records} 單)")
+                    delay = max(0.01, 120 / num_records) # 資料多時按比例演示
+                    msg_box.info(f"💎 正在生成每日數據發展演示... (共 {num_records} 單)")
                 
                 for i in range(num_records):
                     curr = full_data[i]
-                    # 邏輯優化：首單必綠，其餘比對前筆
+                    # 第一單必綠，其餘比對前筆
                     is_up = True if i == 0 else curr >= full_data[i-1]
-                    color_code = "#00c853" if is_up else "#ff4b4b" # 綠升紅跌
+                    color_code = "#00c853" if is_up else "#ff4b4b"
                     
-                    # 強化數字變色顯示
+                    # 右上角金額顯示 (強化顏色與發光)
                     value_placeholder.markdown(f"""
                         <div style="text-align: right; padding: 12px; border-right: 6px solid {color_code}; background-color: #ffffff; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
                             <span style="font-size: 1.0em; color: #555 !important; font-weight: 500;">目前結算總額:</span><br>
@@ -337,28 +339,29 @@ else:
                         </div>
                     """, unsafe_allow_html=True)
                     
-                    # 經典折線圖，並固定高度
+                    # 繪製精緻折線圖
                     chart_placeholder.line_chart(full_data[:i+1], height=320)
                     
+                    # 播放滴答音效
                     st.components.v1.html("<script>window.parent.playTick();</script>", height=0)
                     
-                    # 歷史低點音效
+                    # 歷史低點警告音
                     if i > 5 and curr == min(full_data[:i+1]):
                         st.components.v1.html("<script>window.parent.playLow();</script>", height=0)
 
                     import time
                     time.sleep(delay)
                 
-                # 顯示成功訊息，達成向上移動美化
-                msg_box.success(f"🏁 曲線圖演示完畢！最終收益：${int(full_data[-1]):,}")
+                # --- 演示結束 ---
+                msg_box.success(f"🏆 即時演示完畢！最終收益：${int(full_data[-1]):,}")
                 st.components.v1.html("<script>window.parent.playWin();</script>", height=0)
                 st.balloons()
             else:
-                msg_box.error("❌ 尚未讀取到新注單！")
+                msg_box.error("❌ 尚未讀取到新注單資料！")
         else:
             if not main_df.empty:
-                # 初始狀態靜態折線圖
-                chart_placeholder.line_chart(main_df["結算總分"], height=320)                                       
+                # 初始靜態圖
+                chart_placeholder.line_chart(main_df["結算總分"], height=320)                                                    
 
     # --- TAB4 ---
     with tab4:
