@@ -362,3 +362,36 @@ else:
             if not main_df.empty:
                 chart_placeholder.line_chart(main_df["結算總分"], height=320)
                 st.info("💡 提示：勾選上方「解鎖音效權限」即可啟動動態演示")
+
+    # --- TAB4 ---
+    with tab4:
+        with st.expander("補倉"):
+            val = st.number_input("金額", 0, 999999999, 30000)
+            if st.button("補"):
+                bal = int(main_df["結算總分"].iloc[-1])
+                new = {
+                    "日期":get_now_time(),
+                    "賽事項目": "補倉",
+                    "類型": "手動補倉",
+                    "金額": val,
+                    "盈虧金額": 0,
+                    "結算總分": bal + val
+                }
+                save_data(pd.concat([main_df, pd.DataFrame([new])], ignore_index=True))
+                st.rerun()
+
+        with st.expander("新增報表"):
+            name = st.text_input("名稱")
+            if st.button("建立報表"):
+                if name:
+                    pd.DataFrame(columns=COLUMNS).to_csv(f"{name}.csv", index=False)
+                    st.rerun()
+
+        with st.expander("刪除報表"):
+            deletable = [f for f in all_reports if f != DEFAULT_DB]
+            if deletable:
+                target = st.selectbox("選擇", deletable)
+                if st.button("刪除"):
+                    os.remove(target)
+                    st.session_state.current_db = DEFAULT_DB
+                    st.rerun()
