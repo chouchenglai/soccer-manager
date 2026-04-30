@@ -300,19 +300,8 @@ else:
                 
                 # 漲綠跌紅邏輯
                 color = "#00FF41" if curr >= prev else "#FF3131"
-                status_txt = "🟢 強勢反彈" if curr >= prev else "🔴 遭遇回撤"
-                
-                # 右上角發光看板
-                value_placeholder.markdown(f"""
-                    <div style="text-align: right; padding: 10px; border-right: 8px solid {color}; background-color: #1a1c24; border-radius: 8px; box-shadow: 0 0 15px {color}22;">
-                        <span style="font-size: 0.9em; color: #888;">目前結算總額:</span><br>
-                        <span style="font-size: 3.2em; font-weight: bold; color: {color} !important; font-family: 'Courier New', monospace; text-shadow: 0 0 15px {color}AA;">
-                            ${int(curr):,}
-                        </span><br>
-                        <span style="font-size: 1.2em; color: {color}; font-weight: bold;">{status_txt}</span>
-                    </div>
-                """, unsafe_allow_html=True)
-                
+                status_txt = "🟢 強勢反彈" if curr >= prev else "🔴 遭遇回撤"                
+                                
                 # 曲線圖繪製 (固定高度 320 避免 F11)
                 chart_placeholder.line_chart(full_data[:i+1], height=320)
                 
