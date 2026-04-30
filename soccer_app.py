@@ -326,15 +326,3 @@ else:
 
                 import time
                 time.sleep(delay)
-            
-            # 結束演示
-            st.components.v1.html("<script>window.parent.playWin();</script>", height=0)
-            st.balloons()
-            st.success(f"🏁 數據演示完成！最終盈餘：${int(full_data[-1]):,}")
-        else:
-            st.error("❌ 尚未讀取到數據紀錄，請先前往錄入頁面")
-    else:
-        # 初始狀態顯示靜態圖表與提示
-        if not main_df.empty:
-            chart_placeholder.line_chart(main_df["結算總分"], height=320)
-            st.info("💡 提示：勾選上方「解鎖音效權限」即可開始每日數據發展演示")
