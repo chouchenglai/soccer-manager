@@ -283,34 +283,7 @@ else:
 
     # --- TAB3 ---
     with tab3: 
-    st.markdown("### 📊 統計圖曲線分析表")
-    
-    # --- 2. 專業音效腳本 ---
-    st.components.v1.html("""
-        <audio id="tick_audio" src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3" preload="auto"></audio>
-        <audio id="win_audio" src="https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3" preload="auto"></audio>
-        <audio id="low_audio" src="https://assets.mixkit.co/active_storage/sfx/251/251-preview.mp3" preload="auto"></audio>
-        <script>
-            window.parent.playTick = function() { var s = document.getElementById('tick_audio'); s.currentTime = 0; s.play(); }
-            window.parent.playWin = function() { var s = document.getElementById('win_audio'); s.currentTime = 0; s.play(); }
-            window.parent.playLow = function() { var s = document.getElementById('low_audio'); s.currentTime = 0; s.play(); }
-            document.addEventListener('click', function() { console.log("音效權限已準備"); }, {once: true});
-        </script>
-    """, height=0)
-
-    # 佈局：上方控制區與動態看板
-    ctrl_col, val_col = st.columns([1, 1.2])
-    
-    with ctrl_col:
-        st.write("🔧 **演示控制**")
-        # 勾選即開始演示
-        ready = st.checkbox("🟢 解鎖音效權限 (勾選後即刻開始演示)", value=False)
-
-    value_placeholder = val_col.empty()
-    chart_placeholder = st.empty()
-
-    # --- 3. 即時數據播放邏輯 ---
-    if ready:
+     if ready:
         if not main_df.empty:
             # 取得即時數據欄位：結算總分
             full_data = main_df["結算總分"].tolist()
