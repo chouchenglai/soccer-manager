@@ -297,7 +297,7 @@ else:
             </script>
         """, height=0)
 
-        # 2. 佈局
+        # 2. 佈局控制
         ctrl_col, val_col = st.columns([1, 1.2])
         with ctrl_col:
             st.write("🔧 **演示控制**")
@@ -305,13 +305,12 @@ else:
 
         value_placeholder = val_col.empty()
         chart_placeholder = st.empty()
-        
-        # --- 關鍵美化：建立唯一的狀態容器 ---
         msg_box = st.empty()
 
         if ready:
             if not main_df.empty:
-                full_data = main_df["結算總分"].tolist()
+                # 取得數據並確保為數值型態
+                full_data = pd.to_numeric(main_df["結算總分"]).tolist()
                 num_records = len(full_data)
                 
                 # 智慧速率判斷
@@ -324,19 +323,23 @@ else:
                 
                 for i in range(num_records):
                     curr = full_data[i]
+                    # 邏輯優化：首筆必綠，其餘比對前一筆
                     is_up = True if i == 0 else curr >= full_data[i-1]
-                    color = "#00c853" if is_up else "#ff4b4b"
+                    color_code = "#00c853" if is_up else "#ff4b4b"
                     
+                    # 強化顏色顯示：加入高權重 CSS 確保變色
                     value_placeholder.markdown(f"""
-                        <div style="text-align: right; padding: 12px; border-right: 6px solid {color}; background-color: #ffffff; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
-                            <span style="font-size: 1.0em; color: #555; font-weight: 500;">目前結算總額:</span><br>
-                            <span style="font-size: 3.5em; font-weight: bold; color: {color} !important; text-shadow: 1px 1px 3px rgba(0,0,0,0.1); font-family: 'Courier New', monospace;">
+                        <div style="text-align: right; padding: 12px; border-right: 6px solid {color_code}; background-color: #ffffff; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
+                            <span style="font-size: 1.0em; color: #555 !important; font-weight: 500;">目前結算總額:</span><br>
+                            <span style="font-size: 3.5em; font-weight: bold; color: {color_code} !important; text-shadow: 1px 1px 2px rgba(0,0,0,0.05); font-family: 'Courier New', monospace;">
                                 ${int(curr):,}
                             </span>
                         </div>
                     """, unsafe_allow_html=True)
                     
-                    chart_placeholder.line_chart(full_data[:i+1], height=320)
+                    # 使用面積圖優化座標軸顯示，並固定高度
+                    chart_placeholder.area_chart(full_data[:i+1], height=320, use_container_width=True)
+                    
                     st.components.v1.html("<script>window.parent.playTick();</script>", height=0)
                     
                     if i > 5 and curr == min(full_data[:i+1]):
@@ -344,12 +347,17 @@ else:
 
                     import time
                     time.sleep(delay)
-                              
+                
+                # 取代訊息
                 msg_box.success(f"🏁 曲線圖演示完畢！最終收益：${int(full_data[-1]):,}")
                 st.components.v1.html("<script>window.parent.playWin();</script>", height=0)
                 st.balloons()
             else:
-                msg_box.error("❌ 尚未讀取到新注單！")        
+                msg_box.error("❌ 尚未讀取到新注單！")
+        else:
+            if not main_df.empty:
+                # 初始狀態使用面積圖，維持視覺統一
+                chart_placeholder.area_chart(main_df["結算總分"], height=320, use_container_width=True)                        
 
     # --- TAB4 ---
     with tab4:
