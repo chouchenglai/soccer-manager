@@ -349,11 +349,7 @@ else:
                 st.components.v1.html("<script>window.parent.playWin();</script>", height=0)
                 st.balloons()
             else:
-                msg_box.error("❌ 尚未讀取到新注單！")
-        else:
-            if not main_df.empty:
-                chart_placeholder.line_chart(main_df["結算總分"], height=320)
-                msg_box.info("💡 提示：勾選上方「解鎖音效權限」即可啟動智慧動態演示")
+                msg_box.error("❌ 尚未讀取到新注單！")        
 
     # --- TAB4 ---
     with tab4:
