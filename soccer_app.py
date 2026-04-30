@@ -281,62 +281,81 @@ else:
             use_container_width=True
         )
 
-    # --- TAB3: 統計圖表 (精準定位修正版) ---
+    # --- TAB3: 統計圖表 (專業動態版) ---
     with tab3:
-        # 1. 修正 CSS：僅針對 tab3 內部的自定義容器變色，避免全域亂碼
-        st.markdown("""
-            <style>
-            /* 建立一個獨立的黑金背景類別 */
-            .black-gold-container {
-                background-color: #0E1117 !important;
-                color: white !important;
-                padding: 20px;
-                border-radius: 12px;
-                border: 1px solid #30363d;
-            }
-            /* 確保該容器內的文字都是白的 */
-            .black-gold-container span, .black-gold-container p, .black-gold-container h3 {
-                color: white !important;
-            }
-            </style>
-        """, unsafe_allow_html=True)
-
-        # 2. 用 div 把整個圖表內容包起來
-        st.markdown('<div class="black-gold-container">', unsafe_allow_html=True)
-        
+        # 標題
         st.markdown("### 📊 統計圖曲線分析表")
 
-        # (以下維持不變：佈局與播放邏輯)
+        # 1. 獨立音效腳本 (靜音解鎖)
+        st.components.v1.html("""
+            <audio id="tick_audio" src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3" preload="auto"></audio>
+            <audio id="win_audio" src="https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3" preload="auto"></audio>
+            <audio id="low_audio" src="https://assets.mixkit.co/active_storage/sfx/251/251-preview.mp3" preload="auto"></audio>
+            <script>
+                window.parent.playTick = function() { var s = document.getElementById('tick_audio'); s.currentTime = 0; s.play(); }
+                window.parent.playWin = function() { var s = document.getElementById('win_audio'); s.currentTime = 0; s.play(); }
+                window.parent.playLow = function() { var s = document.getElementById('low_audio'); s.currentTime = 0; s.play(); }
+            </script>
+        """, height=0)
+
+        # 2. 佈局控制
         ctrl_col, val_col = st.columns([1, 1.2])
         with ctrl_col:
+            st.write("🔧 **演示控制**")
             ready = st.checkbox("🟢 解鎖音效權限 (開始演示)", value=False)
 
         value_placeholder = val_col.empty()
         chart_placeholder = st.empty()
 
-        if ready and not main_df.empty:
-            full_data = main_df["結算總分"].tolist()
-            num_records = len(full_data)
-            delay = max(0.01, 120 / num_records)
-            
-            for i in range(1, num_records):
-                curr = full_data[i]
-                prev = full_data[i-1]
-                color = "#00FF41" if curr >= prev else "#FF3131"
+        # 3. 核心演示邏輯 (讀取即時數據)
+        if ready:
+            if not main_df.empty:
+                full_data = main_df["結算總分"].tolist()
+                num_records = len(full_data)
                 
-                value_placeholder.markdown(f"""
-                    <div style="text-align: right; padding: 10px; border-right: 8px solid {color}; background-color: #1a1c24; border-radius: 8px;">
-                        <span style="font-size: 0.9em; color: #888;">目前結算總額:</span><br>
-                        <span style="font-size: 3.2em; font-weight: bold; color: {color} !important; text-shadow: 0 0 10px {color}AA;">
-                            ${int(curr):,}
-                        </span>
-                    </div>
-                """, unsafe_allow_html=True)
+                # 自動校準 120 秒演示時間
+                delay = max(0.01, 120 / num_records)
                 
-                chart_placeholder.line_chart(full_data[:i+1], height=320)
-                time.sleep(delay)
-        
-        elif not main_df.empty:
-            chart_placeholder.line_chart(main_df["結算總分"], height=320)
-        
-        st.markdown('</div>', unsafe_allow_html=True) # 結束容器
+                st.info(f"📈 正在演示數據發展... (共 {num_records} 單)")
+                
+                for i in range(1, num_records):
+                    curr = full_data[i]
+                    prev = full_data[i-1]
+                    
+                    # 紅綠變色邏輯：紅色跌、綠色升
+                    color = "#00c853" if curr >= prev else "#ff4b4b"
+                    
+                    # 更新右上角看板 (改用白色背景+彩色發光文字)
+                    value_placeholder.markdown(f"""
+                        <div style="text-align: right; padding: 10px; border-right: 5px solid {color}; background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+                            <span style="font-size: 1.0em; color: #666;">目前結算總額:</span><br>
+                            <span style="font-size: 3.5em; font-weight: bold; color: {color} !important; text-shadow: 1px 1px 2px rgba(0,0,0,0.1);">
+                                ${int(curr):,}
+                            </span>
+                        </div>
+                    """, unsafe_allow_html=True)
+                    
+                    # 繪製動態曲線
+                    chart_placeholder.line_chart(full_data[:i+1], height=320)
+                    
+                    # 音效回饋
+                    st.components.v1.html("<script>window.parent.playTick();</script>", height=0)
+                    
+                    # 低點警告音
+                    if curr == min(full_data[:i+1]) and i > 5:
+                        st.components.v1.html("<script>window.parent.playLow();</script>", height=0)
+
+                    import time
+                    time.sleep(delay)
+                
+                # 結束演示
+                st.components.v1.html("<script>window.parent.playWin();</script>", height=0)
+                st.balloons()
+                st.success(f"🏁 演示完成！最終餘額：${int(full_data[-1]):,}")
+            else:
+                st.error("❌ 找不到注單記錄，請先進行下注！")
+        else:
+            # 初始狀態顯示靜態圖表
+            if not main_df.empty:
+                chart_placeholder.line_chart(main_df["結算總分"], height=320)
+                st.info("💡 提示：勾選上方「解鎖音效權限」即可開始每日數據發展演示")
