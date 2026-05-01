@@ -78,14 +78,17 @@ if st.session_state.current_db not in all_reports:
 
 main_df = load_data()
 
+# --- 放在 main_df = load_data() 之後 ---
 import base64
 import os
 
+# 1. 圖片轉換函數
 def get_base64_img(file_path):
     with open(file_path, "rb") as f:
         data = f.read()
     return base64.b64encode(data).decode()
 
+# 2. 執行顯示 (確保 ccl_logo_header.jpg 已上傳至 GitHub)
 img_path = "ccl_logo_header.jpg"
 
 if os.path.exists(img_path):
@@ -96,22 +99,23 @@ if os.path.exists(img_path):
                 width: 100%;
                 text-align: center;
                 background-color: #ffffff;
-                padding: 0px; 
-                margin-bottom: 5px;
-                border: none;
+                padding: 10px 0;
+                margin-bottom: 25px;
+                border-radius: 12px;
+                border-bottom: 3px solid #00c853; 
             }}
             .banner-img {{
                 max-width: 100%;
                 height: auto;
-                display: block;
-                margin: 0 auto;
+                border-radius: 10px;
             }}
         </style>
         <div class="banner-box">
-            <img src="data:image/jpeg;base64,{{img_b64}}" class="banner-img">
+            <img src="data:image/jpeg;base64,{img_b64}" class="banner-img">
         </div>
     """, unsafe_allow_html=True)
 else:
+    # 預備方案：萬一圖片沒傳成功，顯示簡約文字
     st.markdown("<h2 style='text-align: center; color: #004b93;'>足球走地賽事管理系統</h2>", unsafe_allow_html=True)
 
 # --- Sidebar (側邊欄) ---
