@@ -141,16 +141,22 @@ else:
             </script>
         """, height=52)
 
+        # 3. 定義全額確認對話框
         @st.dialog("⚠️全額下注確認⚠️")
         def confirm_all_in():
             st.warning(f"確定要將全部餘額 {balance:,} 元一次下注嗎？")
             c_conf1, c_conf2 = st.columns(2)
             if c_conf1.button("💎 確定全額下注", type="primary", use_container_width=True):
                 st.components.v1.html("<script>window.parent.playAppSound('click');</script>", height=0)
-                st.session_state.bet_val = balance; st.rerun()
-            if c_conf2.button("取消", use_container_width=True): st.rerun()
+                st.session_state.bet_val = balance
+                st.rerun()
+            if c_conf2.button("取消", use_container_width=True):
+                st.rerun()
 
+        # 4. 介面內容區       
         m_info = st.text_area("賽事資訊", placeholder="例如：英超 阿仙奴 vs 車路士", key="input_info")
+
+        # 5. 籌碼快選按鈕
         colb = st.columns(5)
         amounts = [5000, 10000, 15000, 20000]
         labels = ["🔵 5,000", "🟢 10,000", "🟡 15,000", "🔴 20,000"]
@@ -159,7 +165,8 @@ else:
                 st.components.v1.html("<script>window.parent.playAppSound('click');</script>", height=0)
                 st.session_state.bet_val = amounts[i]; time.sleep(0.1); st.rerun()
         if colb[4].button("💎 全額（梭哈）"):
-            st.components.v1.html("<script>window.parent.playAppSound('alert');</script>", height=0); confirm_all_in()
+            st.components.v1.html("<script>window.parent.playAppSound('alert');</script>", height=0)
+            confirm_all_in()
 
         c1, c2 = st.columns(2)
         with c1: bet_amt = st.number_input("下注金額", 0, max(1000000, balance), int(st.session_state.bet_val))
