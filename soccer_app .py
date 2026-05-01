@@ -57,7 +57,7 @@ def save_chat(nickname, content):
         "時間": get_now_time(),
         "暱稱": nickname,
         "內容": content,
-        "標籤": "訪客" if nickname != "阿來" else "管理員"
+        "標籤": "訪客" if nickname != "admin" else "管理員"
     }
     df = pd.concat([df, pd.DataFrame([new_msg])], ignore_index=True)
     df.to_csv(CHAT_DB, index=False, encoding='utf-8-sig')
@@ -112,16 +112,20 @@ with st.sidebar:
 # ---------------------------------------------------------
 st.markdown("""
     <style>
-        .ccl-brand-box { text-align: center; padding: 40px 0 30px 0; background: linear-gradient(to bottom, #ffffff, #f8f8f8); border-bottom: 3px solid #00c853; margin-bottom: 35px; border-radius: 20px; }
-        .ccl-chinese-main { font-size: 3.5em; color: #1a1a1a; letter-spacing: 8px; font-weight: 900; display: block; margin-bottom: 10px; line-height: 1.2; font-family: "Microsoft JhengHei", "Heiti TC", "PingFang TC", sans-serif; }
-        .ccl-sub-brand { font-family: 'Verdana', sans-serif; font-weight: 900; font-size: 1.6em; letter-spacing: 1px; margin: 0; }
-        .ccl-url { font-family: 'Courier New', monospace; color: #999; font-size: 1.0em; margin-top: 12px; }
-        .official-badge { background-color: #00c853; color: white; padding: 3px 15px; border-radius: 25px; font-size: 0.7em; font-weight: bold; margin-left: 12px; vertical-align: middle; }
+        .banner-container {
+            width: 100%;
+            text-align: center;
+            padding: 10px 0;
+            margin-bottom: 25px;
+        }
+        .banner-img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 12px;
+        }
     </style>
-    <div class="ccl-brand-box">
-        <div class="ccl-chinese-main">足球走地賽事管理系統</div>
-        <div class="ccl-sub-brand"><span style="color:#555">CCL-</span><span style="color:#00c853">Soccer</span><span class="official-badge">Verified</span></div>
-        <div class="ccl-url">www.ccl-soccer<span style="color: #00c853;">.tw</span></div>
+    <div class="banner-container">
+        <img src="https://您的GitHub連結/CCL_Logo.jpg" class="banner-img">
     </div>
 """, unsafe_allow_html=True)
 
