@@ -110,28 +110,92 @@ with st.sidebar:
 # ---------------------------------------------------------
 # 3. 主頁面頂端：【震撼視覺】足球走地旗艦標題
 # ---------------------------------------------------------
-from PIL import Image, ImageDraw, ImageFont
+st.markdown("""
+    <style>
+        .ccl-main-container {
+            background-color: #ffffff;
+            border: 1px solid #e0e0e0;
+            border-bottom: 5px solid #00c853; /* 綠色橫條 */
+            border-radius: 15px;
+            padding: 35px 20px;
+            text-align: center;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            font-family: "Microsoft JhengHei", "Heiti TC", sans-serif;
+        }
+        .ccl-title-text {
+            font-size: 3.5em;
+            color: #004b93; /* 呼應 Logo 的深藍色 */
+            font-weight: 900;
+            letter-spacing: 10px;
+            margin-bottom: 10px;
+            display: block;
+        }
+        .ccl-brand-row {
+            font-family: 'Verdana', sans-serif;
+            font-size: 1.8em;
+            font-weight: 900;
+            color: #444;
+            margin-top: 5px;
+        }
+        .ccl-green-text {
+            color: #00c853;
+        }
+        .ccl-v-badge {
+            background-color: #00c853;
+            color: white;
+            font-size: 0.6em;
+            padding: 3px 12px;
+            border-radius: 20px;
+            vertical-align: middle;
+            margin-left: 10px;
+            font-weight: bold;
+        }
+        .ccl-footer-url {
+            color: #999;
+            font-family: "Courier New", monospace;
+            font-size: 1.1em;
+            margin-top: 15px;
+            letter-spacing: 1px;
+        }
+    </style>
+    
+    <div class="ccl-main-container">
+        <div class="ccl-title-text">足球走地賽事管理系統</div>
+        <div class="ccl-brand-row">
+            CCL-<span class="ccl-green-text">Soccer</span>
+            <span class="ccl-v-badge">Verified</span>
+        </div>
+        <div class="ccl-footer-url">
+            www.ccl-soccer<span class="ccl-green-text">.tw</span>
+        </div>
+    </div>
+""", unsafe_allow_html=True)
 
-# === 建立畫布 ===
-img = Image.new("RGB", (1600, 400), (255, 255, 255))
-draw = ImageDraw.Draw(img)
+from PIL import Image
 
-# === 載入 Logo ===
-logo = Image.open("logo.jpg")
-logo = logo.resize((220, int(220 * logo.height / logo.width)))
+# 開啟原圖
+logo = Image.open("logo.jpg").convert("RGB")
 
-img.paste(logo, (40, 90))
+# 縮放（適合標題）
+logo_width = 180
+ratio = logo_width / logo.width
+logo_height = int(logo.height * ratio)
+logo = logo.resize((logo_width, logo_height), Image.LANCZOS)
 
-# === 載入字體（請換成你電腦的字體）===
-font = ImageFont.truetype("msjh.ttc", 72)  # 微軟正黑體
+# 建立橫向畫布
+canvas = Image.new("RGB", (400, 200), (255, 255, 255))
 
-# === 寫標題 ===
-draw.text((300, 120), "足球走地賽事管理系統", fill=(0, 102, 204), font=font)
+# 左側置中
+x = 30
+y = (200 - logo_height) // 2
 
-# === 輸出 ===
-img.save("final_output.jpg", "JPEG", quality=95)
+canvas.paste(logo, (x, y))
 
-print("完成！")
+# 儲存
+canvas.save("logo.jpg", "JPEG", quality=95)
+
+print("✅ 已完成：ccl_logo_header.jpg")
 
 # --- 邏輯判斷與主功能 ---
 if main_df.empty:
