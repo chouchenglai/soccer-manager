@@ -175,11 +175,17 @@ else:
         tz_taipei = timezone(timedelta(hours=8))
         can_submit = balance > 0 and bet_amt > 0 and bet_amt <= balance
         cw, cl = st.columns(2)
+
         if cw.button("✅ 過關 (贏)", use_container_width=True, disabled=not can_submit or gain_amt is None):
-            new_row = {"日期": get_now_time(), "賽事項目": m_info, "類型": "贏 (+)", "金額": int(gain_amt), "盈虧金額": int(gain_amt), "結算總分": balance + int(gain_amt)}
+            st.components.v1.html("<script>window.parent.playAppSound('win');</script>", height=0); time.sleep(0.2)
+            now_taipei = datetime.now(tz_taipei).strftime("%Y-%m-%d %H:%M:%S")
+            new_row = {"日期": now_taipei, "賽事項目": m_info, "類型": "贏 (+)", "金額": int(gain_amt), "盈虧金額": int(gain_amt), "結算總分": balance + int(gain_amt)}
             save_data(pd.concat([main_df, pd.DataFrame([new_row])], ignore_index=True)); st.rerun()
+
         if cl.button("❌ 未過關 (輸)", use_container_width=True, disabled=not can_submit):
-            new_row = {"日期": get_now_time(), "賽事項目": m_info, "類型": "輸 (-)", "金額": int(bet_amt), "盈虧金額": -int(bet_amt), "結算總分": balance - int(bet_amt)}
+            st.components.v1.html("<script>window.parent.playAppSound('lose');</script>", height=0); time.sleep(0.2)
+            now_taipei = datetime.now(tz_taipei).strftime("%Y-%m-%d %H:%M:%S")
+            new_row = {"日期": now_taipei, "賽事項目": m_info, "類型": "輸 (-)", "金額": int(bet_amt), "盈虧金額": -int(bet_amt), "結算總分": balance - int(bet_amt)}
             save_data(pd.concat([main_df, pd.DataFrame([new_row])], ignore_index=True)); st.rerun()
 
     with tab2: # 歷史記錄
