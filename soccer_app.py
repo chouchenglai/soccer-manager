@@ -6,7 +6,7 @@ import time
 from datetime import datetime, timedelta, timezone
 
 # 1. 頁面設定 (最頂端)
-st.set_page_config(page_title="CCL-Soccer", page_icon="⚽", layout="wide")
+st.set_page_config(page_title="CCL-Soccer 足球走地賽事管理系統", page_icon="⚽", layout="wide")
 
 # --- 基本設定 ---
 DEFAULT_DB = "soccer_master_data.csv"
@@ -108,19 +108,19 @@ else:
     # 5. 全新：討 論 區 模組[cite: 3]
     # ---------------------------------------------------------
     with tab5:
-        st.markdown("### 💬 即時討論廣場")
+        st.markdown("### 💬 足球現場實況滾球推薦")
         
         # 暱稱檢查邏輯 (瀏覽器緩存識別)
         if 'user_nickname' not in st.session_state:
             with st.form("name_form"):
-                name = st.text_input("首次留言，請輸入您的暱稱：", placeholder="例如：足球小天才")
+                name = st.text_input("首次留言，請輸入您的暱稱：", placeholder="例如：玩家稱呼")
                 if st.form_submit_button("確認進入"):
                     if name:
                         st.session_state.user_nickname = name
                         st.rerun()
         else:
             # 顯示目前暱稱
-            st.info(f"歡迎回來！您目前的暱稱：**{st.session_state.user_nickname}**")
+            st.info(f"歡迎回來！您目前的名稱：**{st.session_state.user_nickname}**")
             
             # 留言輸入區
             with st.form("chat_form", clear_on_submit=True):
@@ -148,7 +148,7 @@ else:
                         </div>
                     """, unsafe_allow_html=True)
             else:
-                st.write("目前還沒有人留言，快來搶沙發！")
+                st.write("目前還沒有人留言，歡迎您加入及討論賽事！")
 
 # --- 底部宣告 ---
 st.divider()
