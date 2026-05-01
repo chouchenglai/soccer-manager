@@ -34,23 +34,29 @@ def load_data():
     if os.path.exists(st.session_state.current_db):
         try:
             df = pd.read_csv(st.session_state.current_db)
-            if "月份" in df.columns: df = df.drop(columns=["月份"])
+            if "月份" in df.columns:
+                df = df.drop(columns=["月份"])
             return df
-        except: return pd.DataFrame(columns=COLUMNS)
+        except:
+            return pd.DataFrame(columns=COLUMNS)
     return pd.DataFrame(columns=COLUMNS)
 
 def save_data(df):
-    if "月份" in df.columns: df = df.drop(columns=["月份"])
+    if "月份" in df.columns:
+        df = df.drop(columns=["月份"])
     df.to_csv(st.session_state.current_db, index=False, encoding='utf-8-sig')
 
 def load_chat():
-    if os.path.exists(CHAT_DB): return pd.read_csv(CHAT_DB)
+    if os.path.exists(CHAT_DB):
+        return pd.read_csv(CHAT_DB)
     return pd.DataFrame(columns=CHAT_COLUMNS)
 
 def save_chat(nickname, content):
     df = load_chat()
     new_msg = {
-        "時間": get_now_time(), "暱稱": nickname, "內容": content,
+        "時間": get_now_time(),
+        "暱稱": nickname,
+        "內容": content,
         "標籤": "訪客" if nickname != "阿來" else "管理員"
     }
     df = pd.concat([df, pd.DataFrame([new_msg])], ignore_index=True)
@@ -58,10 +64,18 @@ def save_chat(nickname, content):
 
 # --- 初始化 ---
 ensure_files()
-if 'current_db' not in st.session_state: st.session_state.current_db = DEFAULT_DB
+
+if 'current_db' not in st.session_state:
+    st.session_state.current_db = DEFAULT_DB
+
 all_reports = get_all_reports()
-if not all_reports: all_reports = [DEFAULT_DB]
-if st.session_state.current_db not in all_reports: st.session_state.current_db = all_reports[0]
+
+if not all_reports:
+    all_reports = [DEFAULT_DB]
+
+if st.session_state.current_db not in all_reports:
+    st.session_state.current_db = all_reports[0]
+
 main_df = load_data()
 
 # --- Sidebar (側邊欄) ---
@@ -69,10 +83,13 @@ with st.sidebar:
     st.header("💰 資金與統計中心")
     idx = all_reports.index(st.session_state.current_db) if st.session_state.current_db in all_reports else 0
     selected_db = st.selectbox("切換報表", all_reports, index=idx)
+
     if selected_db != st.session_state.current_db:
         st.session_state.current_db = selected_db
         st.rerun()
+
     st.divider()
+
     if not main_df.empty:
         current_bal = int(main_df["結算總分"].iloc[-1])
         st.metric("目前可用本金", f"${current_bal:,}")
@@ -80,15 +97,18 @@ with st.sidebar:
         total_investment = main_df[main_df['類型'].isin(invest_types)]['金額'].sum()
         st.write(f"💼 累積投入: `${total_investment:,}`")
         real_profit = current_bal - total_investment
-        if real_profit >= 0: st.success(f"📈 純獲利: `${real_profit:,}`")
-        else: st.error(f"📉 尚虧: `${abs(real_profit):,}`")
+        if real_profit >= 0:
+            st.success(f"📈 純獲利: `${real_profit:,}`")
+        else:
+            st.error(f"📉 尚虧: `${abs(real_profit):,}`")
+
     st.write(f"檔案: `{st.session_state.current_db}`")
     st.divider()
     csv = main_df.to_csv(index=False).encode('utf-8-sig')
     st.download_button("📥 下載完整紀錄 (CSV)", data=csv, file_name="soccer_backup.csv")
 
 # ---------------------------------------------------------
-# 3. 主頁面頂端：旗艦標題設計
+# 3. 主頁面頂端：【震撼視覺】足球走地旗艦標題
 # ---------------------------------------------------------
 st.markdown("""
     <style>
@@ -105,6 +125,7 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
+# --- 邏輯判斷與主功能 ---
 if main_df.empty:
     st.subheader("初始化報表")
     init_cap = st.number_input("起始本金", value=60000, step=1000)
@@ -125,6 +146,10 @@ else:
                 .prefix { font-size: 14px; color: #666; margin-right: 12px; }
             </style>
             <div id="clock-container"><span class="prefix">台北標準時間 (GMT+8) :</span><span id="clock">載入中...</span></div>
+            <audio id="winAudio" src="https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3" preload="auto"></audio>
+            <audio id="loseAudio" src="https://assets.mixkit.co/active_storage/sfx/2511/2511-preview.mp3" preload="auto"></audio>
+            <audio id="clickAudio" src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3" preload="auto"></audio>
+            <audio id="alertAudio" src="https://assets.mixkit.co/active_storage/sfx/951/951-preview.mp3" preload="auto"></audio>
             <script>
                 function updateClock() {
                     const now = new Date();
@@ -135,7 +160,7 @@ else:
                 }
                 setInterval(updateClock, 1000); updateClock();
                 window.parent.playAppSound = function(type) {
-                    var audio = window.parent.document.getElementById(type + 'Audio');
+                    var audio = document.getElementById(type + 'Audio');
                     if (audio) { audio.pause(); audio.currentTime = 0; audio.play().catch(e => console.log(e)); }
                 };
             </script>
@@ -152,36 +177,6 @@ else:
                 st.rerun()
             if c_conf2.button("取消", use_container_width=True):
                 st.rerun()
-
-        # 4. 介面內容區       
-        m_info = st.text_area("賽事資訊", placeholder="例如：英超 阿仙奴 vs 車路士", key="input_info")
-
-        # 5. 籌碼快選按鈕
-        colb = st.columns(5)
-        amounts = [5000, 10000, 15000, 20000]
-        labels = ["🔵 5,000", "🟢 10,000", "🟡 15,000", "🔴 20,000"]
-        for i in range(4):
-            if colb[i].button(labels[i]):
-                st.components.v1.html("<script>window.parent.playAppSound('click');</script>", height=0)
-                st.session_state.bet_val = amounts[i]; time.sleep(0.1); st.rerun()
-        if colb[4].button("💎 全額（梭哈）"):
-            st.components.v1.html("<script>window.parent.playAppSound('alert');</script>", height=0)
-            confirm_all_in()
-
-        # 6. 下注與盈利輸入區
-        c1, c2 = st.columns(2)
-        with c1:
-            bet_amt = st.number_input("下注金額", 0, max(1000000, balance), int(st.session_state.bet_val))
-        with c2:
-            gain_amt = st.number_input("盈利金額", 0, 1000000, value=None, placeholder="請輸入盈利金額")
-
-        st.write("")
-
-        # 7. 提交執行區 (核心修正：統一台北時區)
-        tz_taipei = timezone(timedelta(hours=8)) # 強制定義 GMT+8
-        
-        can_submit = balance > 0 and bet_amt > 0 and bet_amt <= balance
-        cw, cl = st.columns(2)
 
         # 4. 介面內容區       
         m_info = st.text_area("賽事資訊", placeholder="例如：英超 阿仙奴 vs 車路士", key="input_info")
@@ -229,9 +224,17 @@ else:
             return style
         st.dataframe(main_df.iloc[::-1].style.apply(color_row, axis=1).format({"金額": "{:,}", "盈虧金額": "{:+,.0f}", "結算總分": "{:,}"}), use_container_width=True)
 
-    with tab3: # 統計圖表 (氣球邏輯修正)
+    with tab3: # 統計圖表 (氣球鎖定)
         st.markdown("### 📊 統計圖曲線分析表")
-        ready = st.checkbox("🟢 啟動動態演示", value=False)
+        st.components.v1.html("""
+            <audio id="tick_audio" src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3" preload="auto"></audio>
+            <audio id="win_audio" src="https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3" preload="auto"></audio>
+            <script>
+                window.parent.playTick = function() { var s = document.getElementById('tick_audio'); s.currentTime = 0; s.play(); }
+                window.parent.playWin = function() { var s = document.getElementById('win_audio'); s.currentTime = 0; s.play(); }
+            </script>
+        """, height=0)
+        ready = st.checkbox("🟢 解鎖音效權限 (啟動演示)", value=False)
         v_box = st.empty(); c_box = st.empty()
         if ready and not main_df.empty:
             data = pd.to_numeric(main_df["結算總分"]).tolist()
@@ -241,8 +244,8 @@ else:
                 color = "#00c853" if i == 0 or curr >= data[i-1] else "#ff4b4b"
                 v_box.markdown(f'<div style="text-align: right; padding: 12px; border-right: 6px solid {color}; background-color: white; border-radius: 8px;"><span style="font-size: 3.5em; font-weight: bold; color: {color} !important;">${int(curr):,}</span></div>', unsafe_allow_html=True)
                 c_box.line_chart(data[:i+1], height=320)
-                time.sleep(delay)
-            st.balloons() # 僅在 tab3 演示結束時觸發
+                st.components.v1.html("<script>window.parent.playTick();</script>", height=0); time.sleep(delay)
+            st.components.v1.html("<script>window.parent.playWin();</script>", height=0); st.balloons()
         elif not main_df.empty: c_box.line_chart(main_df["結算總分"], height=320)
 
     with tab4: # 報表管理
@@ -255,8 +258,16 @@ else:
         with st.expander("新增報表"):
             n = st.text_input("名稱")
             if st.button("建立報表") and n: pd.DataFrame(columns=COLUMNS).to_csv(f"{n}.csv", index=False); st.rerun()
+        with st.expander("刪除報表"):
+            d_list = [f for f in all_reports if f != DEFAULT_DB]
+            if d_list:
+                t = st.selectbox("選擇", d_list)
+                if st.button("刪除"): os.remove(t); st.session_state.current_db = DEFAULT_DB; st.rerun()
 
-    with tab5: # 討 論 區[cite: 6]
+    # ---------------------------------------------------------
+    # 5. 討 論 區 模組 (統整與修復)
+    # ---------------------------------------------------------
+    with tab5:
         st.markdown("### 💬 足球現場實況滾球推薦")
         if 'user_nickname' not in st.session_state:
             with st.form("name_form"):
@@ -264,17 +275,18 @@ else:
                 if st.form_submit_button("確認進入") and name:
                     st.session_state.user_nickname = name; st.rerun()
         else:
-            st.info(f"歡迎回來！您的名稱：**{st.session_state.user_nickname}**")
+            st.info(f"歡迎回來！您目前的名稱：**{st.session_state.user_nickname}**")
             with st.form("chat_form", clear_on_submit=True):
-                msg = st.text_area("輸入內容...", height=100)
+                msg = st.text_area("輸入您的內容...", height=100)
                 if st.form_submit_button("送出留言") and msg:
-                    save_chat(st.session_state.user_nickname, msg); st.success("送出成功！"); time.sleep(1); st.rerun()
+                    save_chat(st.session_state.user_nickname, msg); st.success("留言已送出！"); time.sleep(1); st.rerun()
             st.divider()
             c_df = load_chat()
             if not c_df.empty:
                 for _, r in c_df.iloc[::-1].iterrows():
                     l_color = "#00c853" if r['標籤'] == "管理員" else "#888"
                     st.markdown(f"""<div style="background-color: #f9f9f9; padding: 15px; border-radius: 10px; margin-bottom: 10px; border-left: 5px solid {l_color};"><span style="color: {l_color}; font-weight: bold;">{r['暱稱']}</span> <span style="color: #aaa; font-size: 0.8em; margin-left: 10px;">{r['時間']}</span><p style="margin-top: 10px; color: #333; line-height: 1.5;">{r['內容']}</p></div>""", unsafe_allow_html=True)
+            else: st.write("目前還沒有人留言，歡迎您加入及討論賽事！")
 
 # --- 底部宣告 ---
 st.divider()
