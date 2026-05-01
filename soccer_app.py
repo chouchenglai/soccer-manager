@@ -168,6 +168,7 @@ if main_df.empty:
         st.rerun()
 
 else:
+    # 這裡就是關鍵分頁區塊
     tab1, tab2, tab3, tab4 = st.tabs(["💰 投注下單", "📋 歷史記錄", "📊 統計圖表", "📈 報表管理"])
 
     # --- TAB1: 快速錄入 ---
@@ -175,17 +176,14 @@ else:
         import time
         from datetime import datetime, timedelta, timezone
         
-        # 1. 取得當前總分
         try:
             balance = int(main_df["結算總分"].iloc[-1]) if not main_df.empty else 0
         except:
             balance = 0
         
-        # 初始化下注金額狀態
         if "bet_val" not in st.session_state:
             st.session_state.bet_val = 5000
 
-        # 2. 極簡橫向時鐘與音效組件
         st.components.v1.html("""
             <style>
                 #clock-container {
@@ -224,7 +222,6 @@ else:
             </script>
         """, height=52)
 
-        # 3. 定義全額確認對話框
         @st.dialog("⚠️全額下注確認⚠️")
         def confirm_all_in():
             st.warning(f"確定要將全部餘額 {balance:,} 元一次下注嗎？")
@@ -236,10 +233,9 @@ else:
             if c_conf2.button("取消", use_container_width=True):
                 st.rerun()
 
-        # 4. 介面內容區       
         m_info = st.text_area("賽事資訊", placeholder="例如：英超 阿仙奴 vs 車路士", key="input_info")
 
-        # 5. 籌碼快選按鈕
+        # 重新加入的全額下注按鈕組件
         colb = st.columns(5)
         amounts = [5000, 10000, 15000, 20000]
         labels = ["🔵 5,000", "🟢 10,000", "🟡 15,000", "🔴 20,000"]
@@ -251,44 +247,28 @@ else:
             st.components.v1.html("<script>window.parent.playAppSound('alert');</script>", height=0)
             confirm_all_in()
 
-        # 6. 下注與盈利輸入區
         c1, c2 = st.columns(2)
         with c1:
             bet_amt = st.number_input("下注金額", 0, max(1000000, balance), int(st.session_state.bet_val))
         with c2:
             gain_amt = st.number_input("盈利金額", 0, 1000000, value=None, placeholder="請輸入盈利金額")
 
-        st.write("")
-
-        # 7. 提交執行區 (核心修正：統一台北時區)
-        tz_taipei = timezone(timedelta(hours=8)) # 強制定義 GMT+8
-        
+        tz_taipei = timezone(timedelta(hours=8))
         can_submit = balance > 0 and bet_amt > 0 and bet_amt <= balance
         cw, cl = st.columns(2)
 
         if cw.button("✅ 過關 (贏)", use_container_width=True, disabled=not can_submit or gain_amt is None):
             st.components.v1.html("<script>window.parent.playAppSound('win');</script>", height=0)
             time.sleep(0.2)
-            # 取得精確台北時間
             now_taipei = datetime.now(tz_taipei).strftime("%Y-%m-%d %H:%M:%S")
-            new_row = {
-                "日期": now_taipei, "賽事項目": m_info, "類型": "贏 (+)",
-                "金額": int(gain_amt), "盈虧金額": int(gain_amt), "結算總分": balance + int(gain_amt)
-            }
-            save_data(pd.concat([main_df, pd.DataFrame([new_row])], ignore_index=True))
-            st.rerun()
+            new_row = {"日期": now_taipei, "賽事項目": m_info, "類型": "贏 (+)", "金額": int(gain_amt), "盈虧金額": int(gain_amt), "結算總分": balance + int(gain_amt)}
+            save_data(pd.concat([main_df, pd.DataFrame([new_row])], ignore_index=True)); st.rerun()
 
         if cl.button("❌ 未過關 (輸)", use_container_width=True, disabled=not can_submit):
             st.components.v1.html("<script>window.parent.playAppSound('lose');</script>", height=0)
-            time.sleep(0.2)
-            # 取得精確台北時間
             now_taipei = datetime.now(tz_taipei).strftime("%Y-%m-%d %H:%M:%S")
-            new_row = {
-                "日期": now_taipei, "賽事項目": m_info, "類型": "輸 (-)",
-                "金額": int(bet_amt), "盈虧金額": -int(bet_amt), "結算總分": balance - int(bet_amt)
-            }
-            save_data(pd.concat([main_df, pd.DataFrame([new_row])], ignore_index=True))
-            st.rerun()
+            new_row = {"日期": now_taipei, "賽事項目": m_info, "類型": "輸 (-)", "金額": int(bet_amt), "盈虧金額": -int(bet_amt), "結算總分": balance - int(bet_amt)}
+            save_data(pd.concat([main_df, pd.DataFrame([new_row])], ignore_index=True)); st.rerun()
 
     # --- TAB2: 歷史記錄 ---
     with tab2:
@@ -302,7 +282,7 @@ else:
             return style
         st.dataframe(main_df.iloc[::-1].style.apply(color_row, axis=1).format({"金額": "{:,}", "盈虧金額": "{:+,.0f}", "結算總分": "{:,}"}), use_container_width=True)
 
-    # --- TAB3: 統計圖表 ---
+    # --- TAB3: 統計圖表 (氣球功能鎖死在此處) ---
     with tab3:
         st.markdown("### 📊 統計圖曲線分析表")
         st.components.v1.html("""
@@ -315,8 +295,10 @@ else:
                 window.parent.playLow = function() { var s = document.getElementById('low_audio'); s.currentTime = 0; s.play(); }
             </script>
         """, height=0)
+
         ready = st.checkbox("🟢 解鎖音效權限 (啟動演示)", value=False)
         val_box = st.empty(); chart_box = st.empty()
+        
         if ready and not main_df.empty:
             data = pd.to_numeric(main_df["結算總分"]).tolist()
             delay = 0.1 if len(data) < 30 else max(0.01, 120 / len(data))
@@ -327,8 +309,12 @@ else:
                 chart_box.line_chart(data[:i+1], height=320)
                 st.components.v1.html("<script>window.parent.playTick();</script>", height=0)
                 time.sleep(delay)
-            st.components.v1.html("<script>window.parent.playWin();</script>", height=0); st.balloons()
-        elif not main_df.empty: chart_box.line_chart(main_df["結算總分"], height=320)
+            
+            # --- 氣球效果僅在此演示結尾出現 ---
+            st.components.v1.html("<script>window.parent.playWin();</script>", height=0)
+            st.balloons()
+        elif not main_df.empty:
+            chart_box.line_chart(main_df["結算總分"], height=320)
 
     # --- TAB4: 報表管理 ---
     with tab4:
