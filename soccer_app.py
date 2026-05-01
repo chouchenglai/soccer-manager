@@ -168,6 +168,36 @@ else:
             st.components.v1.html("<script>window.parent.playAppSound('alert');</script>", height=0)
             confirm_all_in()
 
+        # 6. 下注與盈利輸入區
+        c1, c2 = st.columns(2)
+        with c1:
+            bet_amt = st.number_input("下注金額", 0, max(1000000, balance), int(st.session_state.bet_val))
+        with c2:
+            gain_amt = st.number_input("盈利金額", 0, 1000000, value=None, placeholder="請輸入盈利金額")
+
+        st.write("")
+
+        # 7. 提交執行區 (核心修正：統一台北時區)
+        tz_taipei = timezone(timedelta(hours=8)) # 強制定義 GMT+8
+        
+        can_submit = balance > 0 and bet_amt > 0 and bet_amt <= balance
+        cw, cl = st.columns(2)
+
+        # 4. 介面內容區       
+        m_info = st.text_area("賽事資訊", placeholder="例如：英超 阿仙奴 vs 車路士", key="input_info")
+
+        # 5. 籌碼快選按鈕
+        colb = st.columns(5)
+        amounts = [5000, 10000, 15000, 20000]
+        labels = ["🔵 5,000", "🟢 10,000", "🟡 15,000", "🔴 20,000"]
+        for i in range(4):
+            if colb[i].button(labels[i]):
+                st.components.v1.html("<script>window.parent.playAppSound('click');</script>", height=0)
+                st.session_state.bet_val = amounts[i]; time.sleep(0.1); st.rerun()
+        if colb[4].button("💎 全額（梭哈）"):
+            st.components.v1.html("<script>window.parent.playAppSound('alert');</script>", height=0)
+            confirm_all_in()
+
         c1, c2 = st.columns(2)
         with c1: bet_amt = st.number_input("下注金額", 0, max(1000000, balance), int(st.session_state.bet_val))
         with c2: gain_amt = st.number_input("盈利金額", 0, 1000000, value=None, placeholder="請輸入盈利金額")
