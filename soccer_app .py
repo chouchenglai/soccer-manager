@@ -113,11 +113,63 @@ with st.sidebar:
 # 請將這段代碼中括號內的部分換成您實際的資訊
 st.markdown("""
     <style>
-        .banner-container { width: 100%; text-align: center; padding: 10px 0; margin-bottom: 25px; }
-        .banner-img { max-width: 100%; height: auto; border-radius: 12px; }
+        .ccl-main-container {
+            background-color: #ffffff;
+            border: 1px solid #e0e0e0;
+            border-bottom: 5px solid #00c853; /* 綠色橫條 */
+            border-radius: 15px;
+            padding: 35px 20px;
+            text-align: center;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            font-family: "Microsoft JhengHei", "Heiti TC", sans-serif;
+        }
+        .ccl-title-text {
+            font-size: 3.5em;
+            color: #004b93; /* 呼應 Logo 的深藍色 */
+            font-weight: 900;
+            letter-spacing: 10px;
+            margin-bottom: 10px;
+            display: block;
+        }
+        .ccl-brand-row {
+            font-family: 'Verdana', sans-serif;
+            font-size: 1.8em;
+            font-weight: 900;
+            color: #444;
+            margin-top: 5px;
+        }
+        .ccl-green-text {
+            color: #00c853;
+        }
+        .ccl-v-badge {
+            background-color: #00c853;
+            color: white;
+            font-size: 0.6em;
+            padding: 3px 12px;
+            border-radius: 20px;
+            vertical-align: middle;
+            margin-left: 10px;
+            font-weight: bold;
+        }
+        .ccl-footer-url {
+            color: #999;
+            font-family: "Courier New", monospace;
+            font-size: 1.1em;
+            margin-top: 15px;
+            letter-spacing: 1px;
+        }
     </style>
-    <div class="banner-container">
-        <img src="https://raw.githubusercontent.com/您的GitHub用戶名/您的倉庫名/main/CCL%20Logo.jpg" class="banner-img">
+    
+    <div class="ccl-main-container">
+        <div class="ccl-title-text">足球走地賽事管理系統</div>
+        <div class="ccl-brand-row">
+            CCL-<span class="ccl-green-text">Soccer</span>
+            <span class="ccl-v-badge">Verified</span>
+        </div>
+        <div class="ccl-footer-url">
+            www.ccl-soccer<span class="ccl-green-text">.tw</span>
+        </div>
     </div>
 """, unsafe_allow_html=True)
 
