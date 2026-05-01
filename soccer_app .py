@@ -153,55 +153,42 @@ if main_df.empty:
     if st.button("建立"):
         row = {"日期": get_now_time(), "賽事項目": "初始", "類型": "初始", "金額": int(init_cap), "盈虧金額": 0, "結算總分": int(init_cap)}
         save_data(pd.DataFrame([row])); st.rerun()
+
+# --- 1. 定義外部跳轉確認對話框 ---
+@st.dialog("⚠️ 外部網站訪問確認")
+def confirm_external_link():
+    st.write("您即將離開本系統訪問：**球探即時比分網**")
+    st.write("請問是否繼續執行？")
+    c_link1, c_link2 = st.columns(2)
+    if c_link1.button("✅ 確定前往", type="primary", use_container_width=True):
+        # 使用 JavaScript 打開新視窗
+        js = "window.open('https://live.titan007.com/indexall_big.aspx')"
+        st.components.v1.html(f"<script>{js}</script>", height=0)
+        st.rerun()
+    if c_link2.button("取消", use_container_width=True):
+        st.rerun()
+
 else:
-    tab0, tab1, tab2, tab3, tab4, tab5 = st.tabs(["⚽ 即時比分", "💰 投注下單", "📋 歷史記錄", "📊 統計圖表", "📈 報表管理", "💬 討 論 區"])
+    tab0, tab1, tab2, tab3, tab4, tab5 = st.tabs(["📺 即時比分", "💰 投注下單", "📋 歷史記錄", "📊 統計圖表", "📈 報表管理", "💬 討 論 區"])
 
-    with tab0:
-    # 使用 columns 將頁面分成兩半 (左邊 60% 比分, 右邊 40% 投注頁面)
-    col_live, col_bet = st.columns([6, 4])
+    # --- 3. 修改 tab0 顯示邏輯 (觸發彈窗) ---
+with tab0:
+    st.info("點擊下方按鈕以雙開視窗模式查看比分。")
+    if st.button("🚀 開啟即時比分 (外部連結)", use_container_width=True):
+        confirm_external_link() # 呼叫剛才定義的彈窗
     
+    st.divider()
+    
+    # 這裡保留您的雙開排版建議，讓您在沒打開外部網頁前也能先預填
+    col_live, col_bet = st.columns([6, 4])
     with col_live:
-        st.markdown("### 📡 球探即時比分")
-        # 嵌入外部比分網站
-        st.components.v1.iframe("https://live.titan007.com/indexall_big.aspx", height=800, scrolling=True)
-        
+        st.caption("比分網將在彈出視窗中開啟，或您可以手動刷新此處。")
+        # 這裡如果您還是想嘗試嵌入，可以留著 iframe，或者放一張示意圖
+        st.components.v1.iframe("https://live.titan007.com/indexall_big.aspx", height=600, scrolling=True)
     with col_bet:
-        st.markdown("### 快速投注區")
-        # 這裡放置簡單的投注輸入框，方便您直接從左邊複製賽事名稱過來
-        m_info_quick = st.text_area("賽事資訊 (快速)", placeholder="複製左邊賽事貼到這裡", key="quick_info")
-        # 這裡可以視需求加入簡單的下單按鈕邏輯，或提醒使用者切換到「投注下單」標籤執行完整操作
-        st.info("💡 提示：您可以在此預填賽事，再切換到「投注下單」欄目完成最後操作。")
-
-    with tab1: # 下單投注
-        try: balance = int(main_df["結算總分"].iloc[-1])
-        except: balance = 0
-        if "bet_val" not in st.session_state: st.session_state.bet_val = 5000
-        st.components.v1.html("""
-            <style>
-                #clock-container { display: flex; align-items: center; background-color: #f8f9fb; padding: 8px 15px; border-radius: 6px; border-left: 5px solid #ff4b4b; font-family: sans-serif; margin-bottom: 5px; }
-                #clock { font-size: 15px; font-weight: 600; color: #31333f; letter-spacing: 0.8px; }
-                .prefix { font-size: 14px; color: #666; margin-right: 12px; }
-            </style>
-            <div id="clock-container"><span class="prefix">台北標準時間 (GMT+8) :</span><span id="clock">載入中...</span></div>
-            <audio id="winAudio" src="https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3" preload="auto"></audio>
-            <audio id="loseAudio" src="https://assets.mixkit.co/active_storage/sfx/2511/2511-preview.mp3" preload="auto"></audio>
-            <audio id="clickAudio" src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3" preload="auto"></audio>
-            <audio id="alertAudio" src="https://assets.mixkit.co/active_storage/sfx/951/951-preview.mp3" preload="auto"></audio>
-            <script>
-                function updateClock() {
-                    const now = new Date();
-                    const hh = String(now.getHours()).padStart(2, '0');
-                    const mm = String(now.getMinutes()).padStart(2, '0');
-                    const ss = String(now.getSeconds()).padStart(2, '0');
-                    document.getElementById('clock').textContent = now.toLocaleDateString() + " " + hh + ":" + mm + ":" + ss;
-                }
-                setInterval(updateClock, 1000); updateClock();
-                window.parent.playAppSound = function(type) {
-                    var audio = document.getElementById(type + 'Audio');
-                    if (audio) { audio.pause(); audio.currentTime = 0; audio.play().catch(e => console.log(e)); }
-                };
-            </script>
-        """, height=52)
+        st.markdown("### 快速投注參考")
+        st.text_area("賽事資訊預填", placeholder="在此輸入或粘貼賽事內容...", key="live_quick_info")
+        st.info("提示：此處輸入的內容僅供參考，請前往『投注下單』標籤正式提交。")
 
         # 3. 定義全額確認對話框
         @st.dialog("⚠️全額下注確認⚠️")
