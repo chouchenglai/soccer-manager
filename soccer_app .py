@@ -156,6 +156,22 @@ if main_df.empty:
 else:
     tab0, tab1, tab2, tab3, tab4, tab5 = st.tabs(["⚽ 即時比分", "💰 投注下單", "📋 歷史記錄", "📊 統計圖表", "📈 報表管理", "💬 討 論 區"])
 
+    with tab0:
+    # 使用 columns 將頁面分成兩半 (左邊 60% 比分, 右邊 40% 投注頁面)
+    col_live, col_bet = st.columns([6, 4])
+    
+    with col_live:
+        st.markdown("### 📡 球探即時比分")
+        # 嵌入外部比分網站
+        st.components.v1.iframe("https://live.titan007.com/indexall_big.aspx", height=800, scrolling=True)
+        
+    with col_bet:
+        st.markdown("### 快速投注區")
+        # 這裡放置簡單的投注輸入框，方便您直接從左邊複製賽事名稱過來
+        m_info_quick = st.text_area("賽事資訊 (快速)", placeholder="複製左邊賽事貼到這裡", key="quick_info")
+        # 這裡可以視需求加入簡單的下單按鈕邏輯，或提醒使用者切換到「投注下單」標籤執行完整操作
+        st.info("💡 提示：您可以在此預填賽事，再切換到「投注下單」欄目完成最後操作。")
+
     with tab1: # 下單投注
         try: balance = int(main_df["結算總分"].iloc[-1])
         except: balance = 0
