@@ -78,6 +78,45 @@ if st.session_state.current_db not in all_reports:
 
 main_df = load_data()
 
+import base64
+import os
+
+# 1. 圖片轉換函數
+def get_base64_img(file_path):
+    with open(file_path, "rb") as f:
+        data = f.read()
+    return base64.b64encode(data).decode()
+
+# 2. 執行顯示 (確保 ccl_logo_header.jpg 已上傳至 GitHub)
+img_path = "ccl_logo_header.jpg"
+
+if os.path.exists(img_path):
+    img_b64 = get_base64_img(img_path)
+    st.markdown(f"""
+        <style>
+            .banner-box {{
+                width: 100%;
+                text-align: center;
+                background-color: #ffffff;
+                padding: 10px 0;
+                margin-bottom: 25px;
+                border-radius: 12px;
+                border-bottom: 3px solid #00c853; 
+            }}
+            .banner-img {{
+                max-width: 100%;
+                height: auto;
+                border-radius: 10px;
+            }}
+        </style>
+        <div class="banner-box">
+            <img src="data:image/jpeg;base64,{img_b64}" class="banner-img">
+        </div>
+    """, unsafe_allow_html=True)
+else:
+    # 預備方案：萬一圖片沒傳成功，顯示簡約文字
+    st.markdown("<h2 style='text-align: center; color: #004b93;'>足球走地賽事管理系統</h2>", unsafe_allow_html=True)
+
 # --- Sidebar (側邊欄) ---
 with st.sidebar:
     st.header("💰 資金與統計中心")
@@ -106,96 +145,6 @@ with st.sidebar:
     st.divider()
     csv = main_df.to_csv(index=False).encode('utf-8-sig')
     st.download_button("📥 下載完整紀錄 (CSV)", data=csv, file_name="soccer_backup.csv")
-
-# ---------------------------------------------------------
-# 3. 主頁面頂端：【震撼視覺】足球走地旗艦標題
-# ---------------------------------------------------------
-st.markdown("""
-    <style>
-        .ccl-main-container {
-            background-color: #ffffff;
-            border: 1px solid #e0e0e0;
-            border-bottom: 5px solid #00c853; /* 綠色橫條 */
-            border-radius: 15px;
-            padding: 35px 20px;
-            text-align: center;
-            margin-bottom: 30px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-            font-family: "Microsoft JhengHei", "Heiti TC", sans-serif;
-        }
-        .ccl-title-text {
-            font-size: 3.5em;
-            color: #004b93; /* 呼應 Logo 的深藍色 */
-            font-weight: 900;
-            letter-spacing: 10px;
-            margin-bottom: 10px;
-            display: block;
-        }
-        .ccl-brand-row {
-            font-family: 'Verdana', sans-serif;
-            font-size: 1.8em;
-            font-weight: 900;
-            color: #444;
-            margin-top: 5px;
-        }
-        .ccl-green-text {
-            color: #00c853;
-        }
-        .ccl-v-badge {
-            background-color: #00c853;
-            color: white;
-            font-size: 0.6em;
-            padding: 3px 12px;
-            border-radius: 20px;
-            vertical-align: middle;
-            margin-left: 10px;
-            font-weight: bold;
-        }
-        .ccl-footer-url {
-            color: #999;
-            font-family: "Courier New", monospace;
-            font-size: 1.1em;
-            margin-top: 15px;
-            letter-spacing: 1px;
-        }
-    </style>
-    
-    <div class="ccl-main-container">
-        <div class="ccl-title-text">足球走地賽事管理系統</div>
-        <div class="ccl-brand-row">
-            CCL-<span class="ccl-green-text">Soccer</span>
-            <span class="ccl-v-badge">Verified</span>
-        </div>
-        <div class="ccl-footer-url">
-            www.ccl-soccer<span class="ccl-green-text">.tw</span>
-        </div>
-    </div>
-""", unsafe_allow_html=True)
-
-from PIL import Image
-
-# 開啟原圖
-logo = Image.open("logo.jpg").convert("RGB")
-
-# 縮放（適合標題）
-logo_width = 180
-ratio = logo_width / logo.width
-logo_height = int(logo.height * ratio)
-logo = logo.resize((logo_width, logo_height), Image.LANCZOS)
-
-# 建立橫向畫布
-canvas = Image.new("RGB", (400, 200), (255, 255, 255))
-
-# 左側置中
-x = 30
-y = (200 - logo_height) // 2
-
-canvas.paste(logo, (x, y))
-
-# 儲存
-canvas.save("logo.jpg", "JPEG", quality=95)
-
-print("✅ 已完成：ccl_logo_header.jpg")
 
 # --- 邏輯判斷與主功能 ---
 if main_df.empty:
