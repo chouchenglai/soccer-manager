@@ -102,7 +102,6 @@ if os.path.exists(img_path):
                 padding: 10px 0;
                 margin-bottom: 25px;
                 border-radius: 12px;
-                border-bottom: 3px solid #00c853; 
             }}
             .banner-img {{
                 max-width: 100%;
