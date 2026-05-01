@@ -105,7 +105,7 @@ st.markdown("""
             border-radius: 20px;
         }
         .ccl-chinese-main {
-            font-size: 4.5em; 
+            font-size: 3.5em; 
             color: #1a1a1a;
             letter-spacing: 8px;
             font-weight: 900;
