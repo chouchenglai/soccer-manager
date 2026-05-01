@@ -9,7 +9,7 @@ from datetime import datetime, timedelta, timezone
 st.set_page_config(page_title="CCL-Soccer", page_icon="⚽", layout="wide")
 
 # --- 基本設定 ---
-DEFAULT_DB = "soccer_master_data.csv"
+DEFAULT_DB = "soccer_admin_data.csv"
 CHAT_DB = "ccl_chat_log.csv"
 COUNTER_FILE = "visitor_count.txt"
 ACTIVE_USERS_FILE = "active_users.log"
