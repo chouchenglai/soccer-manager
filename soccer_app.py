@@ -92,50 +92,51 @@ with st.sidebar:
     st.download_button("📥 下載完整紀錄 (CSV)", data=csv, file_name="soccer_backup.csv")
 
 # ---------------------------------------------------------
-# 3. 主頁面頂端：全新「足球走地」中文優先旗艦版標題
+# 3. 主頁面頂端：【震撼視覺】足球走地旗艦標題
 # ---------------------------------------------------------
 st.markdown("""
     <style>
         .ccl-brand-box {
             text-align: center; 
-            padding: 30px 0 25px 0;
-            background: linear-gradient(to bottom, #ffffff, #fafafa);
-            border-bottom: 2px solid #00c853;
-            margin-bottom: 25px;
-            border-radius: 15px;
+            padding: 40px 0 30px 0;
+            background: linear-gradient(to bottom, #ffffff, #f8f8f8);
+            border-bottom: 3px solid #00c853;
+            margin-bottom: 35px;
+            border-radius: 20px;
         }
         .ccl-chinese-main {
-            font-size: 3.5em; 
-            color: #1E1E1E;
-            letter-spacing: 6px;
-            font-weight: 800;
+            font-size: 4.5em; 
+            color: #1a1a1a;
+            letter-spacing: 8px;
+            font-weight: 900;
             display: block;
-            margin-bottom: 5px;
-            font-family: "Microsoft JhengHei", "Heiti TC", sans-serif;
+            margin-bottom: 10px;
+            line-height: 1.2;
+            font-family: "Microsoft JhengHei", "Heiti TC", "PingFang TC", sans-serif;
         }
         .ccl-sub-brand {
             font-family: 'Verdana', sans-serif;
             font-weight: 900;
-            font-size: 1.8em;
-            letter-spacing: 0px;
+            font-size: 1.6em;
+            letter-spacing: 1px;
             margin: 0;
         }
-        .ccl-prefix { color: #444; }
+        .ccl-prefix { color: #555; }
         .ccl-suffix { color: #00c853; }
         .ccl-url {
             font-family: 'Courier New', monospace;
-            color: #888;
+            color: #999;
             font-size: 1.0em;
-            margin-top: 10px;
+            margin-top: 12px;
         }
         .official-badge {
             background-color: #00c853;
             color: white;
-            padding: 2px 12px;
-            border-radius: 20px;
+            padding: 3px 15px;
+            border-radius: 25px;
             font-size: 0.7em;
             font-weight: bold;
-            margin-left: 10px;
+            margin-left: 12px;
             vertical-align: middle;
         }
     </style>
@@ -149,11 +150,10 @@ st.markdown("""
             <span class="official-badge">Verified</span>
         </div>
         <div class="ccl-url">
-            ccl-soccer<span style="color: #00c853;">.tw</span>
+            www.ccl-soccer<span style="color: #00c853;">.tw</span>
         </div>
     </div>
 """, unsafe_allow_html=True)
-
 
 # --- 邏輯判斷與主功能 ---
 if main_df.empty:
@@ -161,12 +161,8 @@ if main_df.empty:
     init_cap = st.number_input("起始本金", value=60000, step=1000)
     if st.button("建立"):
         row = {
-            "日期": get_now_time(),
-            "賽事項目": "初始",
-            "類型": "初始",
-            "金額": int(init_cap),
-            "盈虧金額": 0,
-            "結算總分": int(init_cap)
+            "日期": get_now_time(), "賽事項目": "初始", "類型": "初始",
+            "金額": int(init_cap), "盈虧金額": 0, "結算總分": int(init_cap)
         }
         save_data(pd.DataFrame([row]))
         st.rerun()
@@ -178,12 +174,10 @@ else:
     with tab1:
         import time
         from datetime import datetime, timedelta, timezone
-        
         try:
             balance = int(main_df["結算總分"].iloc[-1]) if not main_df.empty else 0
         except:
             balance = 0
-        
         if "bet_val" not in st.session_state:
             st.session_state.bet_val = 5000
 
@@ -225,19 +219,7 @@ else:
             </script>
         """, height=52)
 
-        @st.dialog("⚠️全額下注確認⚠️")
-        def confirm_all_in():
-            st.warning(f"確定要將全部餘額 {balance:,} 元一次下注嗎？")
-            c_conf1, c_conf2 = st.columns(2)
-            if c_conf1.button("💎 確定全額下注", type="primary", use_container_width=True):
-                st.components.v1.html("<script>window.parent.playAppSound('click');</script>", height=0)
-                st.session_state.bet_val = balance
-                st.rerun()
-            if c_conf2.button("取消", use_container_width=True):
-                st.rerun()
-
         m_info = st.text_area("賽事資訊", placeholder="例如：英超 阿仙奴 vs 車路士", key="input_info")
-
         colb = st.columns(5)
         amounts = [5000, 10000, 15000, 20000]
         labels = ["🔵 5,000", "🟢 10,000", "🟡 15,000", "🔴 20,000"]
@@ -245,15 +227,10 @@ else:
             if colb[i].button(labels[i]):
                 st.components.v1.html("<script>window.parent.playAppSound('click');</script>", height=0)
                 st.session_state.bet_val = amounts[i]; time.sleep(0.1); st.rerun()
-        if colb[4].button("💎 全額（梭哈）"):
-            st.components.v1.html("<script>window.parent.playAppSound('alert');</script>", height=0)
-            confirm_all_in()
-
+        
         c1, c2 = st.columns(2)
-        with c1:
-            bet_amt = st.number_input("下注金額", 0, max(1000000, balance), int(st.session_state.bet_val))
-        with c2:
-            gain_amt = st.number_input("盈利金額", 0, 1000000, value=None, placeholder="請輸入盈利金額")
+        with c1: bet_amt = st.number_input("下注金額", 0, max(1000000, balance), int(st.session_state.bet_val))
+        with c2: gain_amt = st.number_input("盈利金額", 0, 1000000, value=None, placeholder="請輸入盈利金額")
 
         tz_taipei = timezone(timedelta(hours=8))
         can_submit = balance > 0 and bet_amt > 0 and bet_amt <= balance
@@ -261,48 +238,29 @@ else:
 
         if cw.button("✅ 過關 (贏)", use_container_width=True, disabled=not can_submit or gain_amt is None):
             st.components.v1.html("<script>window.parent.playAppSound('win');</script>", height=0)
-            time.sleep(0.2)
             now_taipei = datetime.now(tz_taipei).strftime("%Y-%m-%d %H:%M:%S")
-            new_row = {
-                "日期": now_taipei, "賽事項目": m_info, "類型": "贏 (+)",
-                "金額": int(gain_amt), "盈虧金額": int(gain_amt), "結算總分": balance + int(gain_amt)
-            }
-            save_data(pd.concat([main_df, pd.DataFrame([new_row])], ignore_index=True))
-            st.rerun()
+            new_row = {"日期": now_taipei, "賽事項目": m_info, "類型": "贏 (+)", "金額": int(gain_amt), "盈虧金額": int(gain_amt), "結算總分": balance + int(gain_amt)}
+            save_data(pd.concat([main_df, pd.DataFrame([new_row])], ignore_index=True)); st.rerun()
 
         if cl.button("❌ 未過關 (輸)", use_container_width=True, disabled=not can_submit):
             st.components.v1.html("<script>window.parent.playAppSound('lose');</script>", height=0)
-            time.sleep(0.2)
             now_taipei = datetime.now(tz_taipei).strftime("%Y-%m-%d %H:%M:%S")
-            new_row = {
-                "日期": now_taipei, "賽事項目": m_info, "類型": "輸 (-)",
-                "金額": int(bet_amt), "盈虧金額": -int(bet_amt), "結算總分": balance - int(bet_amt)
-            }
-            save_data(pd.concat([main_df, pd.DataFrame([new_row])], ignore_index=True))
-            st.rerun()
+            new_row = {"日期": now_taipei, "賽事項目": m_info, "類型": "輸 (-)", "金額": int(bet_amt), "盈虧金額": -int(bet_amt), "結算總分": balance - int(bet_amt)}
+            save_data(pd.concat([main_df, pd.DataFrame([new_row])], ignore_index=True)); st.rerun()
 
-    # --- 其餘分頁保持 ---
+    # --- TAB2: 歷史記錄 ---
     with tab2:
         def color_row(row):
             style = ['color: black'] * len(row)
-            if row['盈虧金額'] > 0:
-                target_color = 'color: green'
-            elif row['盈虧金額'] < 0:
-                target_color = 'color: red'
-            else:
-                target_color = 'color: black'
-            type_idx = row.index.get_loc('類型')
-            profit_idx = row.index.get_loc('盈虧金額')
-            style[type_idx] = target_color
-            style[profit_idx] = target_color
+            if row['盈虧金額'] > 0: target_color = 'color: green'
+            elif row['盈虧金額'] < 0: target_color = 'color: red'
+            else: target_color = 'color: black'
+            style[row.index.get_loc('類型')] = target_color
+            style[row.index.get_loc('盈虧金額')] = target_color
             return style
+        st.dataframe(main_df.iloc[::-1].style.apply(color_row, axis=1).format({"金額": "{:,}", "盈虧金額": "{:+,.0f}", "結算總分": "{:,}"}), use_container_width=True)
 
-        st.dataframe(
-            main_df.iloc[::-1].style.apply(color_row, axis=1)
-            .format({"金額": "{:,}", "盈虧金額": "{:+,.0f}", "結算總分": "{:,}"}), 
-            use_container_width=True
-        )
-
+    # --- TAB3: 統計圖表 ---
     with tab3:
         st.markdown("### 📊 統計圖曲線分析表")
         st.components.v1.html("""
@@ -315,70 +273,46 @@ else:
                 window.parent.playLow = function() { var s = document.getElementById('low_audio'); s.currentTime = 0; s.play(); }
             </script>
         """, height=0)
+        ready = st.checkbox("🟢 解鎖音效權限 (啟動演示)", value=False)
+        val_box = st.empty(); chart_box = st.empty()
+        if ready and not main_df.empty:
+            data = pd.to_numeric(main_df["結算總分"]).tolist()
+            delay = 0.1 if len(data) < 30 else max(0.01, 120 / len(data))
+            for i in range(len(data)):
+                curr = data[i]
+                color = "#00c853" if i == 0 or curr >= data[i-1] else "#ff4b4b"
+                val_box.markdown(f'<div style="text-align: right; padding: 12px; border-right: 6px solid {color}; background-color: white; border-radius: 8px;"><span style="font-size: 3.5em; font-weight: bold; color: {color} !important;">${int(curr):,}</span></div>', unsafe_allow_html=True)
+                chart_box.line_chart(data[:i+1], height=320)
+                st.components.v1.html("<script>window.parent.playTick();</script>", height=0)
+                time.sleep(delay)
+            st.components.v1.html("<script>window.parent.playWin();</script>", height=0); st.balloons()
+        elif not main_df.empty: chart_box.line_chart(main_df["結算總分"], height=320)
 
-        ctrl_col, val_col = st.columns([1, 1.2])
-        with ctrl_col:
-            ready = st.checkbox("🟢 解鎖音效權限 (啟動演示)", value=False)
-        value_placeholder = val_col.empty()
-        chart_placeholder = st.empty()
-        msg_box = st.empty()
-
-        if ready:
-            if not main_df.empty:
-                full_data = pd.to_numeric(main_df["結算總分"]).tolist()
-                num_records = len(full_data)
-                delay = 0.1 if num_records < 30 else max(0.01, 120 / num_records)
-                msg_box.info(f"🚀 分析中...")
-                
-                for i in range(num_records):
-                    curr = full_data[i]
-                    is_up = True if i == 0 else curr >= full_data[i-1]
-                    color_code = "#00c853" if is_up else "#ff4b4b"
-                    value_placeholder.markdown(f"""
-                        <div style="text-align: right; padding: 12px; border-right: 6px solid {color_code}; background-color: #ffffff; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
-                            <span style="font-size: 1.0em; color: #555 !important;">目前結算總額:</span><br>
-                            <span style="font-size: 3.5em; font-weight: bold; color: {color_code} !important; font-family: 'Courier New', monospace;">
-                                ${int(curr):,}
-                            </span>
-                        </div>
-                    """, unsafe_allow_html=True)
-                    chart_placeholder.line_chart(full_data[:i+1], height=320)
-                    st.components.v1.html("<script>window.parent.playTick();</script>", height=0)
-                    if i > 5 and curr == min(full_data[:i+1]):
-                        st.components.v1.html("<script>window.parent.playLow();</script>", height=0)
-                    time.sleep(delay)
-                st.components.v1.html("<script>window.parent.playWin();</script>", height=0)
-                st.balloons()
-            else:
-                msg_box.error("❌ 無資料！")
-        else:
-            if not main_df.empty:
-                chart_placeholder.line_chart(main_df["結算總分"], height=320)
-
+    # --- TAB4: 報表管理 ---
     with tab4:
         with st.expander("補倉"):
             val = st.number_input("金額", 0, 999999999, 30000)
             if st.button("補"):
                 bal = int(main_df["結算總分"].iloc[-1])
-                new = {
-                    "日期":get_now_time(), "賽事項目": "補倉", "類型": "手動補倉",
-                    "金額": val, "盈虧金額": 0, "結算總分": bal + val
-                }
-                save_data(pd.concat([main_df, pd.DataFrame([new])], ignore_index=True))
-                st.rerun()
-
+                new = {"日期":get_now_time(), "賽事項目": "補倉", "類型": "手動補倉", "金額": val, "盈虧金額": 0, "結算總分": bal + val}
+                save_data(pd.concat([main_df, pd.DataFrame([new])], ignore_index=True)); st.rerun()
         with st.expander("新增報表"):
             name = st.text_input("名稱")
             if st.button("建立報表"):
-                if name:
-                    pd.DataFrame(columns=COLUMNS).to_csv(f"{name}.csv", index=False)
-                    st.rerun()
-
+                if name: pd.DataFrame(columns=COLUMNS).to_csv(f"{name}.csv", index=False); st.rerun()
         with st.expander("刪除報表"):
             deletable = [f for f in all_reports if f != DEFAULT_DB]
             if deletable:
                 target = st.selectbox("選擇", deletable)
-                if st.button("刪除"):
-                    os.remove(target)
-                    st.session_state.current_db = DEFAULT_DB
-                    st.rerun()
+                if st.button("刪除"): os.remove(target); st.session_state.current_db = DEFAULT_DB; st.rerun()
+
+# ---------------------------------------------------------
+# 4. 頁面最底部：版權宣告與謹慎標語
+# ---------------------------------------------------------
+st.divider()
+st.markdown("""
+    <div style="color: #888; font-size: 0.9em; text-align: left; padding-bottom: 20px;">
+        謹慎理財 信用至上<br>
+        Copyright © 2026 周振來管理系統版權所有
+    </div>
+""", unsafe_allow_html=True)
