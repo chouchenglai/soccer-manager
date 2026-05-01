@@ -281,10 +281,7 @@ else:
             save_data(pd.concat([main_df, pd.DataFrame([new_row])], ignore_index=True))
             st.rerun()
 
-st.markdown(
-    "<h4 style='text-align: center; color: white; background-color: red; padding: 10px; border-radius: 10px;'>⚠️ 謹慎理財！信用至上！ ⚠️</h4>",
-    unsafe_allow_html=True
-)
+st.markdown(謹慎理財 信用至上</h4>", unsafe_allow_html=True)
 
     # --- 其餘分頁保持 ---
     with tab2:
