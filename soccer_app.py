@@ -24,7 +24,6 @@ def get_now_time():
 
 # --- 訪問統計工具 ---
 def update_counters():
-    # 1. 總瀏覽次數
     if 'visited' not in st.session_state:
         st.session_state.visited = True
         if not os.path.exists(COUNTER_FILE):
@@ -37,7 +36,6 @@ def update_counters():
                 f.write(str(count))
                 f.truncate()
     
-    # 2. 在線人數
     now = time.time()
     try:
         session_id = st.runtime.scriptrunner.get_script_run_ctx().session_id
@@ -108,7 +106,7 @@ def delete_chat(index):
     df = df.drop(index)
     df.to_csv(CHAT_DB, index=False, encoding='utf-8-sig')
 
-# --- 初始化與執行 ---
+# --- 初始化與統計 ---
 ensure_files()
 update_counters()
 
@@ -130,10 +128,10 @@ with st.sidebar:
         current_bal = int(main_df["結算總分"].iloc[-1])
         st.metric("目前可用本金", f"${current_bal:,}")
         invest_types = ['初始', '手動補倉', '補倉']
-        total_investment = main_df[main_df['類型'].isin(invest_types)]['金額'].sum()
-        real_profit = current_bal - total_investment
-        if real_profit >= 0: st.success(f"📈 純獲利: `${real_profit:,}`")
-        else: st.error(f"📉 尚虧: `${abs(real_profit):,}`")
+        total_inv = main_df[main_df['類型'].isin(invest_types)]['金額'].sum()
+        real_p = current_bal - total_inv
+        if real_p >= 0: st.success(f"📈 純獲利: `${real_p:,}`")
+        else: st.error(f"📉 尚虧: `${abs(real_p):,}`")
 
 # --- 標題 ---
 st.markdown("""
@@ -150,7 +148,7 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
-# --- 主功能 ---
+# --- 主功能標籤頁 ---
 if main_df.empty:
     st.subheader("初始化報表")
     init_cap = st.number_input("起始本金", value=60000, step=1000)
@@ -161,20 +159,25 @@ else:
     tab1, tab2, tab3, tab4, tab5 = st.tabs(["💰 投注下單", "📋 歷史記錄", "📊 統計圖表", "📈 報表管理", "💬 討 論 區"])
 
     with tab1: # 投注
-        try: balance = int(main_df["結算總分"].iloc[-1])
-        except: balance = 0
+        balance = int(main_df["結算總分"].iloc[-1])
         st.components.v1.html("""
             <style>#clock-container { display: flex; align-items: center; background-color: #f8f9fb; padding: 8px 15px; border-radius: 6px; border-left: 5px solid #ff4b4b; font-family: sans-serif; }</style>
-            <div id="clock-container"><span style="font-size:14px;color:#666;margin-right:12px;">台北標準時間:</span><span id="clock" style="font-size:15px;font-weight:600;"></span></div>
+            <div id="clock-container"><span style="font-size:14px;color:#666;margin-right:12px;">台北標準時間 (GMT+8):</span><span id="clock" style="font-size:15px;font-weight:600;"></span></div>
             <script>function up(){ const n=new Date(); document.getElementById('clock').innerHTML=n.toLocaleString(); } setInterval(up,1000); up();</script>
         """, height=52)
         
+        @st.dialog("⚠️全額下注確認⚠️")
+        def confirm_all_in():
+            st.warning(f"確定要將全部餘額 {balance:,} 元一次下注嗎？")
+            if st.button("💎 確定全額下注", type="primary", use_container_width=True):
+                st.session_state.bet_val = balance; st.rerun()
+
         m_info = st.text_area("賽事資訊", placeholder="例如：英超 阿仙奴 vs 車路士")
         colb = st.columns(5)
         if 'bet_val' not in st.session_state: st.session_state.bet_val = 5000
         for i, amt in enumerate([5000, 10000, 15000, 20000]):
             if colb[i].button(f"🔵 {amt:,}"): st.session_state.bet_val = amt; st.rerun()
-        if colb[4].button("💎 全額"): st.session_state.bet_val = balance; st.rerun()
+        if colb[4].button("💎 全額"): confirm_all_in()
         
         c1, c2 = st.columns(2)
         with c1: bet = st.number_input("下注金額", 0, 1000000, int(st.session_state.bet_val))
@@ -188,14 +191,26 @@ else:
             new = {"日期": get_now_time(), "賽事項目": m_info, "類型": "輸 (-)", "金額": int(bet), "盈虧金額": -int(bet), "結算總分": balance - int(bet)}
             save_data(pd.concat([main_df, pd.DataFrame([new])], ignore_index=True)); st.rerun()
 
-    with tab2: st.dataframe(main_df.iloc[::-1], use_container_width=True)
-    with tab3: st.line_chart(main_df["結算總分"])
-    with tab4: st.write("報表管理中心")
+    with tab2: # 歷史
+        st.dataframe(main_df.iloc[::-1], use_container_width=True)
+
+    with tab3: # 統計圖
+        ready = st.checkbox("啟動動態演示")
+        if ready: st.line_chart(main_df["結算總分"]); st.balloons()
+        else: st.line_chart(main_df["結算總分"])
+
+    with tab4: # 管理
+        with st.expander("補倉"):
+            val = st.number_input("金額", 0, 999999, 30000)
+            if st.button("執行補倉"):
+                bal = int(main_df["結算總分"].iloc[-1])
+                new = {"日期": get_now_time(), "賽事項目": "補倉", "類型": "手動補倉", "金額": val, "盈虧金額": 0, "結算總分": bal + val}
+                save_data(pd.concat([main_df, pd.DataFrame([new])], ignore_index=True)); st.rerun()
 
     with tab5: # 討論區
         if 'reply_to' not in st.session_state: st.session_state.reply_to = ""
         if 'user_nickname' not in st.session_state:
-            with st.form("name_form"):
+            with st.form("login"):
                 name = st.text_input("輸入暱稱：")
                 pwd = st.text_input("密碼 (管理員)：", type="password") if name in ["管理員", "阿來"] else ""
                 if st.form_submit_button("進入討論區") and name:
@@ -204,7 +219,7 @@ else:
                     st.rerun()
         else:
             with st.form("chat", clear_on_submit=True):
-                msg = st.text_area("留言內容", value=st.session_state.reply_to)
+                msg = st.text_area("內容", value=st.session_state.reply_to)
                 if st.form_submit_button("送出") and msg:
                     save_chat(st.session_state.user_nickname, msg, "管理員" if st.session_state.is_admin else "訪客")
                     st.session_state.reply_to = ""; st.rerun()
@@ -219,7 +234,7 @@ else:
                 if st.session_state.is_admin and c2.button("🗑️", key=f"d_{idx}"):
                     delete_chat(idx); st.rerun()
 
-# --- 底部統計 ---
+# --- 底部統計 (黑色純文本) ---
 st.divider()
 total_v, online_v = get_counts()
 col_left, col_right = st.columns([3, 1])
