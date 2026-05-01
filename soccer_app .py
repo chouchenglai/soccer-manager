@@ -100,7 +100,7 @@ if os.path.exists(img_path):
                 text-align: center;
                 background-color: #ffffff;
                 padding: 0px 0;
-                margin-bottom: -50px;
+                margin-bottom: 50px;
                 border-radius: 12px;
             }}
             .banner-img {{
