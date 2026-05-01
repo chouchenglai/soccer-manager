@@ -99,7 +99,7 @@ if os.path.exists(img_path):
                 width: 100%;
                 text-align: center;
                 background-color: #ffffff;
-                padding: 10px 0;
+                padding: 0px 0;
                 margin-bottom: -50px;
                 border-radius: 12px;
             }}
