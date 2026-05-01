@@ -146,6 +146,7 @@ else:
             st.warning(f"確定要將全部餘額 {balance:,} 元一次下注嗎？")
             c_conf1, c_conf2 = st.columns(2)
             if c_conf1.button("💎 確定全額下注", type="primary", use_container_width=True):
+                st.components.v1.html("<script>window.parent.playAppSound('click');</script>", height=0)
                 st.session_state.bet_val = balance; st.rerun()
             if c_conf2.button("取消", use_container_width=True): st.rerun()
 
@@ -154,13 +155,17 @@ else:
         amounts = [5000, 10000, 15000, 20000]
         labels = ["🔵 5,000", "🟢 10,000", "🟡 15,000", "🔴 20,000"]
         for i in range(4):
-            if colb[i].button(labels[i]): st.session_state.bet_val = amounts[i]; time.sleep(0.1); st.rerun()
-        if colb[4].button("💎 全額（梭哈）"): confirm_all_in()
+            if colb[i].button(labels[i]):
+                st.components.v1.html("<script>window.parent.playAppSound('click');</script>", height=0)
+                st.session_state.bet_val = amounts[i]; time.sleep(0.1); st.rerun()
+        if colb[4].button("💎 全額（梭哈）"):
+            st.components.v1.html("<script>window.parent.playAppSound('alert');</script>", height=0); confirm_all_in()
 
         c1, c2 = st.columns(2)
         with c1: bet_amt = st.number_input("下注金額", 0, max(1000000, balance), int(st.session_state.bet_val))
         with c2: gain_amt = st.number_input("盈利金額", 0, 1000000, value=None, placeholder="請輸入盈利金額")
         
+        tz_taipei = timezone(timedelta(hours=8))
         can_submit = balance > 0 and bet_amt > 0 and bet_amt <= balance
         cw, cl = st.columns(2)
         if cw.button("✅ 過關 (贏)", use_container_width=True, disabled=not can_submit or gain_amt is None):
