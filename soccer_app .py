@@ -117,8 +117,6 @@ else:
     # 預備方案：萬一圖片沒傳成功，顯示簡約文字
     st.markdown("<h2 style='text-align: center; color: #004b93;'>足球走地賽事管理系統</h2>", unsafe_allow_html=True)
 
-# --- Sidebar (側邊欄) ---
-with st.sidebar:
     st.header("💰 資金與統計中心")
     idx = all_reports.index(st.session_state.current_db) if st.session_state.current_db in all_reports else 0
     selected_db = st.selectbox("切換報表", all_reports, index=idx)
