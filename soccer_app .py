@@ -110,22 +110,14 @@ with st.sidebar:
 # ---------------------------------------------------------
 # 3. 主頁面頂端：【震撼視覺】足球走地旗艦標題
 # ---------------------------------------------------------
+# 請將這段代碼中括號內的部分換成您實際的資訊
 st.markdown("""
     <style>
-        .banner-container {
-            width: 100%;
-            text-align: center;
-            padding: 10px 0;
-            margin-bottom: 25px;
-        }
-        .banner-img {
-            max-width: 100%;
-            height: auto;
-            border-radius: 12px;
-        }
+        .banner-container { width: 100%; text-align: center; padding: 10px 0; margin-bottom: 25px; }
+        .banner-img { max-width: 100%; height: auto; border-radius: 12px; }
     </style>
     <div class="banner-container">
-        <img src="https://您的GitHub連結/CCL_Logo.jpg" class="banner-img">
+        <img src="https://raw.githubusercontent.com/您的GitHub用戶名/您的倉庫名/main/CCL%20Logo.jpg" class="banner-img">
     </div>
 """, unsafe_allow_html=True)
 
