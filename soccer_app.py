@@ -6,7 +6,7 @@ import time
 from datetime import datetime, timedelta, timezone
 
 # 1. 頁面設定 (最頂端)
-st.set_page_config(page_title="CCL-Soccer", page_icon="⚽", layout="wide")
+st.set_page_config(page_title="CCL-Soccer 足球賽事管理系統", page_icon="⚽", layout="wide")
 
 # --- 基本設定 ---
 DEFAULT_DB = "soccer_data.csv"
