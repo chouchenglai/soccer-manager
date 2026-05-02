@@ -270,8 +270,7 @@ else:
                     st.session_state.show_add_funds = False
                     st.rerun()          
           
-    with tab2: # 註冊帳號"        
-               st.write("")
+    with tab2: # 註冊帳號"                       
         with st.expander("加入會員"):
             n = st.text_input("名稱")
             if st.button("確認送出") and n: pd.DataFrame(columns=COLUMNS).to_csv(f"{n}.csv", index=False); st.rerun()
