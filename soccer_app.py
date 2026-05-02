@@ -234,13 +234,12 @@ else:
             new_row = {"日期": now_taipei, "賽事項目": m_info, "類型": "輸 (-)", "金額": int(bet_amt), "盈虧金額": -int(bet_amt), "結算總分": balance - int(bet_amt)}
             save_data(pd.concat([main_df, pd.DataFrame([new_row])], ignore_index=True)); st.rerun()                 
 
-# --- 新增：再投入補倉的快捷入口 ---
+# --- 再投入補倉 ---
         st.write("")   
         col_link, col_empty = st.columns([2, 8]) # 放在左側
         with col_link:
-            # 模擬超鏈結樣式的按鈕
-            if st.button("🔗 再投入補倉", help="點擊直接進行補倉操作", use_container_width=False):
-                # 這裡利用 session_state 做標記，讓系統知道我們要開啟補倉功能
+            # 超鏈接按鈕
+            if st.button("🔗 再投入補倉", help="點擊直接進行補倉操作", use_container_width=False):                
                 st.session_state.show_add_funds = True
                 st.rerun()
 
@@ -271,13 +270,7 @@ else:
                     st.session_state.show_add_funds = False
                     st.rerun()          
           
-    with tab2: # 註冊帳號"
-        with st.expander("補倉"):
-            val = st.number_input("金額", 0, 999999999, 30000)
-            if st.button("補"):
-                bal = int(main_df["結算總分"].iloc[-1])
-                new = {"日期":get_now_time(), "賽事項目": "補倉", "類型": "手動補倉", "金額": val, "盈虧金額": 0, "結算總分": bal + val}
-                save_data(pd.concat([main_df, pd.DataFrame([new])], ignore_index=True)); st.rerun()
+    with tab2: # 註冊帳號"        
         with st.expander("新增報表"):
             n = st.text_input("名稱")
             if st.button("建立報表") and n: pd.DataFrame(columns=COLUMNS).to_csv(f"{n}.csv", index=False); st.rerun()
