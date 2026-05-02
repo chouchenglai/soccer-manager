@@ -248,7 +248,7 @@ else:
             st.divider()
             st.subheader("📥 快速補倉面板")
             with st.form("quick_add_funds"):
-                add_amt = st.number_input("請輸入補倉金額", min_value=1000, step=1000, value=10000)
+                add_amt = st.number_input("請輸入補倉金額", min_value=1000, step=1000, value=30000)
                 c_submit, c_cancel = st.columns([2, 8])
                 if c_submit.form_submit_button("確認補倉"):
                     # 執行補倉邏輯
@@ -269,7 +269,6 @@ else:
                 if c_cancel.form_submit_button("取消"):
                     st.session_state.show_add_funds = False
                     st.rerun()          
-                    st.write("")
           
     with tab2: # 註冊帳號"
         with st.expander("補倉"):
