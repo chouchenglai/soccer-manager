@@ -271,10 +271,11 @@ else:
                     st.rerun()          
           
     with tab2: # 註冊帳號"        
-        with st.expander("新增報表"):
+               st.write("")
+        with st.expander("加入會員"):
             n = st.text_input("名稱")
-            if st.button("建立報表") and n: pd.DataFrame(columns=COLUMNS).to_csv(f"{n}.csv", index=False); st.rerun()
-        with st.expander("刪除報表"):
+            if st.button("確認送出") and n: pd.DataFrame(columns=COLUMNS).to_csv(f"{n}.csv", index=False); st.rerun()
+        with st.expander("註銷會員"):
             d_list = [f for f in all_reports if f != DEFAULT_DB]
             if d_list:
                 t = st.selectbox("選擇", d_list)
