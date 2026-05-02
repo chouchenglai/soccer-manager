@@ -235,9 +235,14 @@ else:
             save_data(pd.concat([main_df, pd.DataFrame([new_row])], ignore_index=True)); st.rerun()
     
         with tab_live:
-            st.markdown("### 📡 即時比分同步觀看 (Live)")   
-            st.components.v1.iframe("https://live.titan007.com/indexall_big.aspx", height=800, scrolling=True)
-            st.info("💡 提示：擇優要下注賽事後，點擊上方欄目，即可切換回【下單欄目】。")
+        # 第一行：大標題
+        st.markdown("### 📡 即時比分同步觀看 (Live)")
+        
+        # 第二行：藍色背景提示框 (這就是 st.info 的效果)
+        st.info("💡 提示：擇優要下注賽事後，點擊上方欄目，即可切換回【下單欄目】。")
+        
+        # 第三行：嵌入外部比分網[cite: 1]
+        st.components.v1.iframe("https://live.titan007.com/indexall_big.aspx", height=800, scrolling=True)
 
     with tab2: # 歷史記錄
         def color_row(row):
