@@ -31,16 +31,41 @@ def ensure_files():
         pd.DataFrame(columns=CHAT_COLUMNS).to_csv(CHAT_DB, index=False, encoding='utf-8-sig')
 
 def load_data():
+    """讀取當前選擇的報表資料，並自動忽略數位簽章行"""
     if os.path.exists(st.session_state.current_db):
         try:
-            df = pd.read_csv(st.session_state.current_db)
+            # 💡 核心優化：加上 comment='#' 讓系統無視第一行的協議標記
+            df = pd.read_csv(st.session_state.current_db, comment='#')
+            
+            # 移除舊有的月份欄位
             if "月份" in df.columns:
                 df = df.drop(columns=["月份"])
             return df
-        except:
+        except Exception:
+            # 若讀取失敗或檔案為空，回傳標準欄位的空表格
             return pd.DataFrame(columns=COLUMNS)
     return pd.DataFrame(columns=COLUMNS)
 
+def save_data(df):
+    if "月份" in df.columns:
+        df = df.drop(columns=["月份"])
+    df.to_csv(st.session_state.current_db, index=False, encoding='utf-8-sig')
+
+def load_chat():
+    if os.path.exists(CHAT_DB):
+        return pd.read_csv(CHAT_DB)
+    return pd.DataFrame(columns=CHAT_COLUMNS)
+
+def save_chat(nickname, content):
+    df = load_chat()
+    new_msg = {
+        "時間": get_now_time(),
+        "暱稱": nickname,
+        "內容": content,
+        "標籤": "訪客" if nickname != "admin" else "管理員"
+    }
+    df = pd.concat([df, pd.DataFrame([new_msg])], ignore_index=True)
+    df.to_csv(CHAT_DB, index=False, encoding='utf-8-sig')
 
 # --- 初始化 ---
 ensure_files()
@@ -308,30 +333,51 @@ else:
                     st.session_state.show_add_funds = False
                     st.rerun()          
           
-    with tab2:
-    # 如果還沒同意協議，只顯示按鈕[cite: 2]
-    if not st.session_state.agreed_terms:
-        if st.button("🚀 點我閱讀協議"):
-            show_agreement()
-    else:
-        # 同意後，顯示註冊介面
-        st.success("✅ 協議已認證")
-        n = st.text_input("請輸入新會員名稱")
-        if st.button("確認送出"):
-            if n:
-                file_name = f"{n}.csv"
-                # 寫入包含協議標記的檔案[cite: 1]
-                with open(file_name, "w", encoding="utf-8-sig") as f:
-                    f.write("# 協議狀態: [已認證_同意服務協議]\n")
-                    pd.DataFrame(columns=COLUMNS).to_csv(f, index=False)
-                
-                # 🚀 執行跳轉關鍵：更換 current_db 並重新整理[cite: 2]
-                st.session_state.current_db = file_name
-                st.session_state.agreed_terms = False # 重置協議狀態供下次使用
-                
-                st.success(f"註冊成功！即將跳轉至 {n} 的報表...")
-                time.sleep(1)
-                st.rerun() # 重新執行後，預設會回到第一個 Tab[cite: 2]     
+    with tab2: # 📝 註冊帳號
+        st.write("")                       
+        st.write("")
+        
+        # 初始化狀態
+        if "agreed_terms" not in st.session_state:
+            st.session_state.agreed_terms = False
+
+        # --- 邏輯 A：未同意協議 ---
+        if not st.session_state.agreed_terms:
+            st.info("💡 歡迎加入！請點擊下方按鈕閱讀協議並開始註冊。")
+            if st.button("🚀 閱讀協議並開始註冊", use_container_width=True):
+                show_agreement() # 這裡會調用上方定義好的對話框
+        
+        # --- 邏輯 B：同意後顯示原本內容 ---
+        else:
+            with st.expander("▼ 加入會員 (協議認證通過)", expanded=True):
+                st.write("✅ 您已認證並同意服務協議")
+                n = st.text_input("名稱", placeholder="請輸入欲創建的報表名稱...")
+                if st.button("確認送出"):
+                    if n:
+                        file_name = f"{n}.csv"
+                        # 使用您代碼中定義好的 TW_TZ
+                        now_str = datetime.now(TW_TZ).strftime("%Y-%m-%d %H:%M:%S")
+                        agreement_stamp = f"# 協議狀態: [已認證_同意服務協議] | 認證時間: {now_str}\n"
+                        
+                        with open(file_name, "w", encoding="utf-8-sig") as f:
+                            f.write(agreement_stamp)
+                            pd.DataFrame(columns=COLUMNS).to_csv(f, index=False)
+                        
+                        st.success(f"🎊 會員「{n}」註冊成功！報表已完成數位認證。")
+                        time.sleep(1)
+                        st.session_state.agreed_terms = False # 重置保護，下次進來仍需閱讀
+                        st.rerun()
+                    else:
+                        st.error("請輸入名稱！")
+
+            with st.expander("▼ 註銷會員"):
+                d_list = [f for f in get_all_reports() if f != DEFAULT_DB]
+                if d_list:
+                    t = st.selectbox("選擇欲刪除的報表", d_list)
+                    if st.button("確認刪除報表"):
+                        os.remove(t)
+                        st.session_state.current_db = DEFAULT_DB
+                        st.rerun()     
 
     with tab_live:
         # 第一行：大標題
