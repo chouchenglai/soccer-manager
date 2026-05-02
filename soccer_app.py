@@ -235,7 +235,7 @@ else:
             save_data(pd.concat([main_df, pd.DataFrame([new_row])], ignore_index=True)); st.rerun()
     
         with tab_live:
-            st.markdown("### 📡 球探即時比分 (同步觀看)")   
+            st.markdown("### 📡 即時比分同步觀看 (Live)")   
             st.components.v1.iframe("https://live.titan007.com/indexall_big.aspx", height=800, scrolling=True)
 
     with tab2: # 歷史記錄
