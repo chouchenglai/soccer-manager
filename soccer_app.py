@@ -232,7 +232,8 @@ else:
             st.components.v1.html("<script>window.parent.playAppSound('lose');</script>", height=0); time.sleep(0.2)
             now_taipei = datetime.now(tz_taipei).strftime("%Y-%m-%d %H:%M:%S")
             new_row = {"日期": now_taipei, "賽事項目": m_info, "類型": "輸 (-)", "金額": int(bet_amt), "盈虧金額": -int(bet_amt), "結算總分": balance - int(bet_amt)}
-            save_data(pd.concat([main_df, pd.DataFrame([new_row])], ignore_index=True)); st.rerun()  
+            save_data(pd.concat([main_df, pd.DataFrame([new_row])], ignore_index=True)); st.rerun()
+                        st.write("")  
 
 # --- 新增：再投入補倉的快捷入口 ---
         col_link, col_empty = st.columns([2, 8]) # 放在左側
