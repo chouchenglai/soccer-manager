@@ -153,7 +153,7 @@ if main_df.empty:
         row = {"日期": get_now_time(), "賽事項目": "初始", "類型": "初始", "金額": int(init_cap), "盈虧金額": 0, "結算總分": int(init_cap)}
         save_data(pd.DataFrame([row])); st.rerun()
 else:
-    tab1, tab_live, tab2, tab3, tab4, tab5 = st.tabs(["💰 下單投注",  "📈 註冊帳號",  "⚽ 即時比分",  "📋 歷史記錄", "📊 統計圖表",  "💬 討 論 區"])
+    tab1, tab2, tab_live, tab3, tab4, tab5 = st.tabs(["💰 下單投注",  "📈 註冊帳號",  "⚽ 即時比分",  "📋 歷史記錄", "📊 統計圖表",  "💬 討 論 區"])
 
     with tab1: # 下單投注
         try: balance = int(main_df["結算總分"].iloc[-1])
@@ -233,8 +233,24 @@ else:
             now_taipei = datetime.now(tz_taipei).strftime("%Y-%m-%d %H:%M:%S")
             new_row = {"日期": now_taipei, "賽事項目": m_info, "類型": "輸 (-)", "金額": int(bet_amt), "盈虧金額": -int(bet_amt), "結算總分": balance - int(bet_amt)}
             save_data(pd.concat([main_df, pd.DataFrame([new_row])], ignore_index=True)); st.rerun()            
-    
-        with tab_live:
+          
+    with tab2: # 註冊帳號"
+        with st.expander("補倉"):
+            val = st.number_input("金額", 0, 999999999, 30000)
+            if st.button("補"):
+                bal = int(main_df["結算總分"].iloc[-1])
+                new = {"日期":get_now_time(), "賽事項目": "補倉", "類型": "手動補倉", "金額": val, "盈虧金額": 0, "結算總分": bal + val}
+                save_data(pd.concat([main_df, pd.DataFrame([new])], ignore_index=True)); st.rerun()
+        with st.expander("新增報表"):
+            n = st.text_input("名稱")
+            if st.button("建立報表") and n: pd.DataFrame(columns=COLUMNS).to_csv(f"{n}.csv", index=False); st.rerun()
+        with st.expander("刪除報表"):
+            d_list = [f for f in all_reports if f != DEFAULT_DB]
+            if d_list:
+                t = st.selectbox("選擇", d_list)
+                if st.button("刪除"): os.remove(t); st.session_state.current_db = DEFAULT_DB; st.rerun()     
+
+    with tab_live:
         # 第一行：大標題
             st.markdown("### 📡 即時比分同步觀看 (Live)")
         
@@ -242,18 +258,8 @@ else:
             st.info("💡 提示：擇優場次後，請複製賽事，再點擊上方欄目，切換【下單投注】")
            
         # 第三行：嵌入外部比分網[cite: 1]
-            st.components.v1.iframe("https://live.titan007.com/indexall_big.aspx", height=800, scrolling=True)
+            st.components.v1.iframe("https://live.titan007.com/indexall_big.aspx", height=800, scrolling=True) 
 
-    with tab2: # 歷史記錄
-        def color_row(row):
-            style = ['color: black'] * len(row)
-            if row['盈虧金額'] > 0: target_color = 'color: green'
-            elif row['盈虧金額'] < 0: target_color = 'color: red'
-            else: target_color = 'color: black'
-            style[row.index.get_loc('類型')] = target_color
-            style[row.index.get_loc('盈虧金額')] = target_color
-            return style
-        st.dataframe(main_df.iloc[::-1].style.apply(color_row, axis=1).format({"金額": "{:,}", "盈虧金額": "{:+,.0f}", "結算總分": "{:,}"}), use_container_width=True)
 
     with tab3: # 統計圖表
         st.markdown("### 📊 統計圖曲線分析表")
@@ -279,21 +285,16 @@ else:
             st.components.v1.html("<script>window.parent.playWin();</script>", height=0); st.balloons()
         elif not main_df.empty: c_box.line_chart(main_df["結算總分"], height=320)
 
-    with tab4: # 註冊帳號"
-        with st.expander("補倉"):
-            val = st.number_input("金額", 0, 999999999, 30000)
-            if st.button("補"):
-                bal = int(main_df["結算總分"].iloc[-1])
-                new = {"日期":get_now_time(), "賽事項目": "補倉", "類型": "手動補倉", "金額": val, "盈虧金額": 0, "結算總分": bal + val}
-                save_data(pd.concat([main_df, pd.DataFrame([new])], ignore_index=True)); st.rerun()
-        with st.expander("新增報表"):
-            n = st.text_input("名稱")
-            if st.button("建立報表") and n: pd.DataFrame(columns=COLUMNS).to_csv(f"{n}.csv", index=False); st.rerun()
-        with st.expander("刪除報表"):
-            d_list = [f for f in all_reports if f != DEFAULT_DB]
-            if d_list:
-                t = st.selectbox("選擇", d_list)
-                if st.button("刪除"): os.remove(t); st.session_state.current_db = DEFAULT_DB; st.rerun()
+    with tab4: # 歷史記錄
+        def color_row(row):
+            style = ['color: black'] * len(row)
+            if row['盈虧金額'] > 0: target_color = 'color: green'
+            elif row['盈虧金額'] < 0: target_color = 'color: red'
+            else: target_color = 'color: black'
+            style[row.index.get_loc('類型')] = target_color
+            style[row.index.get_loc('盈虧金額')] = target_color
+            return style
+        st.dataframe(main_df.iloc[::-1].style.apply(color_row, axis=1).format({"金額": "{:,}", "盈虧金額": "{:+,.0f}", "結算總分": "{:,}"}), use_container_width=True) 
 
     # ---------------------------------------------------------
     # 5. 討論區模組
