@@ -269,6 +269,7 @@ else:
                 if c_cancel.form_submit_button("取消"):
                     st.session_state.show_add_funds = False
                     st.rerun()          
+                    st.write("")
           
     with tab2: # 註冊帳號"
         with st.expander("補倉"):
