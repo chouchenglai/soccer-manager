@@ -154,7 +154,7 @@ if main_df.empty:
         row = {"日期": get_now_time(), "賽事項目": "初始", "類型": "初始", "金額": int(init_cap), "盈虧金額": 0, "結算總分": int(init_cap)}
         save_data(pd.DataFrame([row])); st.rerun()
 else:
-    tab1, tablive, tab2, tab3, tab4, tab5 = st.tabs(["💰 下單投注", "⚽ 即時比分", "📋 歷史記錄", "📊 統計圖表", "📈 報表管理", "💬 討 論 區"])
+    tab1, tab_live, tab2, tab3, tab4, tab5 = st.tabs(["💰 下單投注", "⚽ 即時比分", "📋 歷史記錄", "📊 統計圖表", "📈 報表管理", "💬 討 論 區"])
 
     with tab1: # 下單投注
         try: balance = int(main_df["結算總分"].iloc[-1])
@@ -235,7 +235,11 @@ else:
             save_data(pd.concat([main_df, pd.DataFrame([new_row])], ignore_index=True)); st.rerun()
        
     with tab_live:
-        st.components.v1.iframe("https://live.titan007.com/indexall_big.aspx", height=800, scrolling=True)
+    # 這裡的 tab_live 必須與上面定義的一模一樣
+    st.markdown("### 📡 球探即時比分 (同步監控)")
+    
+    # 使用 iframe 直接嵌入網頁，height 可以根據您的螢幕高度調整
+    st.components.v1.iframe("https://live.titan007.com/indexall_big.aspx", height=800, scrolling=True)
 
     with tab2: # 歷史記錄
         def color_row(row):
