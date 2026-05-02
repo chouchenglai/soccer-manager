@@ -356,24 +356,32 @@ else:
                 if st.button("確認送出"):
                     if n:
                         file_name = f"{n}.csv"
-                        # 1. 取得台北目前時間
                         now_str = datetime.now(TW_TZ).strftime("%Y-%m-%d %H:%M:%S")
-                        
-                        # 2. 準備繁體中文數位簽章標記
                         agreement_stamp = f"# 協議狀態: [已認證_同意服務協議] | 認證時間: {now_str}\n"
                         
-                        # 3. 執行檔案寫入 (注入簽章)
+                        # 1. 準備初始資料列 (這行是防止 KeyError 的關鍵)
+                        # 設定起始金額為 0 或您指定的數字
+                        init_row = {
+                            "日期": now_str, 
+                            "賽事項目": "系統初始化", 
+                            "類型": "初始", 
+                            "金額": 0, 
+                            "盈虧金額": 0, 
+                            "結算總分": 0
+                        }
+                        init_df = pd.DataFrame([init_row])
+                        
+                        # 2. 執行檔案寫入 (注入簽章 + 初始數據)
                         with open(file_name, "w", encoding="utf-8-sig") as f:
-                            f.write(agreement_stamp) # 寫入第一行
-                            pd.DataFrame(columns=COLUMNS).to_csv(f, index=False) # 寫入欄位
+                            f.write(agreement_stamp)
+                            init_df.to_csv(f, index=False)
                         
-                        # 🚀 4. 核心跳轉優化：切換檔案並重置狀態
-                        st.session_state.current_db = file_name  # 強制切換至新報表
-                        st.session_state.agreed_terms = False    # 關閉註冊流程
+                        # 🚀 3. 自動跳轉與切換
+                        st.session_state.current_db = file_name  
+                        st.session_state.agreed_terms = False    
                         
-                        st.success(f"🎊 會員「{n}」註冊成功！系統切換中，請稍候...")
+                        st.success(f"🎊 會員「{n}」註冊成功！系統準備中...")
                         
-                        # 5. 執行跳轉 (回到第一個 Tab 並讀取新檔案)
                         time.sleep(1.5)
                         st.rerun() 
                     else:
