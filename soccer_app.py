@@ -153,7 +153,7 @@ if main_df.empty:
         row = {"日期": get_now_time(), "賽事項目": "初始", "類型": "初始", "金額": int(init_cap), "盈虧金額": 0, "結算總分": int(init_cap)}
         save_data(pd.DataFrame([row])); st.rerun()
 else:
-    tab1, tab2, tab_live, tab3, tab4, tab5 = st.tabs(["💰 下單投注",  "📈 註冊帳號",  "⚽ 即時比分",  "📋 歷史記錄", "📊 統計圖表",  "💬 討 論 區"])
+    tab1, tab2, tab_live, tab3, tab4, tab5 = st.tabs(["💰 下單投注",  "📝 註冊帳號",  "⚽ 即時比分",  "📋 歷史記錄", "📊 統計圖表",  "💬 討 論 區"])
 
     with tab1: # 下單投注
         try: balance = int(main_df["結算總分"].iloc[-1])
