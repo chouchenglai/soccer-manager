@@ -237,7 +237,7 @@ else:
         with tab_live:
             st.markdown("### 📡 即時比分同步觀看 (Live)")   
             st.components.v1.iframe("https://live.titan007.com/indexall_big.aspx", height=800, scrolling=True)
-                        st.info("💡 提示：擇優要下注賽事後，點擊上方欄目，即可切換回【下單欄目】。")
+            st.info("💡 提示：擇優要下注賽事後，點擊上方欄目，即可切換回【下單欄目】。")
 
     with tab2: # 歷史記錄
         def color_row(row):
