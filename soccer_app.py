@@ -133,6 +133,47 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+
+# ... 您的寶藍色 CSS 代碼之後 ...
+
+# ==========================================
+# 1. 協議對話框定義 (全域區域，放在這裡確保 tab2 可以調用到它)
+# ==========================================
+@st.dialog("📋 CCL-Soccer 會員服務許可協議")
+def show_agreement():
+    st.warning("⚠️ 為了保障您的權益，請仔細閱讀以下條款。")
+    
+    agreement_content = """
+    ### 一、 服務性質聲明
+    本平台僅提供賽事數據分析與統計工具。我們**不經手任何下注金流**，亦不與非法博弈網站掛鉤。
+    
+    ### 二、 風險豁免 (免責聲明)
+    * 數據僅供參考，不保證獲利。
+    * 會員應自行承擔所有投資風險。
+    * 嚴禁利用本站資訊進行非法賭博。
+    
+    ### 三、 隱私權保護
+    我們承諾採取技術措施保護會員註冊資料，絕不主動洩露予第三方。
+    
+    ### 四、 使用者協定
+    會員帳號僅限個人使用，不得將本站分析內容進行商業倒賣或公開傳播。
+    
+    ### 五、 賽事客觀認知 (站長重要提醒)
+    **用戶在參考報明牌資訊時，原則已同意免責條款聲明。賽事無絕對的認同，畢竟數據只是提供參考，輸贏與否，取決於球員球技，如果數據再漂亮，球員球技不行，最後也是會無用，量力而為，以平常心看待結果，要有恆心及毅力，必定能有所成就，希望大家都能愉快參與。**
+    """
+    
+    with st.container(height=380):
+        st.markdown(agreement_content)
+    
+    st.divider()
+    agree = st.checkbox("我已閱讀並完全同意上述「所有」協定內容")
+    
+    if st.button("確認並進入註冊", type="primary", disabled=not agree):
+        st.session_state.agreed_terms = True
+        st.rerun()
+
+# 接下來才是您的 Sidebar (側邊欄) 代碼 ...
+
 # --- Sidebar (側邊欄) ---
 with st.sidebar:
     st.header("💰 資金與統計中心")
@@ -287,17 +328,51 @@ else:
                     st.session_state.show_add_funds = False
                     st.rerun()          
           
-    with tab2: # 註冊帳號"
+    with tab2: # 📝 註冊帳號
         st.write("")                       
         st.write("")
-        with st.expander("加入會員"):
-            n = st.text_input("名稱")
-            if st.button("確認送出") and n: pd.DataFrame(columns=COLUMNS).to_csv(f"{n}.csv", index=False); st.rerun()
-        with st.expander("註銷會員"):
-            d_list = [f for f in all_reports if f != DEFAULT_DB]
-            if d_list:
-                t = st.selectbox("選擇", d_list)
-                if st.button("刪除"): os.remove(t); st.session_state.current_db = DEFAULT_DB; st.rerun()     
+        
+        # 初始化狀態
+        if "agreed_terms" not in st.session_state:
+            st.session_state.agreed_terms = False
+
+        # --- 邏輯 A：未同意協議 ---
+        if not st.session_state.agreed_terms:
+            st.info("💡 歡迎加入！請點擊下方按鈕閱讀協議並開始註冊。")
+            if st.button("🚀 閱讀協議並開始註冊", use_container_width=True):
+                show_agreement() # 這裡會調用上方定義好的對話框
+        
+        # --- 邏輯 B：同意後顯示原本內容 ---
+        else:
+            with st.expander("▼ 加入會員 (協議認證通過)", expanded=True):
+                st.write("✅ 您已認證並同意服務協議")
+                n = st.text_input("名稱", placeholder="請輸入欲創建的報表名稱...")
+                if st.button("確認送出"):
+                    if n:
+                        file_name = f"{n}.csv"
+                        # 使用您代碼中定義好的 TW_TZ
+                        now_str = datetime.now(TW_TZ).strftime("%Y-%m-%d %H:%M:%S")
+                        agreement_stamp = f"# 協議狀態: [已認證_同意服務協議] | 認證時間: {now_str}\n"
+                        
+                        with open(file_name, "w", encoding="utf-8-sig") as f:
+                            f.write(agreement_stamp)
+                            pd.DataFrame(columns=COLUMNS).to_csv(f, index=False)
+                        
+                        st.success(f"🎊 會員「{n}」註冊成功！報表已完成數位認證。")
+                        time.sleep(1)
+                        st.session_state.agreed_terms = False # 重置保護，下次進來仍需閱讀
+                        st.rerun()
+                    else:
+                        st.error("請輸入名稱！")
+
+            with st.expander("▼ 註銷會員"):
+                d_list = [f for f in get_all_reports() if f != DEFAULT_DB]
+                if d_list:
+                    t = st.selectbox("選擇欲刪除的報表", d_list)
+                    if st.button("確認刪除報表"):
+                        os.remove(t)
+                        st.session_state.current_db = DEFAULT_DB
+                        st.rerun()     
 
     with tab_live:
         # 第一行：大標題
