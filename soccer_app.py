@@ -154,7 +154,7 @@ if main_df.empty:
         row = {"日期": get_now_time(), "賽事項目": "初始", "類型": "初始", "金額": int(init_cap), "盈虧金額": 0, "結算總分": int(init_cap)}
         save_data(pd.DataFrame([row])); st.rerun()
 else:
-    tab1, tab_live, tab2, tab3, tab4, tab5 = st.tabs(["💰 下單投注", "📺 即時比分", "📋 歷史記錄", "📊 統計圖表", "📈 報表管理", "💬 討 論 區"])
+    tab1, tab_live, tab2, tab3, tab4, tab5 = st.tabs(["💰 下單投注", "⚽ 即時比分", "📋 歷史記錄", "📊 統計圖表", "📈 報表管理", "💬 討 論 區"])
 
     with tab1: # 下單投注
         try: balance = int(main_df["結算總分"].iloc[-1])
@@ -233,13 +233,9 @@ else:
             now_taipei = datetime.now(tz_taipei).strftime("%Y-%m-%d %H:%M:%S")
             new_row = {"日期": now_taipei, "賽事項目": m_info, "類型": "輸 (-)", "金額": int(bet_amt), "盈虧金額": -int(bet_amt), "結算總分": balance - int(bet_amt)}
             save_data(pd.concat([main_df, pd.DataFrame([new_row])], ignore_index=True)); st.rerun()
-   
-    # --- 2. 新增即時比分內容 (直接嵌入) ---
+       
     with tab_live:
-    st.markdown("### 📡 球探即時比分 (同步監控)")
-    # 直接在頁面內嵌入，不跳轉、不彈窗，最安全
     st.components.v1.iframe("https://live.titan007.com/indexall_big.aspx", height=800, scrolling=True)
-    st.info("💡 提示：您可以直接在上方查看比分，若要下單，請點擊上方標籤切換回『下單投注』。")    
 
     with tab2: # 歷史記錄
         def color_row(row):
