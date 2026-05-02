@@ -359,8 +359,7 @@ else:
                         now_str = datetime.now(TW_TZ).strftime("%Y-%m-%d %H:%M:%S")
                         agreement_stamp = f"# 協議狀態: [已認證_同意服務協議] | 認證時間: {now_str}\n"
                         
-                        # 1. 準備初始資料列 (這行是防止 KeyError 的關鍵)
-                        # 設定起始金額為 0 或您指定的數字
+                        # ✨ 關鍵修復：建立一筆初始數據，防止跳轉後找不到「結算總分」欄位
                         init_row = {
                             "日期": now_str, 
                             "賽事項目": "系統初始化", 
@@ -371,12 +370,12 @@ else:
                         }
                         init_df = pd.DataFrame([init_row])
                         
-                        # 2. 執行檔案寫入 (注入簽章 + 初始數據)
+                        # 執行檔案寫入 (注入協議標記 + 初始數據)
                         with open(file_name, "w", encoding="utf-8-sig") as f:
-                            f.write(agreement_stamp)
-                            init_df.to_csv(f, index=False)
+                            f.write(agreement_stamp) # 寫入第一行條款
+                            init_df.to_csv(f, index=False) # 寫入報表欄位與初始數據
                         
-                        # 🚀 3. 自動跳轉與切換
+                        # 自動跳轉與切換
                         st.session_state.current_db = file_name  
                         st.session_state.agreed_terms = False    
                         
