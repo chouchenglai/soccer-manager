@@ -116,6 +116,23 @@ if os.path.exists(img_path):
 else:    
     st.markdown("<h2 style='text-align: center; color: #004b93;'>足球走地賽事管理系統</h2>", unsafe_allow_html=True)
 
+# ==========================================
+# 🚀 「寶藍色加粗」CSS 代碼
+# ==========================================
+st.markdown("""
+    <style>
+        /* 定位第二個 Tab 的文字 (註冊帳號) */
+        button[data-baseweb="tab"]:nth-child(2) p {
+            color: #007bff !important; /* 寶藍色 */
+            font-weight: 900 !important; /* 特粗效果 */
+        }
+        /* 當選中第二個 Tab 時，下方底線也同步變藍色 */
+        button[data-baseweb="tab"]:nth-child(2)[aria-selected="true"] {
+            border-bottom-color: #007bff !important;
+        }
+    </style>
+""", unsafe_allow_html=True)
+
 # --- Sidebar (側邊欄) ---
 with st.sidebar:
     st.header("💰 資金與統計中心")
