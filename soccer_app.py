@@ -17,7 +17,7 @@ CHAT_COLUMNS = ["時間", "暱稱", "內容", "標籤"]
 TW_TZ = pytz.timezone('Asia/Taipei') # 設定台北時區
 
 def get_now_time():
-    """獲取精確的台北目前時間"""
+    """獲取導航的台北目前時間"""
     return datetime.now(TW_TZ).strftime("%Y-%m-%d %H:%M")
 
 # --- 工具 ---
@@ -88,7 +88,7 @@ def get_base64_img(file_path):
         data = f.read()
     return base64.b64encode(data).decode()
 
-# 2. 執行顯示 (確保 ccl_logo_header.jpg 已上傳至 GitHub)
+# 2. 執行顯示
 img_path = "ccl_logo_header.jpg"
 
 if os.path.exists(img_path):
@@ -113,8 +113,7 @@ if os.path.exists(img_path):
             <img src="data:image/jpeg;base64,{img_b64}" class="banner-img">
         </div>
     """, unsafe_allow_html=True)
-else:
-    # 預備方案：萬一圖片沒傳成功，顯示簡約文字
+else:    
     st.markdown("<h2 style='text-align: center; color: #004b93;'>足球走地賽事管理系統</h2>", unsafe_allow_html=True)
 
 # --- Sidebar (側邊欄) ---
@@ -154,7 +153,7 @@ if main_df.empty:
         row = {"日期": get_now_time(), "賽事項目": "初始", "類型": "初始", "金額": int(init_cap), "盈虧金額": 0, "結算總分": int(init_cap)}
         save_data(pd.DataFrame([row])); st.rerun()
 else:
-    tab1, tab_live, tab2, tab3, tab4, tab5 = st.tabs(["💰 下單投注", "⚽ 即時比分", "📋 歷史記錄", "📊 統計圖表", "📈 報表管理", "💬 討 論 區"])
+    tab1, tab_live, tab2, tab3, tab4, tab5 = st.tabs(["💰 下單投注",  "📈 註冊帳號",  "⚽ 即時比分",  "📋 歷史記錄", "📊 統計圖表",  "💬 討 論 區"])
 
     with tab1: # 下單投注
         try: balance = int(main_df["結算總分"].iloc[-1])
@@ -256,7 +255,7 @@ else:
             return style
         st.dataframe(main_df.iloc[::-1].style.apply(color_row, axis=1).format({"金額": "{:,}", "盈虧金額": "{:+,.0f}", "結算總分": "{:,}"}), use_container_width=True)
 
-    with tab3: # 統計圖表 (氣球鎖定)
+    with tab3: # 統計圖表
         st.markdown("### 📊 統計圖曲線分析表")
         st.components.v1.html("""
             <audio id="tick_audio" src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3" preload="auto"></audio>
@@ -280,7 +279,7 @@ else:
             st.components.v1.html("<script>window.parent.playWin();</script>", height=0); st.balloons()
         elif not main_df.empty: c_box.line_chart(main_df["結算總分"], height=320)
 
-    with tab4: # 報表管理
+    with tab4: # 註冊帳號"
         with st.expander("補倉"):
             val = st.number_input("金額", 0, 999999999, 30000)
             if st.button("補"):
@@ -297,7 +296,7 @@ else:
                 if st.button("刪除"): os.remove(t); st.session_state.current_db = DEFAULT_DB; st.rerun()
 
     # ---------------------------------------------------------
-    # 5. 討 論 區 模組 (全開放管理版)
+    # 5. 討論區模組
     # ---------------------------------------------------------
     with tab5:
         st.markdown("### 💬 足球現場實況滾球推薦")
@@ -305,7 +304,7 @@ else:
         # 1. 訪客登記邏輯
         if 'user_nickname' not in st.session_state:
             with st.form("name_form"):
-                name = st.text_input("首次留言，請輸入您的暱稱：", placeholder="例如：玩家稱呼")
+                name = st.text_input("首次留言，請輸入您的暱稱：", placeholder="例如：訪客稱呼")
                 if st.form_submit_button("確認進入") and name:
                     st.session_state.user_nickname = name
                     st.rerun()
@@ -343,7 +342,7 @@ else:
                             """, unsafe_allow_html=True)
                         
                         with col_ctrl:
-                            # 增加：全開放式編輯與刪除功能
+                            # 編輯與刪除功能
                             if st.button("🗑️ 刪除", key=f"del_{index}"):
                                 updated_df = c_df.drop(index)
                                 updated_df.to_csv(CHAT_DB, index=False, encoding='utf-8-sig')
@@ -357,7 +356,7 @@ else:
                                     c_df.to_csv(CHAT_DB, index=False, encoding='utf-8-sig')
                                     st.rerun()
             else:
-                st.write("目前還沒有人留言，歡迎您加入及討論賽事！")
+                st.write("目前還沒有人留言，歡迎您發言及討論賽事！")
 
 # --- 底部宣告 ---
 st.divider()
