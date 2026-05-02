@@ -216,7 +216,7 @@ else:
 
         c1, c2 = st.columns(2)
         with c1: bet_amt = st.number_input("下注金額", 0, max(1000000, balance), int(st.session_state.bet_val))
-        with c2: gain_amt = st.number_input("盈利金額", 0, 1000000, value=None, placeholder="請輸入盈利金額")  st.write
+        with c2: gain_amt = st.number_input("盈利金額", 0, 1000000, value=None, placeholder="請輸入盈利金額")  
                    
         tz_taipei = timezone(timedelta(hours=8))
         can_submit = balance > 0 and bet_amt > 0 and bet_amt <= balance
@@ -233,14 +233,10 @@ else:
             now_taipei = datetime.now(tz_taipei).strftime("%Y-%m-%d %H:%M:%S")
             new_row = {"日期": now_taipei, "賽事項目": m_info, "類型": "輸 (-)", "金額": int(bet_amt), "盈虧金額": -int(bet_amt), "結算總分": balance - int(bet_amt)}
             save_data(pd.concat([main_df, pd.DataFrame([new_row])], ignore_index=True)); st.rerun()
-
-# --- 2. 即時比分網 ---       
-        with tab_live:
-    # 這裡的 tab_live 必須與上面定義的一模一樣
-            st.markdown("### 📡 球探即時比分 (同步監控)")
     
-    # 使用 iframe 直接嵌入網頁，height 可以根據您的螢幕高度調整
-    st.components.v1.iframe("https://live.titan007.com/indexall_big.aspx", height=800, scrolling=True)
+        with tab_live:
+            st.markdown("### 📡 球探即時比分 (同步觀看)")   
+            st.components.v1.iframe("https://live.titan007.com/indexall_big.aspx", height=800, scrolling=True)
 
     with tab2: # 歷史記錄
         def color_row(row):
