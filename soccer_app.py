@@ -217,6 +217,7 @@ else:
         c1, c2 = st.columns(2)
         with c1: bet_amt = st.number_input("下注金額", 0, max(1000000, balance), int(st.session_state.bet_val))
         with c2: gain_amt = st.number_input("盈利金額", 0, 1000000, value=None, placeholder="請輸入盈利金額")  
+        st.write("")
                    
         tz_taipei = timezone(timedelta(hours=8))
         can_submit = balance > 0 and bet_amt > 0 and bet_amt <= balance
@@ -232,8 +233,7 @@ else:
             st.components.v1.html("<script>window.parent.playAppSound('lose');</script>", height=0); time.sleep(0.2)
             now_taipei = datetime.now(tz_taipei).strftime("%Y-%m-%d %H:%M:%S")
             new_row = {"日期": now_taipei, "賽事項目": m_info, "類型": "輸 (-)", "金額": int(bet_amt), "盈虧金額": -int(bet_amt), "結算總分": balance - int(bet_amt)}
-            save_data(pd.concat([main_df, pd.DataFrame([new_row])], ignore_index=True)); st.rerun()
-            st.write("")
+            save_data(pd.concat([main_df, pd.DataFrame([new_row])], ignore_index=True)); st.rerun()            
     
         with tab_live:
         # 第一行：大標題
