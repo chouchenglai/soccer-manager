@@ -31,7 +31,55 @@ def ensure_files():
         pd.DataFrame(columns=CHAT_COLUMNS).to_csv(CHAT_DB, index=False, encoding='utf-8-sig')
 
 def load_data():
-    import base64
+    if os.path.exists(st.session_state.current_db):
+        try:
+            df = pd.read_csv(st.session_state.current_db)
+            if "月份" in df.columns:
+                df = df.drop(columns=["月份"])
+            return df
+        except:
+            return pd.DataFrame(columns=COLUMNS)
+    return pd.DataFrame(columns=COLUMNS)
+
+def save_data(df):
+    if "月份" in df.columns:
+        df = df.drop(columns=["月份"])
+    df.to_csv(st.session_state.current_db, index=False, encoding='utf-8-sig')
+
+def load_chat():
+    if os.path.exists(CHAT_DB):
+        return pd.read_csv(CHAT_DB)
+    return pd.DataFrame(columns=CHAT_COLUMNS)
+
+def save_chat(nickname, content):
+    df = load_chat()
+    new_msg = {
+        "時間": get_now_time(),
+        "暱稱": nickname,
+        "內容": content,
+        "標籤": "訪客" if nickname != "admin" else "管理員"
+    }
+    df = pd.concat([df, pd.DataFrame([new_msg])], ignore_index=True)
+    df.to_csv(CHAT_DB, index=False, encoding='utf-8-sig')
+
+# --- 初始化 ---
+ensure_files()
+
+if 'current_db' not in st.session_state:
+    st.session_state.current_db = DEFAULT_DB
+
+all_reports = get_all_reports()
+
+if not all_reports:
+    all_reports = [DEFAULT_DB]
+
+if st.session_state.current_db not in all_reports:
+    st.session_state.current_db = all_reports[0]
+
+main_df = load_data()
+
+# --- 放在 main_df = load_data() 之後 ---
+import base64
 import os
 
 # 1. 圖片轉換函數
@@ -67,9 +115,6 @@ if os.path.exists(img_path):
     """, unsafe_allow_html=True)
 else:    
     st.markdown("<h2 style='text-align: center; color: #004b93;'>足球走地賽事管理系統</h2>", unsafe_allow_html=True)
-
-
-
 
 # ==========================================
 # 🚀 「寶藍色加粗」CSS 代碼
@@ -113,7 +158,7 @@ def show_agreement():
     ### 四、 使用者協定
     會員帳號僅限個人使用，不得將本站分析內容進行商業倒賣或公開傳播。
     
-    ### 五、 賽事客觀認知 (站長重要叮嚀！！！)
+    ### 五、 賽事客觀認知 (站長重要提醒)
     **用戶在參考報明牌資訊時，原則已同意免責條款聲明。賽事無絕對的認同，畢竟數據只是提供參考，輸贏與否，取決於球員球技，如果數據再漂亮，球員球技不行，最後也是會無用，量力而為，以平常心看待結果，要有恆心及毅力，必定能有所成就，希望大家都能愉快參與。**
     """
     
@@ -291,22 +336,21 @@ else:
         if "agreed_terms" not in st.session_state:
             st.session_state.agreed_terms = False
 
-        # --- 流程 A：尚未同意協議 ---
+        # --- 邏輯 A：未同意協議 ---
         if not st.session_state.agreed_terms:
             st.info("💡 歡迎加入！請點擊下方按鈕閱讀協議並開始註冊。")
             if st.button("🚀 閱讀協議並開始註冊", use_container_width=True):
-                show_agreement()
+                show_agreement() # 這裡會調用上方定義好的對話框
         
-        # --- 流程 B：同意後顯示註冊欄目 ---
+        # --- 邏輯 B：同意後顯示原本內容 ---
         else:
             with st.expander("▼ 加入會員 (協議認證通過)", expanded=True):
                 st.write("✅ 您已認證並同意服務協議")
                 n = st.text_input("名稱", placeholder="請輸入欲創建的報表名稱...")
-                
                 if st.button("確認送出"):
                     if n:
                         file_name = f"{n}.csv"
-                        # 1. 執行數位簽章寫入 (同步台北時間)
+                        # 使用您代碼中定義好的 TW_TZ
                         now_str = datetime.now(TW_TZ).strftime("%Y-%m-%d %H:%M:%S")
                         agreement_stamp = f"# 協議狀態: [已認證_同意服務協議] | 認證時間: {now_str}\n"
                         
@@ -314,14 +358,10 @@ else:
                             f.write(agreement_stamp)
                             pd.DataFrame(columns=COLUMNS).to_csv(f, index=False)
                         
-                        # 🚀 2. 核心優化：自動切換報表並準備跳轉[cite: 2]
-                        st.session_state.current_db = file_name  
-                        st.session_state.agreed_terms = False    
-                        
-                        st.success(f"🎊 會員「{n}」註冊成功！系統將自動為您切換並跳轉至投注頁面...")
-                        
-                        time.sleep(1.5) # 留點時間顯示成功訊息
-                        st.rerun() # 重新執行後，預設會回到第一個 Tab[cite: 2]
+                        st.success(f"🎊 會員「{n}」註冊成功！報表已完成數位認證。")
+                        time.sleep(1)
+                        st.session_state.agreed_terms = False # 重置保護，下次進來仍需閱讀
+                        st.rerun()
                     else:
                         st.error("請輸入名稱！")
 
