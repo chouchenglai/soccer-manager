@@ -261,8 +261,18 @@ else:
             st.components.v1.iframe("https://live.titan007.com/indexall_big.aspx", height=800, scrolling=True) 
 
 
-    with tab3: # 統計圖表
-        st.markdown("### 📊 統計圖曲線分析表")
+    with tab3: # 歷史記錄
+        def color_row(row):
+            style = ['color: black'] * len(row)
+            if row['盈虧金額'] > 0: target_color = 'color: green'
+            elif row['盈虧金額'] < 0: target_color = 'color: red'
+            else: target_color = 'color: black'
+            style[row.index.get_loc('類型')] = target_color
+            style[row.index.get_loc('盈虧金額')] = target_color
+            return style
+        st.dataframe(main_df.iloc[::-1].style.apply(color_row, axis=1).format({"金額": "{:,}", "盈虧金額": "{:+,.0f}", "結算總分": "{:,}"}), use_container_width=True)
+ 
+    with tab4: #st.markdown("### 📊 統計圖曲線分析表")
         st.components.v1.html("""
             <audio id="tick_audio" src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3" preload="auto"></audio>
             <audio id="win_audio" src="https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3" preload="auto"></audio>
@@ -283,18 +293,7 @@ else:
                 c_box.line_chart(data[:i+1], height=320)
                 st.components.v1.html("<script>window.parent.playTick();</script>", height=0); time.sleep(delay)
             st.components.v1.html("<script>window.parent.playWin();</script>", height=0); st.balloons()
-        elif not main_df.empty: c_box.line_chart(main_df["結算總分"], height=320)
-
-    with tab4: # 歷史記錄
-        def color_row(row):
-            style = ['color: black'] * len(row)
-            if row['盈虧金額'] > 0: target_color = 'color: green'
-            elif row['盈虧金額'] < 0: target_color = 'color: red'
-            else: target_color = 'color: black'
-            style[row.index.get_loc('類型')] = target_color
-            style[row.index.get_loc('盈虧金額')] = target_color
-            return style
-        st.dataframe(main_df.iloc[::-1].style.apply(color_row, axis=1).format({"金額": "{:,}", "盈虧金額": "{:+,.0f}", "結算總分": "{:,}"}), use_container_width=True) 
+        elif not main_df.empty: c_box.line_chart(main_df["結算總分"], height=320)  
 
     # ---------------------------------------------------------
     # 5. 討論區模組
