@@ -297,28 +297,67 @@ else:
                 if st.button("刪除"): os.remove(t); st.session_state.current_db = DEFAULT_DB; st.rerun()
 
     # ---------------------------------------------------------
-    # 5. 討 論 區 模組 (統整與修復)
+    # 5. 討 論 區 模組 (全開放管理版)
     # ---------------------------------------------------------
     with tab5:
         st.markdown("### 💬 足球現場實況滾球推薦")
+        
+        # 1. 訪客登記邏輯 (保留原有功能)
         if 'user_nickname' not in st.session_state:
             with st.form("name_form"):
-                name = st.text_input("首次留言，請輸入您的暱稱：", placeholder="例如：玩家稱呼")
+                name = st.text_input("首次留言，請輸入您的暱稱：", placeholder="例如：足球愛好者")
                 if st.form_submit_button("確認進入") and name:
-                    st.session_state.user_nickname = name; st.rerun()
+                    st.session_state.user_nickname = name
+                    st.rerun()
         else:
             st.info(f"歡迎回來！您現在的尊稱是：**{st.session_state.user_nickname}**")
+            
+            # 2. 留言輸入表單
             with st.form("chat_form", clear_on_submit=True):
                 msg = st.text_area("輸入您的內容...", height=100)
                 if st.form_submit_button("送出留言") and msg:
-                    save_chat(st.session_state.user_nickname, msg); st.success("留言已送出！"); time.sleep(1); st.rerun()
+                    save_chat(st.session_state.user_nickname, msg)
+                    st.success("留言已送出！")
+                    time.sleep(0.5)
+                    st.rerun()
+            
             st.divider()
+            
+            # 3. 留言顯示與開放式管理
             c_df = load_chat()
             if not c_df.empty:
-                for _, r in c_df.iloc[::-1].iterrows():
-                    l_color = "#00c853" if r['標籤'] == "管理員" else "#888"
-                    st.markdown(f"""<div style="background-color: #f9f9f9; padding: 15px; border-radius: 10px; margin-bottom: 10px; border-left: 5px solid {l_color};"><span style="color: {l_color}; font-weight: bold;">{r['暱稱']}</span> <span style="color: #aaa; font-size: 0.8em; margin-left: 10px;">{r['時間']}</span><p style="margin-top: 10px; color: #333; line-height: 1.5;">{r['內容']}</p></div>""", unsafe_allow_html=True)
-            else: st.write("目前還沒有人留言，歡迎您加入及討論賽事！")
+                # 倒序顯示，最新的在最上面[cite: 2]
+                for index, r in c_df.iloc[::-1].iterrows():
+                    with st.container():
+                        # 佈局：左側內容，右側管理按鈕
+                        col_text, col_ctrl = st.columns([8, 2])
+                        
+                        with col_text:
+                            # 保留原本的視覺樣式[cite: 2]
+                            st.markdown(f"""
+                                <div style="background-color: #f9f9f9; padding: 15px; border-radius: 10px; margin-bottom: 5px; border-left: 5px solid #00c853;">
+                                    <span style="color: #00c853; font-weight: bold;">{r['暱稱']}</span> 
+                                    <span style="color: #aaa; font-size: 0.8em; margin-left: 10px;">{r['時間']}</span>
+                                    <p style="margin-top: 10px; color: #333; line-height: 1.5;">{r['內容']}</p>
+                                </div>
+                            """, unsafe_allow_html=True)
+                        
+                        with col_ctrl:
+                            # 增加：全開放式編輯與刪除功能
+                            if st.button("🗑️ 刪除", key=f"del_{index}"):
+                                updated_df = c_df.drop(index)
+                                updated_df.to_csv(CHAT_DB, index=False, encoding='utf-8-sig')
+                                st.rerun()
+                            
+                            # 編輯功能切換
+                            if st.checkbox("📝 編輯", key=f"edit_chk_{index}"):
+                                edit_val = st.text_area("修正內容：", value=r['內容'], key=f"edit_area_{index}")
+                                if st.button("確認修改", key=f"save_{index}"):
+                                    c_df.at[index, '內容'] = edit_val
+                                    c_df.to_csv(CHAT_DB, index=False, encoding='utf-8-sig')
+                                    st.rerun()
+            else:
+                st.write("目前還沒有人留言，歡迎您加入及討論賽事！")
 
 # --- 底部宣告 ---
 st.divider()
