@@ -302,10 +302,10 @@ else:
     with tab5:
         st.markdown("### 💬 足球現場實況滾球推薦")
         
-        # 1. 訪客登記邏輯 (保留原有功能)
+        # 1. 訪客登記邏輯
         if 'user_nickname' not in st.session_state:
             with st.form("name_form"):
-                name = st.text_input("首次留言，請輸入您的暱稱：", placeholder="例如：足球愛好者")
+                name = st.text_input("首次留言，請輸入您的暱稱：", placeholder="例如：玩家稱呼")
                 if st.form_submit_button("確認進入") and name:
                     st.session_state.user_nickname = name
                     st.rerun()
