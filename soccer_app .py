@@ -41,26 +41,6 @@ def load_data():
             return pd.DataFrame(columns=COLUMNS)
     return pd.DataFrame(columns=COLUMNS)
 
-def save_data(df):
-    if "月份" in df.columns:
-        df = df.drop(columns=["月份"])
-    df.to_csv(st.session_state.current_db, index=False, encoding='utf-8-sig')
-
-def load_chat():
-    if os.path.exists(CHAT_DB):
-        return pd.read_csv(CHAT_DB)
-    return pd.DataFrame(columns=CHAT_COLUMNS)
-
-def save_chat(nickname, content):
-    df = load_chat()
-    new_msg = {
-        "時間": get_now_time(),
-        "暱稱": nickname,
-        "內容": content,
-        "標籤": "訪客" if nickname != "admin" else "管理員"
-    }
-    df = pd.concat([df, pd.DataFrame([new_msg])], ignore_index=True)
-    df.to_csv(CHAT_DB, index=False, encoding='utf-8-sig')
 
 # --- 初始化 ---
 ensure_files()
