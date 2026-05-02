@@ -31,19 +31,7 @@ def ensure_files():
         pd.DataFrame(columns=CHAT_COLUMNS).to_csv(CHAT_DB, index=False, encoding='utf-8-sig')
 
 def load_data():
-    if os.path.exists(st.session_state.current_db):
-        try:
-            # 關鍵：加上 comment='#' 參數來無視協議標記[cite: 2]
-            df = pd.read_csv(st.session_state.current_db, comment='#')
-            if "月份" in df.columns:
-                df = df.drop(columns=["月份"])
-            return df
-        except:
-            return pd.DataFrame(columns=COLUMNS)
-    return pd.DataFrame(columns=COLUMNS)
-
-# --- 放在 main_df = load_data() 之後 ---
-import base64
+    import base64
 import os
 
 # 1. 圖片轉換函數
@@ -79,6 +67,9 @@ if os.path.exists(img_path):
     """, unsafe_allow_html=True)
 else:    
     st.markdown("<h2 style='text-align: center; color: #004b93;'>足球走地賽事管理系統</h2>", unsafe_allow_html=True)
+
+
+
 
 # ==========================================
 # 🚀 「寶藍色加粗」CSS 代碼
