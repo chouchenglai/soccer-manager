@@ -234,9 +234,9 @@ else:
             new_row = {"日期": now_taipei, "賽事項目": m_info, "類型": "輸 (-)", "金額": int(bet_amt), "盈虧金額": -int(bet_amt), "結算總分": balance - int(bet_amt)}
             save_data(pd.concat([main_df, pd.DataFrame([new_row])], ignore_index=True)); st.rerun()
        
-    with tab_live:
+        with tab_live:
     # 這裡的 tab_live 必須與上面定義的一模一樣
-    st.markdown("### 📡 球探即時比分 (同步監控)")
+            st.markdown("### 📡 球探即時比分 (同步監控)")
     
     # 使用 iframe 直接嵌入網頁，height 可以根據您的螢幕高度調整
     st.components.v1.iframe("https://live.titan007.com/indexall_big.aspx", height=800, scrolling=True)
