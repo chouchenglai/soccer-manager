@@ -240,6 +240,8 @@ else:
         
         # 第二行：藍色背景提示框 (這就是 st.info 的效果)
             st.info("💡 提示：擇優要下注賽事後，點擊上方欄目，即可切換回【下單欄目】。")
+
+            st.link_button("🔗 在獨立視窗開啟比分網 (設置可保留)", "https://live.titan007.com/indexall_big.aspx", use_container_width=True)
         
         # 第三行：嵌入外部比分網[cite: 1]
             st.components.v1.iframe("https://live.titan007.com/indexall_big.aspx", height=800, scrolling=True)
