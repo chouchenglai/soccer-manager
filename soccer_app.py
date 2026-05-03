@@ -302,10 +302,7 @@ else:
             else:
                 st.info("目前沒有可刪除的自訂報表")               
 
-    # ---------------------------------------------------------
-    # 5. 討論區模組
-    # ---------------------------------------------------------
-    with tab5:
+            with tab5:
         st.markdown("### 💬 足球現場實況滾球推薦")
         
         # 1. 訪客登記邏輯
@@ -323,7 +320,7 @@ else:
                 msg = st.text_area("輸入您的內容...", height=100)
                 if st.form_submit_button("送出留言") and msg:
                     save_chat(st.session_state.user_nickname, msg)
-                    st.success("留言已送出！")
+                    st.success("留言已送出")
                     time.sleep(0.5)
                     st.rerun()
             
@@ -364,6 +361,7 @@ else:
                                     st.rerun()
             else:
                 st.write("目前還沒有人留言，歡迎您發言及討論賽事！")
+
 
 # --- 底部 ---
 st.divider()
