@@ -120,6 +120,7 @@ else:
     # 接下來接您原本各個 tab 的內容...
     
     with tab1:
+   with tab1:
     # --- 關鍵邏輯：如果資料庫是空的，必須先設定本金 ---
     if main_df.empty:
         st.subheader("🏁 初始化報表")
