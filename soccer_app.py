@@ -204,7 +204,7 @@ else:
     with tab4: # 報表管理[cite: 2]
         with st.expander("新增報表"):
             n = st.text_input("報表名稱")
-             if st.button("建立") and n: pd.DataFrame(columns=COLUMNS).to_csv(f"{n}.csv", index=False); st.rerun()
+             if st.button("建立") and n: pd.DataFrame(columns=COLUMNS).to_csv(f"{n}.csv", index=False)
             with st.expander("刪除報表"):
                d_list = [f for f in all_reports if f != DEFAULT_DB]
                   if d_list:
