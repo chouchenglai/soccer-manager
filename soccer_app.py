@@ -66,10 +66,15 @@ def save_chat(nickname, content):
 
 # --- 初始化 ---
 ensure_files()
-if 'current_db' not in st.session_state: st.session_state.current_db = DEFAULT_DB
-all_reports = get_all_reports()
-if not all_reports: all_reports = [DEFAULT_DB]
-if st.session_state.current_db not in all_reports: st.session_state.current_db = all_reports[0]
+idef ensure_files():
+    # 確保主報表、討論區存在
+    for db, cols in [(DEFAULT_DB, COLUMNS), (CHAT_DB, CHAT_COLUMNS)]:
+        if not os.path.exists(db):
+            pd.DataFrame(columns=cols).to_csv(db, index=False, encoding='utf-8-sig')
+    
+    # 確保申請進度表存在
+    if not os.path.exists("pending_requests.csv"):
+        pd.DataFrame(columns=["時間", "用戶名稱", "報表名稱", "狀態"]).to_csv("pending_requests.csv", index=False, encoding='utf-8-sig')
 
 main_df = load_data()
 
@@ -279,41 +284,109 @@ else:
         st.line_chart(main_df["結算總分"], height=320)
 
     with tab4: # 📈 報表管理
-        st.subheader("📋 報表檔案管理與申請")
+        st.subheader("📋 報表檔案管理與申請中心")
         
-        # --- 工具函數：確保申請清單檔案存在 (24小時制) ---
+        # --- 工具函數：確保申請清單檔案存在 ---
         def ensure_request_file():
-            # --- 修正後的安全讀取與顯示邏輯 ---
-req_file = "pending_requests.csv"
+            req_file = "pending_requests.csv"
+            req_cols = ["時間", "用戶名稱", "報表名稱", "狀態"]
+            if not os.path.exists(req_file):
+                pd.DataFrame(columns=req_cols).to_csv(req_file, index=False, encoding='utf-8-sig')
 
-# 1. 先判定檔案是否存在，建立 status_df 變數
-if os.path.exists(req_file):
-    try:
-        status_df = pd.read_csv(req_file)
-    except:
-        status_df = pd.DataFrame(columns=["時間", "用戶名稱", "報表名稱", "狀態"])
-else:
-    status_df = pd.DataFrame(columns=["時間", "用戶名稱", "報表名稱", "狀態"])
+        # --- 區塊 1：新增報表申請邏輯 ---
+        with st.expander("➕ 申請建立新報表帳本", expanded=True):
+            col_n1, col_n2 = st.columns([3, 1])
+            with col_n1:
+                new_name = st.text_input("輸入新報表名稱", placeholder="例如：User01_專用報表 (不需輸入 .csv)")
+            with col_n2:
+                st.write(" ") # 垂直對齊補位
+                create_btn = st.button("送出申請", use_container_width=True)
+            
+            if create_btn:
+                if new_name:
+                    # 統一副檔名格式
+                    target_file = f"{new_name}.csv" if not new_name.endswith(".csv") else new_name
+                    
+                    if os.path.exists(target_file):
+                        st.error(f"⚠️ 檔案 {target_file} 已經存在或正在審核中！")
+                    else:
+                        # 1. 建立伺服器端臨時「地基檔」
+                        pd.DataFrame(columns=COLUMNS).to_csv(target_file, index=False, encoding='utf-8-sig')
+                        
+                        # 2. 寫入申請清單以便管理員手動同步回 GitHub
+                        ensure_request_file()
+                        req_df = pd.read_csv("pending_requests.csv")
+                        new_req = {
+                            "時間": datetime.now().strftime("%Y-%m-%d %H:%M"),
+                            "用戶名稱": "訪客用戶", 
+                            "報表名稱": target_file,
+                            "狀態": "⏳ 正在審核中 (24H同步)" 
+                        }
+                        pd.concat([req_df, pd.DataFrame([new_req])], ignore_index=True).to_csv("pending_requests.csv", index=False, encoding='utf-8-sig')
+                        
+                        # 3. 提示與反饋
+                        st.balloons()
+                        st.session_state.current_db = target_file
+                        st.success(f"✅ 報表「{target_file}」已送出審核申請！")
+                        st.info("📢 提示：系統已開啟臨時帳本，請於 24 小時內確認審核結果。")
+                        time.sleep(2)
+                        st.rerun()
+                else:
+                    st.error("❌ 請輸入報表名稱！")
 
-# 2. 顯示進度表格 (確保這一段與上面的 if/else 站在同一條垂直線上)
-st.write("### 🔍 報表申請審核進度查詢")
+        st.divider()
 
-if not status_df.empty:
-    # 依時間倒序排列
-    status_df = status_df.iloc[::-1]
-    
-    def style_status(val):
-        if '審核中' in val: return 'color: #ff4b4b; font-weight: bold;'
-        if '通過' in val: return 'color: #00cc66; font-weight: bold;'
-        return ''
+        # --- 區塊 2：報表審核進度查詢表格 ---
+        st.write("### 🔍 報表申請審核進度查詢")
+        
+        req_file = "pending_requests.csv"
+        # 安全讀取邏輯：防止檔案不存在時報錯
+        if os.path.exists(req_file):
+            try:
+                status_df = pd.read_csv(req_file)
+            except:
+                status_df = pd.DataFrame(columns=["時間", "用戶名稱", "報表名稱", "狀態"])
+        else:
+            status_df = pd.DataFrame(columns=["時間", "用戶名稱", "報表名稱", "狀態"])
+        
+        if not status_df.empty:
+            # 最新申請顯示在最上方
+            display_df = status_df.iloc[::-1]
+            
+            # 定義審核狀態的顏色樣式
+            def style_status(val):
+                if '審核中' in val: return 'color: #ff4b4b; font-weight: bold;'
+                if '通過' in val: return 'color: #00cc66; font-weight: bold;'
+                return ''
 
-    st.dataframe(
-        status_df.style.applymap(style_status, subset=['狀態']),
-        use_container_width=True,
-        hide_index=True
-    )
-else:
-    st.caption("目前尚無申請紀錄。")  
+            st.dataframe(
+                display_df.style.applymap(style_status, subset=['狀態']),
+                use_container_width=True,
+                hide_index=True
+            )
+        else:
+            st.caption("目前尚無申請紀錄。")
+
+        st.divider()
+
+        # --- 區塊 3：現有報表清單 (管理員同步至 GitHub 後，切換才有效) ---
+        st.write("### 📂 已通過審核之報表清單")
+        # 過濾掉進度表與討論區檔案，讓清單乾淨
+        all_files = [f for f in os.listdir('.') if f.endswith('.csv') and f not in ["pending_requests.csv", CHAT_DB]]
+        
+        if all_files:
+            for r in all_files:
+                c_r1, c_r2 = st.columns([3, 1])
+                with c_r1:
+                    st.write(f"📄 **{r}**")
+                with c_r2:
+                    if st.button(f"切換", key=f"sw_{r}"):
+                        st.session_state.current_db = r
+                        st.rerun()
+        else:
+            st.info("尚無可用報表，請於上方送出申請。")
+
+        st.info("📢 提示：若您的報表顯示「✅ 已通過審核」，代表您的數據已由管理員同步至雲端永久保存。")  
 
 # ---------------------------------------------------------
     # 5. 討論區模組 (防崩潰終極版)
