@@ -33,13 +33,12 @@ def load_data():
     except:
         return pd.DataFrame(columns=COLUMNS)
 
-# --- 初始化 ---
-ensure_files()
-if 'current_db' not in st.session_state: st.session_state.current_db = DEFAULT_DB
-all_reports = get_all_reports()
-if not all_reports: all_reports = [DEFAULT_DB]
-if st.session_state.current_db not in all_reports: st.session_state.current_db = all_reports[0]
+def save_data(df):
+    df.to_csv(DEFAULT_DB, index=False)
+    st.success("✅ 紀錄儲存成功！")
 
+# --- 程式初始化 ---
+st.set_page_config(page_title="足球管理中心 - 專業本地版", layout="wide")
 main_df = load_data()
 
 # --- 標誌顯示區 (Base64) ---
