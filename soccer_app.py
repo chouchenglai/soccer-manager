@@ -332,13 +332,25 @@ else:
         # --- 工具函數：確保申請清單檔案存在 ---
         def ensure_request_file():
             req_file = "pending_requests.csv"
-            req_cols = ["時間", "用戶名稱", "報表名稱", "狀態"]
-            if not os.path.exists(req_file):
-                pd.DataFrame(columns=req_cols).to_csv(req_file, index=False, encoding='utf-8-sig')
+req_cols = ["申請編號", "申請日期", "申請名稱", "備註事項", "審核結果"]
+
+if os.path.exists(req_file):
+    try:
+        # 讀取檔案
+        req_df = pd.read_csv(req_file)
+        # 如果檔案是空的（沒有標題列），手動補上標題
+        if req_df.empty and len(req_df.columns) < 5:
+            req_df = pd.DataFrame(columns=req_cols)
+    except Exception:
+        # 發生 EmptyDataError 時，直接建立帶標題的 DataFrame
+        req_df = pd.DataFrame(columns=req_cols)
+else:
+    # 檔案不存在，建立新表
+    req_df = pd.DataFrame(columns=req_cols)
 
         # --- 區塊 1：新增報表申請 (優化編號與日期) ---
         with st.expander("➕ 申請建立新報表帳本", expanded=True):
-            new_name = st.text_input("輸入新報表名稱", placeholder="例如：Fran Chou")
+            new_name = st.text_input("輸入新報表名稱", placeholder="例如：您的名稱")
             create_btn = st.button("送出申請")
             
             if create_btn and new_name:
