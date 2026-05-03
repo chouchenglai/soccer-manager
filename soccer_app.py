@@ -375,7 +375,7 @@ with tab4:
             if not os.path.exists(target_file):
                 pd.DataFrame(columns=COLUMNS).to_csv(target_file, index=False, encoding='utf-8-sig')
             
-            st.balloons()
+            st.toast()
             st.success(f"✅ 申請已送出！編號：{new_id}")
             time.sleep(1.5)
             st.rerun()
