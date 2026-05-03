@@ -109,11 +109,11 @@ if os.path.exists(img_path):
         <div class="banner-box"><img src="data:image/jpeg;base64,{img_b64}" class="banner-img"></div>
     """, unsafe_allow_html=True)
 
-# --- 側邊欄：切換報表與數據統計 ---
+# --- 側邊欄：恢復經典排版效果 ---
 with st.sidebar:
     st.header("💰 資金與統計中心")
     
-    # 1. 獲取所有報表清單
+    # 1. 獲取報表清單
     all_reports = get_all_reports()
     
     # 2. 安全索引計算
@@ -131,33 +131,32 @@ with st.sidebar:
 
     st.divider()
 
-    # --- 4. 優化後的數據統計顯示 ---
+    # --- 4. 恢復原有的經典數值顯示 ---
     if not main_df.empty:
-        # 計算數值
+        # 獲取數值
         current_balance = main_df.iloc[-1]["結算總分"]
         initial_investment = main_df.iloc[0]["金額"]
         total_profit = current_balance - initial_investment
         
-        # 使用 Markdown 合併顯示，消除多餘間距
-        st.markdown(f"""
-            <p style='margin-bottom: -10px;'>目前可用本金</p>
-            <h1 style='margin-top: 0px;'>${current_balance:,.0f}</h1>
-        """, unsafe_allow_html=True)
+        # 經典顯示方式
+        st.write("目前可用本金")
+        st.title(f"${current_balance:,.0f}")
         
         st.caption(f"💼 累積投入: ${initial_investment:,.0f}")
         
-        # 純獲利區塊
+        # 純獲利顯示盒
         profit_bg = '#e6f4ea' if total_profit >= 0 else '#fce8e6'
-        profit_color = '#137333' if total_profit >= 0 else '#c5221f'
         st.markdown(f"""
             <div style="background-color: {profit_bg}; padding: 10px; border-radius: 5px;">
-                <span style="color: {profit_color}; font-weight: bold;">
+                <span style="color: {'#137333' if total_profit >= 0 else '#c5221f'}; font-weight: bold;">
                     📈 純獲利: ${total_profit:,.0f}
                 </span>
             </div>
         """, unsafe_allow_html=True)
     else:
         st.warning("⚠️ 尚無報表數據")
+
+    st.divider()
     
     # 5. 下載按鈕
     csv_data = main_df.to_csv(index=False, encoding='utf-8-sig').encode('utf-8-sig')
