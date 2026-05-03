@@ -29,28 +29,23 @@ def ensure_files():
     if not os.path.exists(CHAT_DB):
         pd.DataFrame(columns=CHAT_COLUMNS).to_csv(CHAT_DB, index=False, encoding='utf-8-sig')
 
+# --- 修正後的核心工具 ---
+def ensure_files():
+    # 報表檔案 (DEFAULT_DB) 這裡不預先建立，讓主邏輯判斷是否存在
+    if not os.path.exists(CHAT_DB):
+        pd.DataFrame(columns=CHAT_COLUMNS).to_csv(CHAT_DB, index=False, encoding='utf-8-sig')
+
 def load_data():
-    if os.path.exists(st.session_state.current_db):
+    # 這裡只負責讀取，若檔案不存在就回傳空表，不要主動去寫入空檔
+    target = st.session_state.current_db
+    if os.path.exists(target):
         try:
-            df = pd.read_csv(st.session_state.current_db)
+            df = pd.read_csv(target)
             if "月份" in df.columns: df = df.drop(columns=["月份"])
             return df
-        except: return pd.DataFrame(columns=COLUMNS)
+        except: 
+            return pd.DataFrame(columns=COLUMNS)
     return pd.DataFrame(columns=COLUMNS)
-
-def save_data(df):
-    if "月份" in df.columns: df = df.drop(columns=["月份"])
-    df.to_csv(st.session_state.current_db, index=False, encoding='utf-8-sig')
-
-def load_chat():
-    if os.path.exists(CHAT_DB): return pd.read_csv(CHAT_DB)
-    return pd.DataFrame(columns=CHAT_COLUMNS)
-
-def save_chat(nickname, content):
-    df = load_chat()
-    new_msg = {"時間": get_now_time(), "暱稱": nickname, "內容": content, "標籤": "訪客"}
-    df = pd.concat([df, pd.DataFrame([new_msg])], ignore_index=True)
-    df.to_csv(CHAT_DB, index=False, encoding='utf-8-sig')
 
 # --- 初始化 ---
 ensure_files()
