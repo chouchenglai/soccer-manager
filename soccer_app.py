@@ -200,63 +200,64 @@ else:
             n = st.text_input("報表名稱")
             if st.button("建立") and n: pd.DataFrame(columns=COLUMNS).to_csv(f"{n}.csv", index=False); st.rerun()
 
+    # ---------------------------------------------------------
+    # 5. 討論區模組
+    # ---------------------------------------------------------
     with tab5:
-    st.markdown("### 💬 足球現場實況推薦與討論")
-    
-    # 1. 訪客登記邏輯 (保持簡單)
-    if 'user_nickname' not in st.session_state:
-        with st.form("name_form"):
-            name = st.text_input("首次進入，請輸入您的暱稱：", placeholder="例如：阿來朋友")
-            if st.form_submit_button("確認進入") and name:
-                st.session_state.user_nickname = name
-                st.rerun()
-    else:
-        st.info(f"歡迎回來！您目前的暱稱是：**{st.session_state.user_nickname}**")
+        st.markdown("### 💬 足球現場實況滾球推薦")
         
-        # 2. 留言輸入表單
-        with st.form("chat_form", clear_on_submit=True):
-            msg = st.text_area("分享您的賽事分析...", height=100)
-            if st.form_submit_button("🚀 送出留言") and msg:
-                save_chat(st.session_state.user_nickname, msg)
-                st.success("留言成功！")
-                time.sleep(0.5)
-                st.rerun()
-        
-        st.divider()
-
-        # 3. 讀取並顯示留言 (具備編輯與刪除功能)
-        c_df = load_chat()
-        if not c_df.empty:
-            # 為了方便操作，我們從最新的留言開始顯示
-            for index, r in c_df.iloc[::-1].iterrows():
-                with st.container():
-                    # 使用 columns 讓內容與按鈕並排
-                    col_content, col_action = st.columns([8, 2])
-                    
-                    with col_content:
-                        st.markdown(f"""
-                            <div style="background-color: #f0f2f6; padding: 10px; border-radius: 8px; border-left: 5px solid #2196f3;">
-                                <strong style="color: #333;">{r['暱稱']}</strong> <small style="color: #888; margin-left: 10px;">{r['時間']}</small>
-                                <p style="margin-top: 5px; color: #444;">{r['內容']}</p>
-                            </div>
-                        """, unsafe_allow_html=True)
-                    
-                    with col_action:
-                        # 刪除功能
-                        if st.button(f"🗑️ 刪除", key=f"del_{index}"):
-                            new_df = c_df.drop(index)
-                            new_df.to_csv(CHAT_DB, index=False, encoding='utf-8-sig')
-                            st.rerun()
+        # 1. 訪客登記邏輯
+        if 'user_nickname' not in st.session_state:
+            with st.form("name_form"):
+                name = st.text_input("首次留言，請輸入您的暱稱：", placeholder="例如：訪客稱呼")
+                if st.form_submit_button("確認進入") and name:
+                    st.session_state.user_nickname = name
+                    st.rerun()
+        else:
+            st.info(f"歡迎回來！您現在的尊稱是：**{st.session_state.user_nickname}**")
+            
+            # 2. 留言輸入表單
+            with st.form("chat_form", clear_on_submit=True):
+                msg = st.text_area("輸入您的內容...", height=100)
+                if st.form_submit_button("送出留言") and msg:
+                    save_chat(st.session_state.user_nickname, msg)
+                    st.success("留言已送出！")
+                    time.sleep(0.5)
+                    st.rerun()
+            
+            st.divider()
+            
+            # 3. 留言顯示與開放式管理
+            c_df = load_chat()
+            if not c_df.empty:
+                # 倒序顯示，最新的在最上面[cite: 2]
+                for index, r in c_df.iloc[::-1].iterrows():
+                    with st.container():
+                        # 佈局：左側內容，右側管理按鈕
+                        col_text, col_ctrl = st.columns([8, 2])
                         
-                        # 編輯功能 (展開輸入框)
+                        with col_text:
+                            # 保留原本的視覺樣式[cite: 2]
+                            st.markdown(f"""
+                                <div style="background-color: #f9f9f9; padding: 15px; border-radius: 10px; margin-bottom: 5px; border-left: 5px solid #00c853;">
+                                    <span style="color: #00c853; font-weight: bold;">{r['暱稱']}</span> 
+                                    <span style="color: #aaa; font-size: 0.8em; margin-left: 10px;">{r['時間']}</span>
+                                    <p style="margin-top: 10px; color: #333; line-height: 1.5;">{r['內容']}</p>
+                                </div>
+                            """, unsafe_allow_html=True)
+                        
+                        with col_ctrl:
+                            
+                            
+                            # 編輯功能 (展開輸入框)
                         if st.checkbox(f"📝 編輯", key=f"edit_check_{index}"):
                             new_msg = st.text_area("修改內容：", value=r['內容'], key=f"edit_val_{index}")
                             if st.button("確認修改", key=f"conf_{index}"):
                                 c_df.at[index, '內容'] = new_msg
                                 c_df.to_csv(CHAT_DB, index=False, encoding='utf-8-sig')
                                 st.rerun()
-        else:
-            st.write("目前還沒有留言，快來搶沙發！")
+            else:
+                st.write("目前還沒有人留言，歡迎您發言及討論賽事！")
 
 # --- 底部 ---
 st.divider()
