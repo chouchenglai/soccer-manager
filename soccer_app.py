@@ -9,7 +9,7 @@ from datetime import datetime, timedelta, timezone
 st.set_page_config(page_title="CCL-Soccer 足球賽事管理系統", page_icon="⚽", layout="wide")
 
 # --- 基本設定 ---
-DEFAULT_DB = "temp.csv"
+DEFAULT_DB = "test.csv"
 CHAT_DB = "ccl_chat_log.csv"
 COLUMNS = ["日期", "賽事項目", "類型", "金額", "盈虧金額", "結算總分"]
 CHAT_COLUMNS = ["時間", "暱稱", "內容", "標籤"]
@@ -232,10 +232,7 @@ else:
         # 第三行：嵌入外部比分網[cite: 1]
             st.components.v1.iframe("https://live.titan007.com/indexall_big.aspx", height=800, scrolling=True)
 
-    with tab2: # 歷史記錄[cite: 2]
-        st.dataframe(main_df.iloc[::-1], use_container_width=True)
-
-    with tab3: # 📋 歷史記錄
+    with tab2: # 📋 歷史記錄
         st.subheader("📜 完整賽事歷史紀錄")
         
         # 1. 定義染色邏輯 (確保縮排正確)
@@ -265,6 +262,9 @@ else:
             st.dataframe(styled_df, use_container_width=True)
         else:
             st.info("目前尚無歷史紀錄。")
+
+    with tab3: # 統計圖表[cite: 2]
+        st.line_chart(main_df["結算總分"], height=320) 
 
     with tab4: # 報表管理
         st.subheader("📁 系統報表管理中心")
