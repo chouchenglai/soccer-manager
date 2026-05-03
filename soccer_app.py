@@ -336,15 +336,15 @@ with tab4:
     req_file = "pending_requests.csv"
     req_cols = ["申請編號", "申請日期", "申請名稱", "備註事項", "審核結果"]
 
-    # --- 2. 安全讀取邏輯 (全域防錯保護) ---
+    # --- 2. 安全讀取邏輯 (修正：強制編號為字串格式) ---
     if os.path.exists(req_file):
         try:
-            req_df = pd.read_csv(req_file)
-            # 確保欄位完全符合標準，若不符則重置
+            # 關鍵點：加入 dtype 參數，強制編號欄位不被轉為數字
+            req_df = pd.read_csv(req_file, dtype={'申請編號': str})
+            
             if not all(col in req_df.columns for col in req_cols):
                 req_df = pd.DataFrame(columns=req_cols)
         except Exception:
-            # 處理 EmptyDataError 或檔案損壞
             req_df = pd.DataFrame(columns=req_cols)
     else:
         req_df = pd.DataFrame(columns=req_cols)
