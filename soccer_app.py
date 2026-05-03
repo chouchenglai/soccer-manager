@@ -266,6 +266,41 @@ else:
     with tab3: # 統計圖表[cite: 2]
         st.line_chart(main_df["結算總分"], height=320)
 
+    with tab4: # 報表管理
+        st.subheader("📁 系統報表管理中心")
+        
+        # --- 區塊 1：新增報表 ---
+        with st.expander("➕ 新增報表檔案"):
+            n = st.text_input("報表名稱", placeholder="請輸入名稱（不需輸入 .csv）")
+            if st.button("確認建立報表"):
+                if n:
+                    file_name = f"{n}.csv"
+                    # 建立一個只有標題欄位的空 CSV
+                    pd.DataFrame(columns=COLUMNS).to_csv(file_name, index=False)
+                    st.success(f"✅ 報表「{file_name}」已成功建立！")
+                    time.sleep(1)
+                    st.rerun() # 重新執行以更新左側選單列表
+                else:
+                    st.error("⚠️ 請輸入報表名稱！")
+
+        # --- 區塊 2：刪除報表 ---
+        with st.expander("🗑️ 刪除現有報表"):
+            # 重新獲取一次列表，排除預設資料庫
+            d_list = [f for f in get_all_reports() if f != DEFAULT_DB]
+            
+            if d_list:
+                t = st.selectbox("選擇欲刪除的報表檔案", d_list)
+                if st.button("確認刪除報表", type="secondary"):
+                    try:
+                        os.remove(t)
+                        st.session_state.current_db = DEFAULT_DB # 刪除後自動跳回預設檔
+                        st.warning(f"檔案 {t} 已刪除。")
+                        time.sleep(1)
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"刪除失敗：{e}")
+            else:
+                st.info("目前沒有可刪除的自訂報表。")  
                
 # --- 底部 ---
 st.divider()
