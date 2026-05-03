@@ -19,16 +19,6 @@ TW_TZ = pytz.timezone('Asia/Taipei') # 設定台北時區
 def get_now_time():
     return datetime.now(TW_TZ).strftime("%Y-%m-%d %H:%M")
 
-# --- 工具 ---
-def get_all_reports():
-    return [f for f in os.listdir('.') if f.endswith('.csv') and f != CHAT_DB]
-
-def ensure_files():
-    if not os.path.exists(DEFAULT_DB):
-        pd.DataFrame(columns=COLUMNS).to_csv(DEFAULT_DB, index=False)
-    if not os.path.exists(CHAT_DB):
-        pd.DataFrame(columns=CHAT_COLUMNS).to_csv(CHAT_DB, index=False, encoding='utf-8-sig')
-
 # --- 修正後的核心工具 ---
 def ensure_files():
     # 報表檔案 (DEFAULT_DB) 這裡不預先建立，讓主邏輯判斷是否存在
