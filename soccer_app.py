@@ -109,63 +109,26 @@ if os.path.exists(img_path):
         <div class="banner-box"><img src="data:image/jpeg;base64,{img_b64}" class="banner-img"></div>
     """, unsafe_allow_html=True)
 
-# --- 側邊欄：恢復經典排版效果 ---
+# --- Sidebar (側邊欄) ---
 with st.sidebar:
     st.header("💰 資金與統計中心")
-    
-    # 1. 獲取報表清單
-    all_reports = get_all_reports()
-    
-    # 2. 安全索引計算
-    if st.session_state.current_db in all_reports:
-        current_idx = all_reports.index(st.session_state.current_db)
-    else:
-        current_idx = 0
-    
-    # 3. 顯示下拉選單
-    selected_db = st.selectbox("切換報表", options=all_reports, index=current_idx)
-    
+    idx = all_reports.index(st.session_state.current_db) if st.session_state.current_db in all_reports else 0
+    selected_db = st.selectbox("切換報表", all_reports, index=idx)
     if selected_db != st.session_state.current_db:
         st.session_state.current_db = selected_db
         st.rerun()
-
     st.divider()
-
-    # --- 4. 恢復原有的經典數值顯示 ---
     if not main_df.empty:
-        # 獲取數值
-        current_balance = main_df.iloc[-1]["結算總分"]
-        initial_investment = main_df.iloc[0]["金額"]
-        total_profit = current_balance - initial_investment
-        
-        # 經典顯示方式
-        st.write("目前可用本金")
-        st.title(f"${current_balance:,.0f}")
-        
-        st.caption(f"💼 累積投入: ${initial_investment:,.0f}")
-        
-        # 純獲利顯示盒
-        profit_bg = '#e6f4ea' if total_profit >= 0 else '#fce8e6'
-        st.markdown(f"""
-            <div style="background-color: {profit_bg}; padding: 10px; border-radius: 5px;">
-                <span style="color: {'#137333' if total_profit >= 0 else '#c5221f'}; font-weight: bold;">
-                    📈 純獲利: ${total_profit:,.0f}
-                </span>
-            </div>
-        """, unsafe_allow_html=True)
-    else:
-        st.warning("⚠️ 尚無報表數據")
-
-    st.divider()
-    
-    # 5. 下載按鈕
-    csv_data = main_df.to_csv(index=False, encoding='utf-8-sig').encode('utf-8-sig')
-    st.download_button(
-        label="📥 下載完整紀錄 (CSV)",
-        data=csv_data,
-        file_name=st.session_state.current_db,
-        mime='text/csv',
-    )
+        current_bal = int(main_df["結算總分"].iloc[-1])
+        st.metric("目前可用本金", f"${current_bal:,}")
+        invest_types = ['初始', '手動補倉', '補倉']
+        total_investment = main_df[main_df['類型'].isin(invest_types)]['金額'].sum()
+        st.write(f"💼 累積投入: `${total_investment:,}`")
+        real_profit = current_bal - total_investment
+        if real_profit >= 0: st.success(f"📈 純獲利: `${real_profit:,}`")
+        else: st.error(f"📉 尚虧: `${abs(real_profit):,}`")
+    csv = main_df.to_csv(index=False).encode('utf-8-sig')
+    st.download_button("📥 下載完整紀錄 (CSV)", data=csv, file_name="soccer_backup.csv")
 
 # --- 邏輯判斷與主功能 ---
 if main_df.empty:
