@@ -205,11 +205,11 @@ else:
         with st.expander("新增報表"):
             n = st.text_input("報表名稱")
              if st.button("建立") and n: pd.DataFrame(columns=COLUMNS).to_csv(f"{n}.csv", index=False); st.rerun()
-    with st.expander("刪除報表"):
-        d_list = [f for f in all_reports if f != DEFAULT_DB]
-        if d_list:
-            t = st.selectbox("選擇", d_list)
-            if st.button("刪除"): os.remove(t); st.session_state.current_db = DEFAULT_DB; st.rerun()
+            with st.expander("刪除報表"):
+               d_list = [f for f in all_reports if f != DEFAULT_DB]
+                  if d_list:
+              t = st.selectbox("選擇", d_list)
+              if st.button("刪除"): os.remove(t); st.session_state.current_db = DEFAULT_DB; st.rerun()
 
     # ---------------------------------------------------------
     # 5. 討論區模組
