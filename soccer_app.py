@@ -302,9 +302,9 @@ else:
             else:
                 st.info("目前沒有可刪除的自訂報表")
 
-              with st.expander("☢️ 危險區域：清空當前報表紀錄"):
-            st.warning("注意：這將刪除目前檔案內的所有投注紀錄，僅保留空表格。")
-            if st.button("🔥 確認完全清空並重置"):
+               with st.expander("☢️ 危險區域：清空當前報表紀錄"):
+             st.warning("注意：這將刪除目前檔案內的所有投注紀錄，僅保留空表格。")
+             if st.button("🔥 確認完全清空並重置"):
                 # 建立一個完全空的資料表 (只有標題)
                 empty_df = pd.DataFrame(columns=COLUMNS)
                 # 覆蓋掉當前的檔案
