@@ -131,26 +131,26 @@ with st.sidebar:
 
     st.divider()
 
-    # --- 4. 補回遺失的數據統計資料 ---
+    # --- 4. 優化後的數據統計顯示 ---
     if not main_df.empty:
-        # 計算最新餘額
+        # 計算數值
         current_balance = main_df.iloc[-1]["結算總分"]
-        # 計算總投入 (第一筆初始金額)
         initial_investment = main_df.iloc[0]["金額"]
-        # 計算純獲利
         total_profit = current_balance - initial_investment
         
-        # 漂亮的統計顯示
-        st.write("目前可用本金")
-        st.title(f"${current_balance:,.0f}")
+        # 使用 Markdown 合併顯示，消除多餘間距
+        st.markdown(f"""
+            <p style='margin-bottom: -10px;'>目前可用本金</p>
+            <h1 style='margin-top: 0px;'>${current_balance:,.0f}</h1>
+        """, unsafe_allow_html=True)
         
         st.caption(f"💼 累積投入: ${initial_investment:,.0f}")
         
-        # 根據獲利顯示顏色
-        profit_color = "green" if total_profit >= 0 else "red"
+        # 純獲利區塊
+        profit_bg = '#e6f4ea' if total_profit >= 0 else '#fce8e6'
+        profit_color = '#137333' if total_profit >= 0 else '#c5221f'
         st.markdown(f"""
-            <div style="background-color: {'#e6f4ea' if total_profit >= 0 else '#fce8e6'}; 
-                        padding: 10px; border-radius: 5px;">
+            <div style="background-color: {profit_bg}; padding: 10px; border-radius: 5px;">
                 <span style="color: {profit_color}; font-weight: bold;">
                     📈 純獲利: ${total_profit:,.0f}
                 </span>
@@ -158,8 +158,6 @@ with st.sidebar:
         """, unsafe_allow_html=True)
     else:
         st.warning("⚠️ 尚無報表數據")
-
-    st.divider()
     
     # 5. 下載按鈕
     csv_data = main_df.to_csv(index=False, encoding='utf-8-sig').encode('utf-8-sig')
