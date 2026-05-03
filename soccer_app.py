@@ -186,8 +186,7 @@ else:
             save_data(pd.concat([main_df, pd.DataFrame([new_row])], ignore_index=True)); st.rerun()
 
     with tab_live:
-    st.markdown("### 📡 球探即時比分 (同步監控)")
-    # 注意：下面這行前面必須有空格縮排！
+        st.markdown("### 📡 球探即時比分 (同步監控)")
         st.components.v1.iframe("https://live.titan007.com/indexall_big.aspx", height=800, scrolling=True)
         st.info("💡 提示：查看完畢後，點擊上方標籤可切換回下單頁面。")
 
