@@ -336,68 +336,75 @@ else:
             if not os.path.exists(req_file):
                 pd.DataFrame(columns=req_cols).to_csv(req_file, index=False, encoding='utf-8-sig')
 
-        # --- 區塊 1：新增報表申請邏輯 ---
+        # --- 區塊 1：新增報表申請 (優化編號與日期) ---
         with st.expander("➕ 申請建立新報表帳本", expanded=True):
-            col_n1, col_n2 = st.columns([3, 1])
-            with col_n1:
-                new_name = st.text_input("輸入新報表名稱", placeholder="例如：User01_專用報表 (不需輸入 .csv)")
-            with col_n2:
-                st.write(" ") # 垂直對齊補位
-                create_btn = st.button("送出申請", use_container_width=True)
+            new_name = st.text_input("輸入新報表名稱", placeholder="例如：Fran Chou")
+            create_btn = st.button("送出申請")
             
-            if create_btn:
-                if new_name:
-                    # 統一副檔名格式
-                    target_file = f"{new_name}.csv" if not new_name.endswith(".csv") else new_name
-                    
-                    if os.path.exists(target_file):
-                        st.error(f"⚠️ 檔案 {target_file} 已經存在或正在審核中！")
-                    else:
-                        # 1. 建立伺服器端臨時「地基檔」
-                        pd.DataFrame(columns=COLUMNS).to_csv(target_file, index=False, encoding='utf-8-sig')
-                        
-                        # 2. 寫入申請清單以便管理員手動同步回 GitHub
-                        ensure_request_file()
-                        req_df = pd.read_csv("pending_requests.csv")
-                        new_req = {
-                            "時間": datetime.now().strftime("%Y-%m-%d %H:%M"),
-                            "用戶名稱": "訪客用戶", 
-                            "報表名稱": target_file,
-                            "狀態": "⏳ 正在審核中 (24H同步)" 
-                        }
-                        pd.concat([req_df, pd.DataFrame([new_req])], ignore_index=True).to_csv("pending_requests.csv", index=False, encoding='utf-8-sig')
-                        
-                        # 3. 提示與反饋
-                        st.balloons()
-                        st.session_state.current_db = target_file
-                        st.success(f"✅ 報表「{target_file}」已送出審核申請！")
-                        st.info("📢 提示：系統已開啟臨時帳本，請於 24 小時內確認審核結果。")
-                        time.sleep(2)
-                        st.rerun()
-                else:
-                    st.error("❌ 請輸入報表名稱！")
+            if create_btn and new_name:
+                target_file = f"{new_name}.csv" if not new_name.endswith(".csv") else new_name
+                
+                # 讀取現有清單來生成編號
+                ensure_request_file()
+                req_df = pd.read_csv("pending_requests.csv")
+                
+                # 自動生成編號：0001, 0002...
+                new_id = f"{len(req_df) + 1:04d}" 
+                
+                new_req = {
+                    "申請編號": new_id,
+                    "申請日期": datetime.now().strftime("%Y年%m月%d日"),
+                    "申請名稱": new_name,
+                    "備註事項": "", # 留空供管理員在 CSV 修改
+                    "審核結果": "⏳ 審核進行中"
+                }
+                
+                # 寫入檔案
+                pd.concat([req_df, pd.DataFrame([new_req])], ignore_index=True).to_csv("pending_requests.csv", index=False, encoding='utf-8-sig')
+                
+                # 建立臨時地基檔
+                pd.DataFrame(columns=COLUMNS).to_csv(target_file, index=False, encoding='utf-8-sig')
+                
+                st.balloons()
+                st.success(f"✅ 申請已送出！編號：{new_id}")
+                time.sleep(2)
+                st.rerun()
 
-        st.divider()
+        # --- 區塊 2：審核進度查詢 (互動表格版) ---
+        with st.expander("🔍 點擊查看：報表申請與審核詳情", expanded=False):
+            req_file = "pending_requests.csv"
+            # 更新欄位名稱以符合您的新需求
+            req_cols = ["申請編號", "申請日期", "申請名稱", "備註事項", "審核結果"]
 
-        # --- 區塊 2：報表審核進度查詢表格 (防錯強化版) ---
-        st.write("### 🔍 報表申請審核進度查詢")
-        
-        req_file = "pending_requests.csv"
-        req_cols = ["時間", "用戶名稱", "報表名稱", "狀態"]
-
-        # 安全讀取邏輯
-        if os.path.exists(req_file):
-            try:
-                # 嘗試讀取，如果檔案是空的會跳到 except
-                status_df = pd.read_csv(req_file)
-                # 再次檢查，如果讀出來沒有欄位，手動補上
-                if status_df.empty and len(status_df.columns) < 4:
+            if os.path.exists(req_file):
+                try:
+                    status_df = pd.read_csv(req_file)
+                    # 如果舊檔案欄位不對，強制更新
+                    if not all(col in status_df.columns for col in req_cols):
+                        status_df = pd.DataFrame(columns=req_cols)
+                except:
                     status_df = pd.DataFrame(columns=req_cols)
-            except Exception:
-                # 發生 EmptyDataError 或其他錯誤時，回傳空白標題表
+            else:
                 status_df = pd.DataFrame(columns=req_cols)
-        else:
-            status_df = pd.DataFrame(columns=req_cols)
+
+            if not status_df.empty:
+                # 最新申請排在最前
+                display_df = status_df.iloc[::-1]
+                
+                # 專業配色邏輯
+                def style_audit(val):
+                    if '進行中' in val: return 'color: #d32f2f; font-weight: bold; background-color: #fff5f5;'
+                    if '通過' in val: return 'color: #2e7d32; font-weight: bold; background-color: #f0fff4;'
+                    return ''
+
+                st.dataframe(
+                    display_df.style.applymap(style_audit, subset=['審核結果']),
+                    use_container_width=True,
+                    hide_index=True
+                )
+                st.caption("📋 備註事項由管理員審核時填寫。")
+            else:
+                st.info("💡 目前尚無申請紀錄。")
 
         # --- 區塊 3：現有報表清單 (僅顯示已通過審核的) ---
         st.write("### 📂 已通過審核之報表清單")
