@@ -23,18 +23,22 @@ def get_now_time():
 def get_all_reports():
     return [f for f in os.listdir('.') if f.endswith('.csv') and f != CHAT_DB]
 
-# --- 修正後的工具函數：自動生成標題檔案 ---
+# --- 修正後的初始化工具區 ---
 def ensure_files():
-    # 1. 檢查主報表檔案 (DEFAULT_DB)
-    # 如果伺服器上找不到這個檔案，就自動建立一個帶有正確標題的 CSV
+    # 1. 確保預設報表存在
     if not os.path.exists(DEFAULT_DB):
         pd.DataFrame(columns=COLUMNS).to_csv(DEFAULT_DB, index=False, encoding='utf-8-sig')
     
-    # 2. 檢查討論區檔案 (CHAT_DB)
+    # 2. 確保討論區存在
     if not os.path.exists(CHAT_DB):
         pd.DataFrame(columns=CHAT_COLUMNS).to_csv(CHAT_DB, index=False, encoding='utf-8-sig')
 
-# 程式初始化時就會執行檢查
+    # 3. 【新增這段】確保「申請進度表」存在，防止 read_csv 報錯
+    req_file = "pending_requests.csv"
+    if not os.path.exists(req_file):
+        pd.DataFrame(columns=["時間", "用戶名稱", "報表名稱", "狀態"]).to_csv(req_file, index=False, encoding='utf-8-sig')
+
+# 確保在程式一開始就呼叫它
 ensure_files()
 
 def load_data():
