@@ -263,6 +263,9 @@ else:
         else:
             st.info("目前尚無歷史紀錄。")
 
+    with tab3: # 統計圖表[cite: 2]
+        st.line_chart(main_df["結算總分"], height=320)
+
                
 # --- 底部 ---
 st.divider()
