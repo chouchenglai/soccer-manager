@@ -19,23 +19,19 @@ TW_TZ = pytz.timezone('Asia/Taipei') # 設定台北時區
 def get_now_time():
     return datetime.now(TW_TZ).strftime("%Y-%m-%d %H:%M")
 
-# --- 修正後的核心工具 ---
-def ensure_files():
-    # 報表檔案 (DEFAULT_DB) 這裡不預先建立，讓主邏輯判斷是否存在
-    if not os.path.exists(CHAT_DB):
-        pd.DataFrame(columns=CHAT_COLUMNS).to_csv(CHAT_DB, index=False, encoding='utf-8-sig')
+# --- 核心工具 ---
+def ensure_default_db():
+    # 如果檔案不存在，建立一個全新的空白檔案
+    if not os.path.exists(DEFAULT_DB):
+        pd.DataFrame(columns=COLUMNS).to_csv(DEFAULT_DB, index=False)
 
 def load_data():
-    # 這裡只負責讀取，若檔案不存在就回傳空表，不要主動去寫入空檔
-    target = st.session_state.current_db
-    if os.path.exists(target):
-        try:
-            df = pd.read_csv(target)
-            if "月份" in df.columns: df = df.drop(columns=["月份"])
-            return df
-        except: 
-            return pd.DataFrame(columns=COLUMNS)
-    return pd.DataFrame(columns=COLUMNS)
+    ensure_default_db()
+    try:
+        df = pd.read_csv(DEFAULT_DB)
+        return df
+    except:
+        return pd.DataFrame(columns=COLUMNS)
 
 # --- 初始化 ---
 ensure_files()
