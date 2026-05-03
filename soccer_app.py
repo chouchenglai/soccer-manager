@@ -247,15 +247,19 @@ else:
                             """, unsafe_allow_html=True)
                         
                         with col_ctrl:
-                            
-                            
-                            # 編輯功能 (展開輸入框)
-                        if st.checkbox(f"📝 編輯", key=f"edit_check_{index}"):
-                            new_msg = st.text_area("修改內容：", value=r['內容'], key=f"edit_val_{index}")
-                            if st.button("確認修改", key=f"conf_{index}"):
-                                c_df.at[index, '內容'] = new_msg
-                                c_df.to_csv(CHAT_DB, index=False, encoding='utf-8-sig')
+                            # 編輯與刪除功能
+                            if st.button("🗑️ 刪除", key=f"del_{index}"):
+                                updated_df = c_df.drop(index)
+                                updated_df.to_csv(CHAT_DB, index=False, encoding='utf-8-sig')
                                 st.rerun()
+                            
+                            # 編輯功能切換
+                            if st.checkbox("📝 編輯", key=f"edit_chk_{index}"):
+                                edit_val = st.text_area("修正內容：", value=r['內容'], key=f"edit_area_{index}")
+                                if st.button("確認修改", key=f"save_{index}"):
+                                    c_df.at[index, '內容'] = edit_val
+                                    c_df.to_csv(CHAT_DB, index=False, encoding='utf-8-sig')
+                                    st.rerun()
             else:
                 st.write("目前還沒有人留言，歡迎您發言及討論賽事！")
 
