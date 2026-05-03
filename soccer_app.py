@@ -30,49 +30,36 @@ def ensure_files():
         pd.DataFrame(columns=CHAT_COLUMNS).to_csv(CHAT_DB, index=False, encoding='utf-8-sig')
 
 def load_data():
-    # --- 修正後的初始化邏輯：絕對讀取法 (替換原檔案第 53-93 行) ---
+    if os.path.exists(st.session_state.current_db):
+        try:
+            df = pd.read_csv(st.session_state.current_db)
+            if "月份" in df.columns: df = df.drop(columns=["月份"])
+            return df
+        except: return pd.DataFrame(columns=COLUMNS)
+    return pd.DataFrame(columns=COLUMNS)
 
-# 1. 強制讀取：不管 session_state，直接看硬碟
-if 'current_db' not in st.session_state:
-    st.session_state.current_db = DEFAULT_DB
+def save_data(df):
+    if "月份" in df.columns: df = df.drop(columns=["月份"])
+    df.to_csv(st.session_state.current_db, index=False, encoding='utf-8-sig')
 
-# 確保檔案清單是最新的
+def load_chat():
+    if os.path.exists(CHAT_DB): return pd.read_csv(CHAT_DB)
+    return pd.DataFrame(columns=CHAT_COLUMNS)
+
+def save_chat(nickname, content):
+    df = load_chat()
+    new_msg = {"時間": get_now_time(), "暱稱": nickname, "內容": content, "標籤": "訪客"}
+    df = pd.concat([df, pd.DataFrame([new_msg])], ignore_index=True)
+    df.to_csv(CHAT_DB, index=False, encoding='utf-8-sig')
+
+# --- 初始化 ---
+ensure_files()
+if 'current_db' not in st.session_state: st.session_state.current_db = DEFAULT_DB
 all_reports = get_all_reports()
+if not all_reports: all_reports = [DEFAULT_DB]
+if st.session_state.current_db not in all_reports: st.session_state.current_db = all_reports[0]
 
-# 2. 核心：在判斷之前，先嘗試從硬碟把資料挖出來
-current_file = st.session_state.current_db
-file_exists = os.path.exists(current_file)
-
-if file_exists:
-    try:
-        # 如果檔案存在，強制讀取最新的內容給 main_df
-        main_df = pd.read_csv(current_file)
-    except:
-        main_df = pd.DataFrame(columns=COLUMNS)
-else:
-    main_df = pd.DataFrame(columns=COLUMNS)
-
-# 3. 判斷是否需要初始化：只要檔案存在且裡面有資料，就絕對不跳初始化
-if not file_exists or main_df.empty or "初始" not in main_df["類型"].values:
-    st.subheader("🚀 初始化報表")
-    init_cap = st.number_input("起始本金", value=60000, step=1000)
-    if st.button("建立"):
-        row = {
-            "日期": get_now_time(), 
-            "賽事項目": "初始", 
-            "類型": "初始", 
-            "金額": int(init_cap), 
-            "盈虧金額": 0, 
-            "結算總分": int(init_cap)
-        }
-        # 建立後直接存檔，確保硬碟裡有東西
-        pd.DataFrame([row]).to_csv(current_file, index=False, encoding='utf-8-sig')
-        st.success("報表已建立！")
-        time.sleep(0.5)
-        st.rerun()
-else:
-    # 這裡就是主功能區
-    tab1, tab_live, tab2, tab3, tab4, tab5 = st.tabs(["💰 下單投注", "⚽ 即時比分", "📋 歷史記錄", "📊 統計圖表", "📈 報表管理", "💬 討 論 區"])
+main_df = load_data()
 
 # --- 標誌顯示區 (Base64) ---
 import base64
