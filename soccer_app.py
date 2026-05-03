@@ -235,16 +235,36 @@ else:
     with tab2: # 歷史記錄[cite: 2]
         st.dataframe(main_df.iloc[::-1], use_container_width=True)
 
-     with tab3: # 歷史記錄
+     with tab3: # 📋 歷史記錄
+        st.subheader("📜 完整賽事歷史紀錄")
+        
+        # 1. 定義染色邏輯 (確保縮排正確)
         def color_row(row):
             style = ['color: black'] * len(row)
-            if row['盈虧金額'] > 0: target_color = 'color: green'
-            elif row['盈虧金額'] < 0: target_color = 'color: red'
-            else: target_color = 'color: black'
+            # 判斷盈虧顏色
+            if row['盈虧金額'] > 0: 
+                target_color = 'color: green'
+            elif row['盈虧金額'] < 0: 
+                target_color = 'color: red'
+            else: 
+                target_color = 'color: black'
+            
+            # 將顏色套用到「類型」與「盈虧金額」這兩欄
             style[row.index.get_loc('類型')] = target_color
             style[row.index.get_loc('盈虧金額')] = target_color
             return style
-        st.dataframe(main_df.iloc[::-1].style.apply(color_row, axis=1).format({"金額": "{:,}", "盈虧金額": "{:+,.0f}", "結算總分": "{:,}"}), use_container_width=True)
+
+        # 2. 顯示表格 (包含倒序處理與千分位格式化)
+        if not main_df.empty:
+            # iloc[::-1] 讓最新的資料排在最上面
+            styled_df = main_df.iloc[::-1].style.apply(color_row, axis=1).format({
+                "金額": "{:,}", 
+                "盈虧金額": "{:+,.0f}", 
+                "結算總分": "{:,}"
+            })
+            st.dataframe(styled_df, use_container_width=True)
+        else:
+            st.info("目前尚無歷史紀錄。")
 
     with tab4: # 報表管理
         st.subheader("📁 系統報表管理中心")
