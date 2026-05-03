@@ -38,33 +38,39 @@ def ensure_files():
     if not os.path.exists(req_file):
         pd.DataFrame(columns=["時間", "用戶名稱", "報表名稱", "狀態"]).to_csv(req_file, index=False, encoding='utf-8-sig')
 
-# 確保在程式一開始就呼叫它
-ensure_files()
+# 1. 先定義函數 (讓 Python 知道這件工具怎麼用)
+def ensure_files():
+    # 確保主報表、討論區、以及申請清單存在
+    for db, cols in [(DEFAULT_DB, COLUMNS), (CHAT_DB, CHAT_COLUMNS)]:
+        if not os.path.exists(db):
+            pd.DataFrame(columns=cols).to_csv(db, index=False, encoding='utf-8-sig')
+    
+    if not os.path.exists("pending_requests.csv"):
+        pd.DataFrame(columns=["時間", "用戶名稱", "報表名稱", "狀態"]).to_csv("pending_requests.csv", index=False, encoding='utf-8-sig')
 
 def load_data():
-    # --- 【核心修復】確保 st.session_state.current_db 存在 ---
+    # 確保 session_state 變數存在，防止 AttributeError
     if 'current_db' not in st.session_state:
         st.session_state.current_db = DEFAULT_DB
     
-    # 檢查檔案是否存在
     if os.path.exists(st.session_state.current_db):
         try:
-            # 讀取資料，若為空白則回傳帶標題的 DataFrame
             df = pd.read_csv(st.session_state.current_db)
             if df.empty:
                 return pd.DataFrame(columns=COLUMNS)
             return df
         except Exception as e:
             return pd.DataFrame(columns=COLUMNS)
-    
-    # 若檔案不存在，回傳空白地基
     return pd.DataFrame(columns=COLUMNS)
-2. 替換程式主邏輯起始處 (大約在代碼第 70-85 行)
-請找到你原本寫 main_df = load_data() 的地方，將其附近的代碼替換為以下順序。順序非常重要，必須先初始化 session_state，再呼叫 load_data()。
 
-Python
-# --- 1. 執行基礎檔案檢查 ---
+# 2. 函數定義完後，才正式呼叫它們
 ensure_files()
+
+# 3. 初始化並讀取資料
+if 'current_db' not in st.session_state:
+    st.session_state.current_db = DEFAULT_DB
+
+main_df = load_data()
 
 # --- 2. 【核心修復】初始化 session_state 變數 ---
 if 'current_db' not in st.session_state:
