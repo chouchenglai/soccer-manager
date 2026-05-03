@@ -49,19 +49,19 @@ def ensure_files():
         pd.DataFrame(columns=["時間", "用戶名稱", "報表名稱", "狀態"]).to_csv("pending_requests.csv", index=False, encoding='utf-8-sig')
 
 def load_data():
-    # 確保 session_state 變數存在，防止 AttributeError
     if 'current_db' not in st.session_state:
         st.session_state.current_db = DEFAULT_DB
-    
-    if os.path.exists(st.session_state.current_db):
-        try:
-            df = pd.read_csv(st.session_state.current_db)
-            if df.empty:
-                return pd.DataFrame(columns=COLUMNS)
-            return df
-        except Exception as e:
-            return pd.DataFrame(columns=COLUMNS)
+    # (中間省略)
     return pd.DataFrame(columns=COLUMNS)
+
+# --- 🎯 就是這裡！把存檔函數更新在這 ---
+def save_data(df):
+    """將 DataFrame 儲存到當前選擇的 CSV 檔案中"""
+    df.to_csv(st.session_state.current_db, index=False, encoding='utf-8-sig')
+
+# --- 接著才是呼叫它們 ---
+ensure_files()
+main_df = load_data()
 
 # 2. 函數定義完後，才正式呼叫它們
 ensure_files()
