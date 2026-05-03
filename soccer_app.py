@@ -5,20 +5,6 @@ import os
 import time
 from datetime import datetime, timedelta, timezone
 
-# 1. 頁面設定 (最頂端)
-st.set_page_config(page_title="CCL-Soccer 足球賽事管理系統", page_icon="⚽", layout="wide")
-
-# --- 基本設定 ---
-DEFAULT_DB = "soccer_data.csv"
-CHAT_DB = "ccl_chat_log.csv"
-COLUMNS = ["日期", "賽事項目", "類型", "金額", "盈虧金額", "結算總分"]
-CHAT_COLUMNS = ["時間", "暱稱", "內容", "標籤"]
-
-TW_TZ = pytz.timezone('Asia/Taipei') # 設定台北時區
-
-def get_now_time():
-    return datetime.now(TW_TZ).strftime("%Y-%m-%d %H:%M")
-
 # --- 工具 ---
 def get_all_reports():
     return [f for f in os.listdir('.') if f.endswith('.csv') and f != CHAT_DB]
@@ -58,6 +44,8 @@ if 'current_db' not in st.session_state: st.session_state.current_db = DEFAULT_D
 all_reports = get_all_reports()
 if not all_reports: all_reports = [DEFAULT_DB]
 if st.session_state.current_db not in all_reports: st.session_state.current_db = all_reports[0]
+
+main_df = load_data()
 
 main_df = load_data()
 
