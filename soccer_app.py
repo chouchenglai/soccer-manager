@@ -235,7 +235,7 @@ else:
     with tab2: # 歷史記錄[cite: 2]
         st.dataframe(main_df.iloc[::-1], use_container_width=True)
 
-     with tab3: # 📋 歷史記錄
+    with tab3: # 📋 歷史記錄
         st.subheader("📜 完整賽事歷史紀錄")
         
         # 1. 定義染色邏輯 (確保縮排正確)
