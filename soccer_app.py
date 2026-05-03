@@ -5,17 +5,9 @@ import os
 import time
 from datetime import datetime, timedelta, timezone
 
-# 1. 頁面設定 (最頂端)
-st.set_page_config(page_title="CCL-Soccer 足球賽事管理系統", page_icon="⚽", layout="wide")
-
 # --- 基本設定 ---
 DEFAULT_DB = "soccer_data.csv"
 COLUMNS = ["日期", "賽事項目", "類型", "金額", "盈虧金額", "結算總分"]
-
-TW_TZ = pytz.timezone('Asia/Taipei') # 設定台北時區
-
-def get_now_time():
-    return datetime.now(TW_TZ).strftime("%Y-%m-%d %H:%M")
 
 # --- 核心工具 ---
 def ensure_default_db():
@@ -39,85 +31,35 @@ def save_data(df):
 st.set_page_config(page_title="足球管理中心 - 專業本地版", layout="wide")
 main_df = load_data()
 
+# --- 側邊欄：統計與備份 ---
+st.sidebar.title("⚽ 本地管理中心")
 
-# --- 標誌顯示區 (Base64) ---
-import base64
-def get_base64_img(file_path):
-    with open(file_path, "rb") as f: data = f.read()
-    return base64.b64encode(data).decode()
+if not main_df.empty:
+    # 1. 目前總餘額
+    current_bal = main_df["結算總分"].iloc[-1]
+    st.sidebar.metric("目前總餘額", f"${current_bal:,}")
 
-img_path = "ccl_logo_header.jpg"
-if os.path.exists(img_path):
-    img_b64 = get_base64_img(img_path)
-    st.markdown(f"""
-        <style>
-            .banner-box {{ width: 90%; text-align: center; background-color: #ffffff; padding: 0px 0; margin-bottom: 20px; overflow: hidden; }}
-            .banner-img {{ width: 90%; transform: scale(1.1); transform-origin: center; height: auto; display: block; margin: 0 auto; }}
-        </style>
-        <div class="banner-box"><img src="data:image/jpeg;base64,{img_b64}" class="banner-img"></div>
-    """, unsafe_allow_html=True)
+    # 2. 累計投入 (自動偵測 '初始' 與 '補倉' 類型)
+    invest_types = ['初始', '手動補倉', '補倉']
+    total_investment = main_df[main_df['類型'].isin(invest_types)]['金額'].sum()
+    st.sidebar.write(f"💼 累積投入: `${total_investment:,}`")
+    
+    # 3. 純獲利計算與變色顯示
+    real_profit = current_bal - total_investment
+    if real_profit >= 0:
+        st.sidebar.success(f"📈 純獲利: `${real_profit:,}`")
+    else:
+        st.sidebar.error(f"📉 尚虧: `${abs(real_profit):,}`")
 
-# --- Sidebar (側邊欄) ---
-with st.sidebar:
-    st.header("💰 資金與統計中心")
-    idx = all_reports.index(st.session_state.current_db) if st.session_state.current_db in all_reports else 0
-    selected_db = st.selectbox("切換報表", all_reports, index=idx)
-    if selected_db != st.session_state.current_db:
-        st.session_state.current_db = selected_db
-        st.rerun()
-    st.divider()
-    if not main_df.empty:
-        current_bal = int(main_df["結算總分"].iloc[-1])
-        st.metric("目前可用本金", f"${current_bal:,}")
-        invest_types = ['初始', '手動補倉', '補倉']
-        total_investment = main_df[main_df['類型'].isin(invest_types)]['金額'].sum()
-        st.write(f"💼 累積投入: `${total_investment:,}`")
-        real_profit = current_bal - total_investment
-        if real_profit >= 0: st.success(f"📈 純獲利: `${real_profit:,}`")
-        else: st.error(f"📉 尚虧: `${abs(real_profit):,}`")
+    st.sidebar.divider()
+    # 4. 下載備份功能
     csv = main_df.to_csv(index=False).encode('utf-8-sig')
-    st.download_button("📥 下載完整紀錄 (CSV)", data=csv, file_name="soccer_backup.csv")
+    st.sidebar.download_button("📥 下載完整紀錄 (CSV)", data=csv, file_name="soccer_backup.csv")
 
-def is_initialized(df):
-    try:
-        return not df.empty and "初始" in df["類型"].values
-    except:
-        return False
+# --- 主介面 ---
+tab1, tab2, tab3 = st.tabs(["📊 數據錄入", "📜 歷史紀錄", "📈 趨勢分析"])
 
-# --- 邏輯判斷與主功能 (請替換原代碼中對應位置) ---
-
-# 1. 再次確認檔案狀態
-file_exists = os.path.exists(st.session_state.current_db)
-if file_exists:
-    # 讀取當前數據，確保 main_df 不是空的
-    main_df = load_data()
-
-# 2. 核心判斷：如果檔案不存在，或是裡面連一行數據都沒有 (除了標題)
-if not file_exists or len(main_df) == 0:
-    st.subheader("🚀 初始化報表")
-    init_cap = st.number_input("起始本金", value=60000, step=1000)
-    if st.button("建立"):
-        row = {
-            "日期": get_now_time(), 
-            "賽事項目": "初始", 
-            "類型": "初始", 
-            "金額": int(init_cap), 
-            "盈虧金額": 0, 
-            "結算總分": int(init_cap)
-        }
-        # 強制寫入檔案並立即更新
-        new_df = pd.DataFrame([row])
-        new_df.to_csv(st.session_state.current_db, index=False, encoding='utf-8-sig')
-        st.success("報表已建立！")
-        time.sleep(0.5)
-        st.rerun()
-else:
-    # --- 只要檔案有資料，就直接進入主功能頁面 ---
-    tab1, tab_live, tab2, tab3, tab4, tab5 = st.tabs(["💰 下單投注", "⚽ 即時比分", "📋 歷史記錄", "📊 統計圖表", "📈 報表管理", "💬 討 論 區"])
-    
-    # 接下來接您原本各個 tab 的內容...
-    
-    with tab1:
+with tab1:
     # --- 關鍵邏輯：如果資料庫是空的，必須先設定本金 ---
     if main_df.empty:
         st.subheader("🏁 初始化報表")
