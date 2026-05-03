@@ -19,23 +19,28 @@ TW_TZ = pytz.timezone('Asia/Taipei') # 設定台北時區
 def get_now_time():
     return datetime.now(TW_TZ).strftime("%Y-%m-%d %H:%M")
 
-# --- 核心工具 ---
-def ensure_default_db():
-    # 如果檔案不存在，建立一個全新的空白檔案
+# --- 工具 ---
+def get_all_reports():
+    return [f for f in os.listdir('.') if f.endswith('.csv') and f != CHAT_DB]
+
+def ensure_files():
     if not os.path.exists(DEFAULT_DB):
         pd.DataFrame(columns=COLUMNS).to_csv(DEFAULT_DB, index=False)
+    if not os.path.exists(CHAT_DB):
+        pd.DataFrame(columns=CHAT_COLUMNS).to_csv(CHAT_DB, index=False, encoding='utf-8-sig')
 
 def load_data():
-    ensure_default_db()
-    try:
-        df = pd.read_csv(DEFAULT_DB)
-        return df
-    except:
-        return pd.DataFrame(columns=COLUMNS)
+    if os.path.exists(st.session_state.current_db):
+        try:
+            df = pd.read_csv(st.session_state.current_db)
+            if "月份" in df.columns: df = df.drop(columns=["月份"])
+            return df
+        except: return pd.DataFrame(columns=COLUMNS)
+    return pd.DataFrame(columns=COLUMNS)
 
 def save_data(df):
-    df.to_csv(DEFAULT_DB, index=False)
-    st.success("✅ 紀錄儲存成功！")
+    if "月份" in df.columns: df = df.drop(columns=["月份"])
+    df.to_csv(st.session_state.current_db, index=False, encoding='utf-8-sig')
 
 def load_chat():
     if os.path.exists(CHAT_DB): return pd.read_csv(CHAT_DB)
