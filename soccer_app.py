@@ -185,12 +185,7 @@ else:
                 "結算總分": last_balance - int(bet_amt)
             }
             save_data(pd.concat([main_df, pd.DataFrame([new_row])], ignore_index=True))
-            st.rerun()
-
-        st.divider()
-        st.write("### 🕒 最近 5 筆紀錄")
-        st.dataframe(main_df.tail(5), use_container_width=True)
-
+            st.rerun()    
 
 # --- 再投入補倉 ---
         st.write("")   
