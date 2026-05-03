@@ -109,34 +109,66 @@ if os.path.exists(img_path):
         <div class="banner-box"><img src="data:image/jpeg;base64,{img_b64}" class="banner-img"></div>
     """, unsafe_allow_html=True)
 
-# --- 側邊欄：切換報表功能 ---
+# --- 側邊欄：切換報表與數據統計 ---
 with st.sidebar:
     st.header("💰 資金與統計中心")
     
-    # 1. 先獲取所有報表清單 (確保 all_reports 在這裡被定義)
+    # 1. 獲取所有報表清單
     all_reports = get_all_reports()
     
-    # 2. 安全計算索引值
-    # 如果目前的資料庫不在清單中，預設選第一個
+    # 2. 安全索引計算
     if st.session_state.current_db in all_reports:
         current_idx = all_reports.index(st.session_state.current_db)
     else:
         current_idx = 0
     
     # 3. 顯示下拉選單
-    selected_db = st.selectbox(
-        "切換報表",
-        options=all_reports,
-        index=current_idx
-    )
+    selected_db = st.selectbox("切換報表", options=all_reports, index=current_idx)
     
-    # 4. 處理切換邏輯
     if selected_db != st.session_state.current_db:
         st.session_state.current_db = selected_db
         st.rerun()
 
     st.divider()
-    # 下方可放下載按鈕等功能
+
+    # --- 4. 補回遺失的數據統計資料 ---
+    if not main_df.empty:
+        # 計算最新餘額
+        current_balance = main_df.iloc[-1]["結算總分"]
+        # 計算總投入 (第一筆初始金額)
+        initial_investment = main_df.iloc[0]["金額"]
+        # 計算純獲利
+        total_profit = current_balance - initial_investment
+        
+        # 漂亮的統計顯示
+        st.write("目前可用本金")
+        st.title(f"${current_balance:,.0f}")
+        
+        st.caption(f"💼 累積投入: ${initial_investment:,.0f}")
+        
+        # 根據獲利顯示顏色
+        profit_color = "green" if total_profit >= 0 else "red"
+        st.markdown(f"""
+            <div style="background-color: {'#e6f4ea' if total_profit >= 0 else '#fce8e6'}; 
+                        padding: 10px; border-radius: 5px;">
+                <span style="color: {profit_color}; font-weight: bold;">
+                    📈 純獲利: ${total_profit:,.0f}
+                </span>
+            </div>
+        """, unsafe_allow_html=True)
+    else:
+        st.warning("⚠️ 尚無報表數據")
+
+    st.divider()
+    
+    # 5. 下載按鈕
+    csv_data = main_df.to_csv(index=False, encoding='utf-8-sig').encode('utf-8-sig')
+    st.download_button(
+        label="📥 下載完整紀錄 (CSV)",
+        data=csv_data,
+        file_name=st.session_state.current_db,
+        mime='text/csv',
+    )
 
 # --- 邏輯判斷與主功能 ---
 if main_df.empty:
