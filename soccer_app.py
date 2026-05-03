@@ -78,6 +78,7 @@ if os.path.exists(img_path):
         <div class="banner-box"><img src="data:image/jpeg;base64,{img_b64}" class="banner-img"></div>
     """, unsafe_allow_html=True)
 
+
 # --- Sidebar (側邊欄) ---
 with st.sidebar:
     st.header("💰 資金與統計中心")
