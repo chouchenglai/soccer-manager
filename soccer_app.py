@@ -66,7 +66,7 @@ def save_chat(nickname, content):
 
 # --- 初始化 ---
 ensure_files()
-idef ensure_files():
+def ensure_files():
     # 確保主報表、討論區存在
     for db, cols in [(DEFAULT_DB, COLUMNS), (CHAT_DB, CHAT_COLUMNS)]:
         if not os.path.exists(db):
