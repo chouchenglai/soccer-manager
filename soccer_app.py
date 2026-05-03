@@ -129,7 +129,9 @@ if not file_exists:
         st.success("報表已建立！")
         time.sleep(0.5)
         st.rerun()
+
 else:
+    main_df = load_data()
     # 只要檔案存在，就直接進來這裡顯示分頁
     tab1, tab_live, tab2, tab3, tab4, tab5 = st.tabs(["💰 下單投注", "⚽ 即時比分", "📋 歷史記錄", "📊 統計圖表", "📈 報表管理", "💬 討 論 區"])
 
