@@ -1,9 +1,7 @@
-import pytz
 import streamlit as st
 import pandas as pd
 import os
-import time
-from datetime import datetime, timedelta, timezone
+from datetime import datetime
 
 # --- 基本設定 ---
 DEFAULT_DB = "soccer_data.csv"
@@ -131,17 +129,6 @@ with tab1:
         st.divider()
         st.write("### 🕒 最近 5 筆紀錄")
         st.dataframe(main_df.tail(5), use_container_width=True)
-
-    with tab_live:
-        # 第一行：大標題
-            st.markdown("### 📡 即時比分同步觀看 (Live)")
-        
-        # 第二行：藍色背景提示框
-            st.info("💡 提示：擇優場次後，請複製賽事，再點擊上方欄目，切換【下單投注】")
-           
-        # 第三行：嵌入外部比分網[cite: 1]
-            st.components.v1.iframe("https://live.titan007.com/indexall_big.aspx", height=800, scrolling=True)
-
     with tab2: # 📋 歷史記錄
         st.subheader("📜 完整賽事歷史紀錄")
         
