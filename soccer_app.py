@@ -129,168 +129,22 @@ with tab1:
         st.divider()
         st.write("### 🕒 最近 5 筆紀錄")
         st.dataframe(main_df.tail(5), use_container_width=True)
-    with tab2: # 📋 歷史記錄
-        st.subheader("📜 完整賽事歷史紀錄")
-        
-        # 1. 定義染色邏輯 (確保縮排正確)
-        def color_row(row):
-            style = ['color: black'] * len(row)
-            # 判斷盈虧顏色
-            if row['盈虧金額'] > 0: 
-                target_color = 'color: green'
-            elif row['盈虧金額'] < 0: 
-                target_color = 'color: red'
-            else: 
-                target_color = 'color: black'
-            
-            # 將顏色套用到「類型」與「盈虧金額」這兩欄
-            style[row.index.get_loc('類型')] = target_color
-            style[row.index.get_loc('盈虧金額')] = target_color
-            return style
 
-        # 2. 顯示表格 (包含倒序處理與千分位格式化)
-        if not main_df.empty:
-            # iloc[::-1] 讓最新的資料排在最上面
-            styled_df = main_df.iloc[::-1].style.apply(color_row, axis=1).format({
-                "金額": "{:,}", 
-                "盈虧金額": "{:+,.0f}", 
-                "結算總分": "{:,}"
-            })
-            st.dataframe(styled_df, use_container_width=True)
-        else:
-            st.info("目前尚無歷史紀錄。")
+with tab2:
+    st.subheader("📜 歷史全紀錄")
+    if not main_df.empty:
+        # 倒序顯示，最新的在最上面
+        st.dataframe(
+            main_df.iloc[::-1], 
+            use_container_width=True,
+            column_config={
+                "金額": st.column_config.NumberColumn(format="$ %d"),
+                "盈虧金額": st.column_config.NumberColumn(format="$ %d"),
+                "結算總分": st.column_config.NumberColumn(format="$ %d"),
+            }
+        )
 
-    with tab3: # 統計圖表[cite: 2]
-        st.line_chart(main_df["結算總分"], height=320)
-
-    with tab4: # 報表管理
-        st.subheader("📁 系統報表管理中心")
-        
-        # --- 區塊 1：新增報表 ---
-        with st.expander("➕ 新增報表檔案"):
-            n = st.text_input("報表名稱", placeholder="請輸入名稱（不需輸入 .csv）")
-            if st.button("確認建立報表"):
-                if n:
-                    file_name = f"{n}.csv"
-                    # 建立一個只有標題欄位的空 CSV
-                    pd.DataFrame(columns=COLUMNS).to_csv(file_name, index=False)
-                    st.success(f"✅ 報表「{file_name}」已成功建立！")
-                    time.sleep(1)
-                    st.rerun() # 重新執行以更新左側選單列表
-                else:
-                    st.error("⚠️ 請輸入報表名稱！")
-
-        # --- 區塊 2：刪除報表 ---
-        with st.expander("🗑️ 刪除現有報表"):
-            # 重新獲取一次列表，排除預設資料庫
-            d_list = [f for f in get_all_reports() if f != DEFAULT_DB]
-            
-            if d_list:
-                t = st.selectbox("選擇欲刪除的報表檔案", d_list)
-                if st.button("確認刪除報表", type="secondary"):
-                    try:
-                        os.remove(t)
-                        st.session_state.current_db = DEFAULT_DB # 刪除後自動跳回預設檔
-                        st.warning(f"檔案 {t} 已刪除。")
-                        time.sleep(1)
-                        st.rerun()
-                    except Exception as e:
-                        st.error(f"刪除失敗：{e}")
-            else:
-                st.info("目前沒有可刪除的自訂報表。")  
-
-# ---------------------------------------------------------
-    # 5. 討論區模組 (修正版：區分身分顏色 + 引用回覆功能)
-    # ---------------------------------------------------------
-    with tab5:
-        st.markdown("### 💬 足球現場實況滾球推薦")
-        
-        def get_chat_safely():
-            if os.path.exists(CHAT_DB):
-                try:
-                    if os.path.getsize(CHAT_DB) > 0:
-                        return pd.read_csv(CHAT_DB)
-                except: pass
-            return pd.DataFrame(columns=CHAT_COLUMNS)
-
-        chat_data = get_chat_safely()
-        
-        if 'user_nickname' not in st.session_state:
-            with st.form("name_registration"):
-                st.info("👋 歡迎！參與討論前請先設定您的暱稱。")
-                name_input = st.text_input("首次留言，請輸入您的暱稱：")
-                if st.form_submit_button("確認進入") and name_input.strip():
-                    st.session_state.user_nickname = name_input.strip()
-                    st.rerun()
-        else:
-            # 初始化引用變數
-            if "reply_target" not in st.session_state:
-                st.session_state.reply_target = ""
-            
-            curr_user = st.session_state.user_nickname
-            is_admin = curr_user.lower() in ['管理員', 'admin']
-            
-            st.caption(f"✅ 當前身分：{'🟢 管理員' if is_admin else '👤 ' + curr_user}")
-            
-            # 留言輸入表單
-            with st.form("chat_form", clear_on_submit=True):
-                msg_content = st.text_area("輸入您的內容...", value=st.session_state.reply_target, height=100)
-                col_s1, col_s2 = st.columns([2, 8])
-                if col_s1.form_submit_button("🚀 送出留言") and msg_content.strip():
-                    save_chat(curr_user, msg_content.strip())
-                    st.session_state.reply_target = "" # 送出後清空引用
-                    st.rerun()
-                if st.session_state.reply_target and col_s2.form_submit_button("取消引用"):
-                    st.session_state.reply_target = ""
-                    st.rerun()
-            
-            st.divider()
-            
-            if not chat_data.empty:
-                for idx, row in chat_data.iloc[::-1].iterrows():
-                    # 判斷該筆留言者是否為管理員
-                    is_msg_admin = str(row['暱稱']).lower() in ['管理員', 'admin']
-                    
-                    # 顏色與樣式邏輯
-                    border_style = "5px solid #00c853" if is_msg_admin else "1px solid #ddd"
-                    name_color = "#00c853" if is_msg_admin else "#666"
-                    name_text = "管理員" if is_msg_admin else row['暱稱']
-                    bg_color = "#f9f9f9" if is_msg_admin else "#ffffff"
-
-                    with st.container():
-                        c_left, c_right = st.columns([7.5, 2.5])
-                        with c_left:
-                            st.markdown(f"""
-                                <div style="background-color: {bg_color}; padding: 15px; border-radius: 10px; margin-bottom: 5px; border-left: {border_style}; border-top: {border_style if not is_msg_admin else 'none'}; border-right: {border_style if not is_msg_admin else 'none'}; border-bottom: {border_style if not is_msg_admin else 'none'};">
-                                    <strong style="color: {name_color}; font-size: 1.1em;">{name_text}</strong> 
-                                    <span style="color: #aaa; font-size: 0.8em; margin-left: 10px;">{row['時間']}</span>
-                                    <p style="margin-top: 10px; color: #333;">{row['內容']}</p>
-                                </div>
-                            """, unsafe_allow_html=True)
-                        
-                        with c_right:
-                            u_key = f"m_{idx}"
-                            # 1. 回覆按鈕
-                            if st.button("💬 回覆", key=f"rp_{u_key}", use_container_width=True):
-                                st.session_state.reply_target = f"@{name_text}："
-                                st.rerun()
-                            
-                            # 2. 編輯功能
-                            if st.checkbox("📝 編輯", key=f"ed_{u_key}"):
-                                new_txt = st.text_area("修改內容：", value=row['內容'], key=f"at_{u_key}")
-                                if st.button("確認修改", key=f"sv_{u_key}"):
-                                    chat_data.at[idx, '內容'] = new_txt
-                                    chat_data.to_csv(CHAT_DB, index=False, encoding='utf-8-sig')
-                                    st.rerun()
-                            
-                            # 3. 刪除按鈕
-                            if st.button("🗑️ 刪除", key=f"dl_{u_key}", use_container_width=True):
-                                chat_data.drop(idx).to_csv(CHAT_DB, index=False, encoding='utf-8-sig')
-                                st.rerun()
-                    st.write("") 
-            else:
-                st.write("目前尚無討論。")
-               
-# --- 底部 ---
-st.divider()
-st.markdown("""<div style="color: #888; font-size: 0.9em; text-align: left; padding-bottom: 20px;">謹慎理財 信用至上<br>Copyright © 2026 周振來足球管理系統版權所有</div>""", unsafe_allow_html=True)
+with tab3:
+    st.subheader("📈 總盈虧趨勢")
+    if not main_df.empty:
+        st.line_chart(main_df["結算總分"])
