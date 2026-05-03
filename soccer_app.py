@@ -1,7 +1,7 @@
+import os
+import pandas as pd
 import pytz
 import streamlit as st
-import pandas as pd
-import os
 import time
 from datetime import datetime, timedelta, timezone
 
@@ -333,23 +333,18 @@ else:
         # --- 區塊 2：報表審核進度查詢 ---
         st.write("### 🔍 報表申請審核進度查詢")
         ensure_request_file()
-        status_df = pd.read_csv("pending_requests.csv")
-        
-        if not status_df.empty:
-            # 依時間倒序排列，讓最新的申請在最上面
-            status_df = status_df.iloc[::-1]
-            
-            # 定義顏色樣式函數
-            def style_status(val):
-                if '審核中' in val: return 'color: #ff4b4b; font-weight: bold;'
-                if '通過' in val: return 'color: #00cc66; font-weight: bold;'
-                return ''
+        req_file = "pending_requests.csv"
 
-            st.dataframe(
-                status_df.style.applymap(style_status, subset=['狀態']),
-                use_container_width=True,
-                hide_index=True
-            )
+if os.path.exists(req_file):
+    try:
+        # 檔案存在，嘗試讀取
+        status_df = pd.read_csv(req_file)
+    except:
+        # 萬一檔案損壞，給一個空白結構
+        status_df = pd.DataFrame(columns=["時間", "用戶名稱", "報表名稱", "狀態"])
+else:
+    # 檔案不存在，直接建立一個空白的 DataFrame，防止後面報錯
+    status_df = pd.DataFrame(columns=["時間", "用戶名稱", "報表名稱", "狀態"])
         else:
             st.caption("目前尚無申請紀錄。")
 
