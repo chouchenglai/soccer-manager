@@ -23,22 +23,31 @@ def get_now_time():
 def get_all_reports():
     return [f for f in os.listdir('.') if f.endswith('.csv') and f != CHAT_DB]
 
+def get_all_reports():
+    return [f for f in os.listdir('.') if f.endswith('.csv') and f != CHAT_DB]
+
 def ensure_files():
-    if not os.path.exists(DEFAULT_DB):
-        pd.DataFrame(columns=COLUMNS).to_csv(DEFAULT_DB, index=False)
+    """修正：只確保討論區基礎檔案存在，報表檔案交給主邏輯初始化"""
     if not os.path.exists(CHAT_DB):
         pd.DataFrame(columns=CHAT_COLUMNS).to_csv(CHAT_DB, index=False, encoding='utf-8-sig')
 
 def load_data():
-    if os.path.exists(st.session_state.current_db):
+    file_exists = os.path.exists(st.session_state.current_db)
+    """修正：增加安全讀取邏輯，防止讀取空檔案崩潰"""
+    target = st.session_state.current_db
+    if os.path.exists(target):
         try:
-            df = pd.read_csv(st.session_state.current_db)
-            if "月份" in df.columns: df = df.drop(columns=["月份"])
-            return df
-        except: return pd.DataFrame(columns=COLUMNS)
+            # 檢查檔案是否有內容
+            if os.path.getsize(target) > 0:
+                df = pd.read_csv(target)
+                if "月份" in df.columns: df = df.drop(columns=["月份"])
+                return df
+        except: 
+            return pd.DataFrame(columns=COLUMNS)
     return pd.DataFrame(columns=COLUMNS)
 
 def save_data(df):
+    """保存數據時強制使用 utf-8-sig 防止亂碼"""
     if "月份" in df.columns: df = df.drop(columns=["月份"])
     df.to_csv(st.session_state.current_db, index=False, encoding='utf-8-sig')
 
@@ -60,6 +69,7 @@ if not all_reports: all_reports = [DEFAULT_DB]
 if st.session_state.current_db not in all_reports: st.session_state.current_db = all_reports[0]
 
 main_df = load_data()
+file_exists = os.path.exists(st.session_state.current_db)
 
 # --- 標誌顯示區 (Base64) ---
 import base64
@@ -100,14 +110,27 @@ with st.sidebar:
     st.download_button("📥 下載完整紀錄 (CSV)", data=csv, file_name="soccer_backup.csv")
 
 # --- 邏輯判斷與主功能 ---
-if main_df.empty:
-    st.subheader("初始化報表")
+file_exists = os.path.exists(st.session_state.current_db)
+
+if not file_exists:
+    st.subheader("🚀 初始化新報表")
     init_cap = st.number_input("起始本金", value=60000, step=1000)
     if st.button("建立"):
-        row = {"日期": get_now_time(), "賽事項目": "初始", "類型": "初始", "金額": int(init_cap), "盈虧金額": 0, "結算總分": int(init_cap)}
-        save_data(pd.DataFrame([row])); st.rerun()
+        row = {
+            "日期": get_now_time(), 
+            "賽事項目": "初始", 
+            "類型": "初始", 
+            "金額": int(init_cap), 
+            "盈虧金額": 0, 
+            "結算總分": int(init_cap)
+        }
+        # 這裡改用 pd.DataFrame 直接寫入，確保檔案被實體建立
+        pd.DataFrame([row]).to_csv(st.session_state.current_db, index=False, encoding='utf-8-sig')
+        st.success("報表已建立！")
+        time.sleep(0.5)
+        st.rerun()
 else:
-    # 核心：標籤頁定義
+    # 只要檔案存在，就直接進來這裡顯示分頁
     tab1, tab_live, tab2, tab3, tab4, tab5 = st.tabs(["💰 下單投注", "⚽ 即時比分", "📋 歷史記錄", "📊 統計圖表", "📈 報表管理", "💬 討 論 區"])
 
     with tab1: # 下單投注
