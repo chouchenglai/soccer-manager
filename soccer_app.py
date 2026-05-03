@@ -384,26 +384,25 @@ with tab4:
 
     # --- 4. 區塊 2：審核進度查詢 (互動摺疊面板) ---
     with st.expander("🔍 點擊查看：報表申請與審核詳情", expanded=False):
-        if not req_df.empty:
-            # 最新申請排在最前
-            display_df = req_df.iloc[::-1]
-            
-            # 專業配色樣式
-            def style_audit(val):
-                if '進行中' in val: return 'color: #d32f2f; font-weight: bold; background-color: #fff5f5;'
-                if '通過' in val: return 'color: #2e7d32; font-weight: bold; background-color: #f0fff4;'
-                return ''
+            if not req_df.empty:
+                # 最新申請排在最前
+                display_df = req_df.iloc[::-1]
+                
+                # 專業配色樣式
+                def style_audit(val):
+                    if '進行中' in val: return 'color: #d32f2f; font-weight: bold; background-color: #fff5f5;'
+                    if '通過' in val: return 'color: #2e7d32; font-weight: bold; background-color: #f0fff4;'
+                    return ''
 
-            st.dataframe(
-                display_df.style.applymap(style_audit, subset=['審核結果']),
-                use_container_width=True,
-                hide_index=True
-            )
-            st.caption("📋 審核通過後，該報表將出現在下方的可用清單中。")
-        else:
-            st.info("💡 目前尚無申請紀錄。")
-
-    st.divider()
+                # --- 修正重點：把 applymap 改成 map ---
+                st.dataframe(
+                    display_df.style.map(style_audit, subset=['審核結果']),
+                    use_container_width=True,
+                    hide_index=True
+                )
+                st.caption("📋 審核通過後，該報表將出現在下方的可用清單中。")
+            else:
+                st.info("💡 目前尚無申請紀錄。")
 
     # --- 5. 區塊 3：已通過審核之報表清單 (嚴格管理版) ---
     st.subheader("📂 已通過審核之報表清單", anchor=False)
