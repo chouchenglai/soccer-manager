@@ -300,18 +300,7 @@ else:
                     except Exception as e:
                         st.error(f"刪除失敗：{e}")
             else:
-                st.info("目前沒有可刪除的自訂報表")
-
-               with st.expander("☢️ 危險區域：清空當前報表紀錄"):
-             st.warning("注意：這將刪除目前檔案內的所有投注紀錄，僅保留空表格。")
-             if st.button("🔥 確認完全清空並重置"):
-                # 建立一個完全空的資料表 (只有標題)
-                empty_df = pd.DataFrame(columns=COLUMNS)
-                # 覆蓋掉當前的檔案
-                empty_df.to_csv(st.session_state.current_db, index=False)
-                st.success("紀錄已清空！請重新整理頁面以重新初始化。")
-                time.sleep(1)
-                st.rerun() # 重新執行後，系統會因為資料為空而要求您輸入初始本金
+                st.info("目前沒有可刪除的自訂報表")               
 
     # ---------------------------------------------------------
     # 5. 討論區模組
