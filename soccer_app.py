@@ -105,13 +105,16 @@ def is_initialized(df):
     except:
         return False
 
-# --- 邏輯判斷與主功能 (替換原檔案第 84-93 行) ---
+# --- 邏輯判斷與主功能 (請替換原代碼中對應位置) ---
 
-# 1. 檢查實體檔案是否存在
+# 1. 再次確認檔案狀態
 file_exists = os.path.exists(st.session_state.current_db)
+if file_exists:
+    # 讀取當前數據，確保 main_df 不是空的
+    main_df = load_data()
 
-# 2. 如果檔案不存在，或者檔案內容是空的且尚未初始化
-if not file_exists or not is_initialized(main_df):
+# 2. 核心判斷：如果檔案不存在，或是裡面連一行數據都沒有 (除了標題)
+if not file_exists or len(main_df) == 0:
     st.subheader("🚀 初始化報表")
     init_cap = st.number_input("起始本金", value=60000, step=1000)
     if st.button("建立"):
@@ -123,18 +126,18 @@ if not file_exists or not is_initialized(main_df):
             "盈虧金額": 0, 
             "結算總分": int(init_cap)
         }
-        # 這裡改用 pd.DataFrame 直接寫入實體檔案，確保下次 file_exists 為 True
-        pd.DataFrame([row]).to_csv(st.session_state.current_db, index=False, encoding='utf-8-sig')
+        # 強制寫入檔案並立即更新
+        new_df = pd.DataFrame([row])
+        new_df.to_csv(st.session_state.current_db, index=False, encoding='utf-8-sig')
         st.success("報表已建立！")
         time.sleep(0.5)
         st.rerun()
 else:
-    # 只要檔案存在且已初始化，就重新讀取一次確保數據同步，然後顯示主介面
-    main_df = load_data()
+    # --- 只要檔案有資料，就直接進入主功能頁面 ---
     tab1, tab_live, tab2, tab3, tab4, tab5 = st.tabs(["💰 下單投注", "⚽ 即時比分", "📋 歷史記錄", "📊 統計圖表", "📈 報表管理", "💬 討 論 區"])
     
-    # ... (後面接原本各個 Tab 的內容) ...
-
+    # 接下來接您原本各個 tab 的內容...
+    
     with tab1: # 下單投注
         try: balance = int(main_df["結算總分"].iloc[-1])
         except: balance = 0
