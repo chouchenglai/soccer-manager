@@ -99,6 +99,12 @@ with st.sidebar:
     csv = main_df.to_csv(index=False).encode('utf-8-sig')
     st.download_button("📥 下載完整紀錄 (CSV)", data=csv, file_name="soccer_backup.csv")
 
+def is_initialized(df):
+    try:
+        return not df.empty and "初始" in df["類型"].values
+    except:
+        return False
+
 # --- 邏輯判斷與主功能 ---
 if main_df.empty:
     st.subheader("初始化報表")
