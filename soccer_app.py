@@ -186,9 +186,14 @@ else:
             save_data(pd.concat([main_df, pd.DataFrame([new_row])], ignore_index=True)); st.rerun()
 
     with tab_live:
-        st.markdown("### 📡 球探即時比分 (同步監控)")
-        st.components.v1.iframe("https://live.titan007.com/indexall_big.aspx", height=800, scrolling=True)
-        st.info("💡 提示：查看完畢後，點擊上方標籤可切換回下單頁面。")
+        # 第一行：大標題
+            st.markdown("### 📡 即時比分同步觀看 (Live)")
+        
+        # 第二行：藍色背景提示框
+            st.info("💡 提示：擇優場次後，請複製賽事，再點擊上方欄目，切換【下單投注】")
+           
+        # 第三行：嵌入外部比分網[cite: 1]
+            st.components.v1.iframe("https://live.titan007.com/indexall_big.aspx", height=800, scrolling=True)
 
     with tab2: # 歷史記錄[cite: 2]
         st.dataframe(main_df.iloc[::-1], use_container_width=True)
