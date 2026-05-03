@@ -61,22 +61,34 @@ if st.session_state.current_db not in all_reports: st.session_state.current_db =
 
 main_df = load_data()
 
-# --- 標誌顯示區 (Base64) ---
-import base64
-def get_base64_img(file_path):
-    with open(file_path, "rb") as f: data = f.read()
-    return base64.b64encode(data).decode()
-
+# --- 標題圖片顯示 (縮小比例版) ---
 img_path = "ccl_logo_header.jpg"
+
 if os.path.exists(img_path):
     img_b64 = get_base64_img(img_path)
     st.markdown(f"""
         <style>
-            .banner-box {{ width: 100%; text-align: center; background-color: #ffffff; padding: 0px 0; margin-bottom: 20px; overflow: hidden; }}
-            .banner-img {{ width: 100%; transform: scale(1.1); transform-origin: center; height: auto; display: block; margin: 0 auto; }}
+            .banner-box {{
+                width: 100%;
+                text-align: center;
+                padding: 10px 0;
+                margin-bottom: 20px;
+            }}
+            .banner-img {{
+                /* 💡 這裡將比例調小，讓圖片不超出範圍 */
+                max-width: 85%; 
+                height: auto;
+                border-radius: 10px;
+                /* 加上這行可以讓陰影更漂亮，更有商業質感 */
+                box-shadow: 0px 4px 12px rgba(0,0,0,0.1);
+            }}
         </style>
-        <div class="banner-box"><img src="data:image/jpeg;base64,{img_b64}" class="banner-img"></div>
+        <div class="banner-box">
+            <img src="data:image/jpeg;base64,{img_b64}" class="banner-img">
+        </div>
     """, unsafe_allow_html=True)
+else:    
+    st.markdown("<h2 style='text-align: center; color: #004b93;'>⚽ 足球走地賽事管理系統</h2>", unsafe_allow_html=True)
 
 
 # --- Sidebar (側邊欄) ---
