@@ -188,8 +188,8 @@ else:
     with tab_live:
     st.markdown("### 📡 球探即時比分 (同步監控)")
     # 注意：下面這行前面必須有空格縮排！
-    st.components.v1.iframe("https://live.titan007.com/indexall_big.aspx", height=800, scrolling=True)
-    st.info("💡 提示：查看完畢後，點擊上方標籤可切換回下單頁面。")
+        st.components.v1.iframe("https://live.titan007.com/indexall_big.aspx", height=800, scrolling=True)
+        st.info("💡 提示：查看完畢後，點擊上方標籤可切換回下單頁面。")
 
     with tab2: # 歷史記錄[cite: 2]
         st.dataframe(main_df.iloc[::-1], use_container_width=True)
