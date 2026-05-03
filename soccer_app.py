@@ -379,38 +379,25 @@ else:
 
         st.divider()
 
-        # --- 區塊 2：報表審核進度查詢表格 ---
+        # --- 區塊 2：報表審核進度查詢表格 (防錯強化版) ---
         st.write("### 🔍 報表申請審核進度查詢")
         
         req_file = "pending_requests.csv"
-        # 安全讀取邏輯：防止檔案不存在時報錯
+        req_cols = ["時間", "用戶名稱", "報表名稱", "狀態"]
+
+        # 安全讀取邏輯
         if os.path.exists(req_file):
             try:
+                # 嘗試讀取，如果檔案是空的會跳到 except
                 status_df = pd.read_csv(req_file)
-            except:
-                status_df = pd.DataFrame(columns=["時間", "用戶名稱", "報表名稱", "狀態"])
+                # 再次檢查，如果讀出來沒有欄位，手動補上
+                if status_df.empty and len(status_df.columns) < 4:
+                    status_df = pd.DataFrame(columns=req_cols)
+            except Exception:
+                # 發生 EmptyDataError 或其他錯誤時，回傳空白標題表
+                status_df = pd.DataFrame(columns=req_cols)
         else:
-            status_df = pd.DataFrame(columns=["時間", "用戶名稱", "報表名稱", "狀態"])
-        
-        if not status_df.empty:
-            # 最新申請顯示在最上方
-            display_df = status_df.iloc[::-1]
-            
-            # 定義審核狀態的顏色樣式
-            def style_status(val):
-                if '審核中' in val: return 'color: #ff4b4b; font-weight: bold;'
-                if '通過' in val: return 'color: #00cc66; font-weight: bold;'
-                return ''
-
-            st.dataframe(
-                display_df.style.applymap(style_status, subset=['狀態']),
-                use_container_width=True,
-                hide_index=True
-            )
-        else:
-            st.caption("目前尚無申請紀錄。")
-
-        st.divider()
+            status_df = pd.DataFrame(columns=req_cols)
 
         # --- 區塊 3：現有報表清單 (管理員同步至 GitHub 後，切換才有效) ---
         st.write("### 📂 已通過審核之報表清單")
