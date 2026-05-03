@@ -303,93 +303,96 @@ else:
                 st.info("目前沒有可刪除的自訂報表。")  
 
 # ---------------------------------------------------------
-    # 5. 討論區模組 (防崩潰終極版)
+    # 5. 討論區模組 (修正版：區分身分顏色 + 引用回覆功能)
     # ---------------------------------------------------------
     with tab5:
         st.markdown("### 💬 足球現場實況滾球推薦")
         
-        # 🛡️ 內部安全讀取函數 (直接處理空檔案報錯)
         def get_chat_safely():
             if os.path.exists(CHAT_DB):
                 try:
-                    # 檢查檔案是否為空，防止 EmptyDataError
                     if os.path.getsize(CHAT_DB) > 0:
                         return pd.read_csv(CHAT_DB)
-                    else:
-                        return pd.DataFrame(columns=CHAT_COLUMNS)
-                except:
-                    return pd.DataFrame(columns=CHAT_COLUMNS)
+                except: pass
             return pd.DataFrame(columns=CHAT_COLUMNS)
 
-        # 讀取聊天紀錄
         chat_data = get_chat_safely()
         
-        # 1. 訪客登記邏輯
         if 'user_nickname' not in st.session_state:
-            with st.container():
+            with st.form("name_registration"):
                 st.info("👋 歡迎！參與討論前請先設定您的暱稱。")
-                with st.form("name_registration"):
-                    name_input = st.text_input("首次留言，請輸入您的暱稱：", placeholder="例如：路過的球神")
-                    submit_name = st.form_submit_button("確認進入")
-                    if submit_name and name_input.strip():
-                        st.session_state.user_nickname = name_input.strip()
-                        st.rerun()
+                name_input = st.text_input("首次留言，請輸入您的暱稱：")
+                if st.form_submit_button("確認進入") and name_input.strip():
+                    st.session_state.user_nickname = name_input.strip()
+                    st.rerun()
         else:
-            # 顯示當前身份
-            st.caption(f"✅ 您目前以 **{st.session_state.user_nickname}** 的身份在線")
+            # 初始化引用變數
+            if "reply_target" not in st.session_state:
+                st.session_state.reply_target = ""
             
-            # 2. 留言輸入表單[cite: 2]
+            curr_user = st.session_state.user_nickname
+            is_admin = curr_user.lower() in ['管理員', 'admin']
+            
+            st.caption(f"✅ 當前身分：{'🟢 管理員' if is_admin else '👤 ' + curr_user}")
+            
+            # 留言輸入表單
             with st.form("chat_form", clear_on_submit=True):
-                msg_content = st.text_area("輸入您的內容...", height=100, placeholder="分享賽事觀點...")
-                submit_msg = st.form_submit_button("🚀 送出留言")
-                if submit_msg:
-                    if msg_content.strip():
-                        # 調用全局定義的 save_chat 函數
-                        save_chat(st.session_state.user_nickname, msg_content.strip())
-                        st.success("留言已送出")
-                        time.sleep(0.5)
-                        st.rerun()
-                    else:
-                        st.warning("內容不能為空喔！")
+                msg_content = st.text_area("輸入您的內容...", value=st.session_state.reply_target, height=100)
+                col_s1, col_s2 = st.columns([2, 8])
+                if col_s1.form_submit_button("🚀 送出留言") and msg_content.strip():
+                    save_chat(curr_user, msg_content.strip())
+                    st.session_state.reply_target = "" # 送出後清空引用
+                    st.rerun()
+                if st.session_state.reply_target and col_s2.form_submit_button("取消引用"):
+                    st.session_state.reply_target = ""
+                    st.rerun()
             
             st.divider()
             
-            # 3. 留言顯示區 (從最新顯示到最舊)[cite: 2]
             if not chat_data.empty:
                 for idx, row in chat_data.iloc[::-1].iterrows():
+                    # 判斷該筆留言者是否為管理員
+                    is_msg_admin = str(row['暱稱']).lower() in ['管理員', 'admin']
+                    
+                    # 顏色與樣式邏輯
+                    border_style = "5px solid #00c853" if is_msg_admin else "1px solid #ddd"
+                    name_color = "#00c853" if is_msg_admin else "#666"
+                    name_text = "管理員" if is_msg_admin else row['暱稱']
+                    bg_color = "#f9f9f9" if is_msg_admin else "#ffffff"
+
                     with st.container():
-                        c_left, c_right = st.columns([8, 2])
-                        
+                        c_left, c_right = st.columns([7.5, 2.5])
                         with c_left:
-                            # 渲染留言樣式
                             st.markdown(f"""
-                                <div style="background-color: #f9f9f9; padding: 12px; border-radius: 8px; margin-bottom: 5px; border-left: 5px solid #00c853;">
-                                    <strong style="color: #00c853;">{row['暱稱']}</strong> 
-                                    <span style="color: #888; font-size: 0.8em; margin-left: 10px;">{row['時間']}</span>
-                                    <p style="margin-top: 8px; color: #333; line-height: 1.6;">{row['內容']}</p>
+                                <div style="background-color: {bg_color}; padding: 15px; border-radius: 10px; margin-bottom: 5px; border-left: {border_style}; border-top: {border_style if not is_msg_admin else 'none'}; border-right: {border_style if not is_msg_admin else 'none'}; border-bottom: {border_style if not is_msg_admin else 'none'};">
+                                    <strong style="color: {name_color}; font-size: 1.1em;">{name_text}</strong> 
+                                    <span style="color: #aaa; font-size: 0.8em; margin-left: 10px;">{row['時間']}</span>
+                                    <p style="margin-top: 10px; color: #333;">{row['內容']}</p>
                                 </div>
                             """, unsafe_allow_html=True)
                         
                         with c_right:
-                            # 生成唯一 Key[cite: 2]
-                            unique_key = f"msg_{idx}_{row['時間']}"
-                            
-                            if st.button("🗑️ 刪除", key=f"del_{unique_key}"):
-                                updated_chat = chat_data.drop(idx)
-                                updated_chat.to_csv(CHAT_DB, index=False, encoding='utf-8-sig')
+                            u_key = f"m_{idx}"
+                            # 1. 回覆按鈕
+                            if st.button("💬 回覆", key=f"rp_{u_key}", use_container_width=True):
+                                st.session_state.reply_target = f"@{name_text}："
                                 st.rerun()
                             
-                            if st.checkbox("📝 編輯", key=f"edt_{unique_key}"):
-                                new_text = st.text_area("修正留言：", value=row['內容'], key=f"area_{unique_key}")
-                                if st.button("確認修改", key=f"save_{unique_key}"):
-                                    chat_data.at[idx, '內容'] = new_text
+                            # 2. 編輯功能
+                            if st.checkbox("📝 編輯", key=f"ed_{u_key}"):
+                                new_txt = st.text_area("修改內容：", value=row['內容'], key=f"at_{u_key}")
+                                if st.button("確認修改", key=f"sv_{u_key}"):
+                                    chat_data.at[idx, '內容'] = new_txt
                                     chat_data.to_csv(CHAT_DB, index=False, encoding='utf-8-sig')
-                                    st.success("已更新！")
-                                    time.sleep(0.5)
                                     st.rerun()
+                            
+                            # 3. 刪除按鈕
+                            if st.button("🗑️ 刪除", key=f"dl_{u_key}", use_container_width=True):
+                                chat_data.drop(idx).to_csv(CHAT_DB, index=False, encoding='utf-8-sig')
+                                st.rerun()
                     st.write("") 
             else:
-                st.write("目前還沒有討論內容，快來搶頭香吧！")
+                st.write("目前尚無討論。")
                
 # --- 底部 ---
 st.divider()
