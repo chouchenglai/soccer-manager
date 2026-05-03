@@ -41,6 +41,7 @@ def save_data(df):
 st.set_page_config(page_title="足球管理中心 - 專業本地版", layout="wide")
 main_df = load_data()
 
+
 # --- 標誌顯示區 (Base64) ---
 import base64
 def get_base64_img(file_path):
