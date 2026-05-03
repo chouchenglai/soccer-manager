@@ -109,26 +109,55 @@ if os.path.exists(img_path):
         <div class="banner-box"><img src="data:image/jpeg;base64,{img_b64}" class="banner-img"></div>
     """, unsafe_allow_html=True)
 
-# --- Sidebar (側邊欄) ---
+# --- Sidebar (側邊欄) 恢復原始經典風格 ---
 with st.sidebar:
     st.header("💰 資金與統計中心")
+    
+    # 1. 獲取報表清單
+    all_reports = get_all_reports()
+    
+    # 2. 安全計算索引
     idx = all_reports.index(st.session_state.current_db) if st.session_state.current_db in all_reports else 0
+    
+    # 3. 切換報表下拉選單
     selected_db = st.selectbox("切換報表", all_reports, index=idx)
     if selected_db != st.session_state.current_db:
         st.session_state.current_db = selected_db
         st.rerun()
+        
     st.divider()
+
+    # 4. 數據統計顯示區
     if not main_df.empty:
+        # 獲取目前可用本金 (取最後一筆結算總分)
         current_bal = int(main_df["結算總分"].iloc[-1])
         st.metric("目前可用本金", f"${current_bal:,}")
+        
+        # 定義投入類型並計算總投入
         invest_types = ['初始', '手動補倉', '補倉']
         total_investment = main_df[main_df['類型'].isin(invest_types)]['金額'].sum()
         st.write(f"💼 累積投入: `${total_investment:,}`")
+        
+        # 計算實際盈虧
         real_profit = current_bal - total_investment
-        if real_profit >= 0: st.success(f"📈 純獲利: `${real_profit:,}`")
-        else: st.error(f"📉 尚虧: `${abs(real_profit):,}`")
+        
+        # 根據盈虧狀況顯示 success (綠) 或 error (紅)
+        if real_profit >= 0:
+            st.success(f"📈 純獲利: `${real_profit:,}`")
+        else:
+            st.error(f"📉 尚虧: `${abs(real_profit):,}`")
+    else:
+        st.info("💡 目前報表尚無數據")
+
+    st.divider()
+
+    # 5. 下載按鈕
     csv = main_df.to_csv(index=False).encode('utf-8-sig')
-    st.download_button("📥 下載完整紀錄 (CSV)", data=csv, file_name="soccer_backup.csv")
+    st.download_button(
+        label="📥 下載完整紀錄 (CSV)", 
+        data=csv, 
+        file_name=st.session_state.current_db
+    )
 
 # --- 邏輯判斷與主功能 ---
 if main_df.empty:
