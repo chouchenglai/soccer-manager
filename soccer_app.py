@@ -275,70 +275,95 @@ else:
         st.line_chart(main_df["結算總分"], height=320)
 
     with tab4: # 📈 報表管理
-        st.subheader("📋 報表檔案管理")
+        st.subheader("📋 報表檔案管理與申請")
         
-        # --- 區塊 1：新增報表 ---
-        with st.expander("➕ 建立新報表帳本", expanded=True):
+        # --- 工具函數：確保申請清單檔案存在 (24小時制) ---
+        def ensure_request_file():
+            req_file = "pending_requests.csv"
+            req_cols = ["時間", "用戶名稱", "報表名稱", "狀態"]
+            if not os.path.exists(req_file):
+                pd.DataFrame(columns=req_cols).to_csv(req_file, index=False, encoding='utf-8-sig')
+
+        # --- 區塊 1：新增報表申請 ---
+        with st.expander("➕ 申請建立新報表帳本", expanded=True):
             col_n1, col_n2 = st.columns([3, 1])
             with col_n1:
-                new_name = st.text_input("輸入新報表名稱", placeholder="例如：2026_五月賽事 (不需輸入 .csv)")
+                new_name = st.text_input("輸入新報表名稱", placeholder="例如：User01_專用報表 (不需輸入 .csv)")
             with col_n2:
-                st.write(" ") # 對齊用
-                create_btn = st.button("確認建立", use_container_width=True)
+                st.write(" ") 
+                create_btn = st.button("送出申請", use_container_width=True)
             
             if create_btn:
                 if new_name:
-                    # 強制加上 .csv 副檔名並建立「地基」檔案
                     target_file = f"{new_name}.csv" if not new_name.endswith(".csv") else new_name
                     
                     if os.path.exists(target_file):
-                        st.error(f"⚠️ 檔案 {target_file} 已經存在了！")
+                        st.error(f"⚠️ 檔案 {target_file} 已經存在或正在審核中！")
                     else:
-                        # 建立一個帶有標題但內容為空的 CSV 檔案
+                        # 1. 建立臨時地基檔 (讓用戶當下能用)
                         pd.DataFrame(columns=COLUMNS).to_csv(target_file, index=False, encoding='utf-8-sig')
                         
-                        # 自動切換到新報表並刷新頁面
+                        # 2. 寫入申請清單 (自動結案邏輯的前置作業)
+                        ensure_request_file()
+                        req_df = pd.read_csv("pending_requests.csv")
+                        new_req = {
+                            "時間": datetime.now().strftime("%Y-%m-%d %H:%M"),
+                            "用戶名稱": "訪客用戶", 
+                            "報表名稱": target_file,
+                            "狀態": "⏳ 正在審核中 (24H同步)" 
+                        }
+                        pd.concat([req_df, pd.DataFrame([new_req])], ignore_index=True).to_csv("pending_requests.csv", index=False, encoding='utf-8-sig')
+                        
+                        # 3. 自動切換並提示
+                        st.balloons()
                         st.session_state.current_db = target_file
-                        st.success(f"✅ 報表「{target_file}」建立成功，已自動切換！")
-                        time.sleep(1)
+                        st.success(f"✅ 報表「{target_file}」已送出審核申請！")
+                        st.info("💡 系統已為您開啟臨時帳本，請於 24 小時內確認審核進度。")
+                        time.sleep(2)
                         st.rerun()
                 else:
                     st.error("❌ 請輸入報表名稱！")
 
         st.divider()
 
-        # --- 區塊 2：現有報表清單與刪除 ---
-        st.write("### 📂 現有報表清單")
-        reports = get_all_reports()
+        # --- 區塊 2：報表審核進度查詢 ---
+        st.write("### 🔍 報表申請審核進度查詢")
+        ensure_request_file()
+        status_df = pd.read_csv("pending_requests.csv")
         
-        for r in reports:
-            c_r1, c_r2, c_r3 = st.columns([2, 1, 1])
-            with c_r1:
-                # 顯示檔案名稱與大小
-                f_size = os.path.getsize(r) / 1024
-                st.write(f"📄 **{r}**  `({f_size:.2f} KB)`")
+        if not status_df.empty:
+            # 依時間倒序排列，讓最新的申請在最上面
+            status_df = status_df.iloc[::-1]
             
-            with c_r2:
-                # 快速切換按鈕
-                if st.button(f"切換至 {r}", key=f"sw_{r}"):
-                    st.session_state.current_db = r
-                    st.rerun()
-            
-            with c_r3:
-                # 刪除按鈕 (排除預設檔案以防萬一)
-                if r != DEFAULT_DB:
-                    if st.button(f"🗑️ 刪除", key=f"del_{r}"):
-                        os.remove(r)
-                        st.warning(f"檔案 {r} 已刪除")
-                        if st.session_state.current_db == r:
-                            st.session_state.current_db = DEFAULT_DB
-                        time.sleep(1)
-                        st.rerun()
-                else:
-                    st.info("主報表不可刪除")
+            # 定義顏色樣式函數
+            def style_status(val):
+                if '審核中' in val: return 'color: #ff4b4b; font-weight: bold;'
+                if '通過' in val: return 'color: #00cc66; font-weight: bold;'
+                return ''
+
+            st.dataframe(
+                status_df.style.applymap(style_status, subset=['狀態']),
+                use_container_width=True,
+                hide_index=True
+            )
+        else:
+            st.caption("目前尚無申請紀錄。")
 
         st.divider()
-        st.info("💡 提示：新建報表後，系統會自動引導您進行該報表的「起始本金初始化」。")  
+
+        # --- 區塊 3：現有報表清單 (管理員結案後用戶可見) ---
+        st.write("### 📂 我的報表清單")
+        reports = get_all_reports()
+        for r in reports:
+            c_r1, c_r2 = st.columns([3, 1])
+            with c_r1:
+                st.write(f"📄 **{r}**")
+            with c_r2:
+                if st.button(f"切換", key=f"sw_{r}"):
+                    st.session_state.current_db = r
+                    st.rerun()
+
+        st.info("📢 提示：若您的報表狀態顯示「✅ 已通過審核」，代表數據已永久保存至資料庫。")  
 
 # ---------------------------------------------------------
     # 5. 討論區模組 (防崩潰終極版)
