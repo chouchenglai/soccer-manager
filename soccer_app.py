@@ -399,20 +399,36 @@ else:
         else:
             status_df = pd.DataFrame(columns=req_cols)
 
-        # --- 區塊 3：現有報表清單 (管理員同步至 GitHub 後，切換才有效) ---
+        # --- 區塊 3：現有報表清單 (僅顯示已通過審核的) ---
         st.write("### 📂 已通過審核之報表清單")
-        # 過濾掉進度表與討論區檔案，讓清單乾淨
-        all_files = [f for f in os.listdir('.') if f.endswith('.csv') and f not in ["pending_requests.csv", CHAT_DB]]
         
-        if all_files:
-            for r in all_files:
+        # 1. 取得所有實際存在的 .csv 檔案
+        all_physical_files = [f for f in os.listdir('.') if f.endswith('.csv') and f not in ["pending_requests.csv", CHAT_DB]]
+        
+        # 2. 取得申請清單中「已通過」的名單
+        approved_list = []
+        if os.path.exists("pending_requests.csv"):
+            try:
+                check_df = pd.read_csv("pending_requests.csv")
+                # 只有狀態包含「通過」二字的報表名稱才會被加入
+                approved_list = check_df[check_df['狀態'].str.contains("通過", na=False)]['報表名稱'].tolist()
+            except:
+                approved_list = []
+
+        # 3. 核心邏輯：除了預設報表外，其他的必須在「通過名單」內才顯示
+        display_reports = [f for f in all_physical_files if f == DEFAULT_DB or f in approved_list]
+
+        if display_reports:
+            for r in display_reports:
                 c_r1, c_r2 = st.columns([3, 1])
                 with c_r1:
-                    st.write(f"📄 **{r}**")
+                    # 幫預設報表加個星號標記
+                    label = f"⭐ {r} (主帳本)" if r == DEFAULT_DB else f"📄 {r}"
+                    st.write(label)
                 with c_r2:
                     if st.button(f"切換", key=f"sw_{r}"):
                         st.session_state.current_db = r
-                        st.rerun()
+                        st.rerun()       
         else:
             st.info("尚無可用報表，請於上方送出申請。")
 
