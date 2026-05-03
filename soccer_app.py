@@ -42,28 +42,36 @@ def ensure_files():
 ensure_files()
 
 def load_data():
+    # --- 【核心修復】確保 st.session_state.current_db 存在 ---
+    if 'current_db' not in st.session_state:
+        st.session_state.current_db = DEFAULT_DB
+    
+    # 檢查檔案是否存在
     if os.path.exists(st.session_state.current_db):
         try:
+            # 讀取資料，若為空白則回傳帶標題的 DataFrame
             df = pd.read_csv(st.session_state.current_db)
-            if "月份" in df.columns: df = df.drop(columns=["月份"])
+            if df.empty:
+                return pd.DataFrame(columns=COLUMNS)
             return df
-        except: return pd.DataFrame(columns=COLUMNS)
+        except Exception as e:
+            return pd.DataFrame(columns=COLUMNS)
+    
+    # 若檔案不存在，回傳空白地基
     return pd.DataFrame(columns=COLUMNS)
+2. 替換程式主邏輯起始處 (大約在代碼第 70-85 行)
+請找到你原本寫 main_df = load_data() 的地方，將其附近的代碼替換為以下順序。順序非常重要，必須先初始化 session_state，再呼叫 load_data()。
 
-def save_data(df):
-    if "月份" in df.columns: df = df.drop(columns=["月份"])
-    df.to_csv(st.session_state.current_db, index=False, encoding='utf-8-sig')
+Python
+# --- 1. 執行基礎檔案檢查 ---
+ensure_files()
 
-def load_chat():
-    if os.path.exists(CHAT_DB): return pd.read_csv(CHAT_DB)
-    return pd.DataFrame(columns=CHAT_COLUMNS)
+# --- 2. 【核心修復】初始化 session_state 變數 ---
+if 'current_db' not in st.session_state:
+    st.session_state.current_db = DEFAULT_DB
 
-def save_chat(nickname, content):
-    df = load_chat()
-    new_msg = {"時間": get_now_time(), "暱稱": nickname, "內容": content, "標籤": "訪客"}
-    df = pd.concat([df, pd.DataFrame([new_msg])], ignore_index=True)
-    df.to_csv(CHAT_DB, index=False, encoding='utf-8-sig')
-
+# --- 3. 呼叫讀取資料 (現在 current_db 絕對存在，不會再報錯了) ---
+main_df = load_data()
 # --- 初始化 ---
 ensure_files()
 def ensure_files():
