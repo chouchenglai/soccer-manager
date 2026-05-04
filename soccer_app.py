@@ -235,7 +235,7 @@ with tab2:
     # --- 2. 安全讀取邏輯 (全域防錯保護) ---
     if os.path.exists(req_file):
         try:
-            req_df = pd.read_csv(req_file)
+            req_df = pd.read_csv(req_file, dtype={'申請編號': str})
             # 確保欄位完全符合標準，若不符則重置
             if not all(col in req_df.columns for col in req_cols):
                 req_df = pd.DataFrame(columns=req_cols)
