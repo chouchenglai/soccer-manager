@@ -245,9 +245,9 @@ with tab2:
     else:
         req_df = pd.DataFrame(columns=req_cols)
 
-    # --- 3. 區塊 A：提交新報表申請 ---
-    st.subheader("提交新報表申請", anchor=False)
-    new_name = st.text_input("請輸入預計建立的報表名稱", placeholder="例如：Fran Chou")
+    # --- 3. 區塊 A：提交新帳號申請 ---
+    st.subheader("提交新帳號申請", anchor=False)
+    new_name = st.text_input("請輸入您要創建的帳號名稱", placeholder="例如：Visitors")
     if st.button("確認送出申請"):
         if new_name:
             # 自動計算編號與日期
@@ -290,12 +290,12 @@ with tab2:
             hide_index=True
         )
     else:
-        st.info("目前尚無申請紀錄。")
+        st.info("目前尚無申請記錄。")
 
     st.divider()
 
     # --- 5. 區塊 C：可用報表帳本清單 (嚴格審核機制) ---
-    st.subheader("已授權報表清單", anchor=False)
+    st.subheader("已授權帳號清單", anchor=False)
     
     # 掃描現有 CSV 檔案
     physical_files = [f for f in os.listdir('.') if f.endswith('.csv') and f not in [req_file, CHAT_DB]]
@@ -316,7 +316,7 @@ with tab2:
                     st.session_state.current_db = fname
                     st.rerun()
     else:
-        st.info("暫無已授權之報表。")
+        st.info("暫無已授權之清單。")
 
     with tab_live:
         # 第一行：大標題
