@@ -299,9 +299,9 @@ else:
         else:
             st.info("目前尚無歷史紀錄。")
 
-    with tab4: # 統計圖表[cite: 2]
-        st.write("")
+    with tab4: # 統計圖表[cite: 2]        
         st.subheader("📈 統計表曲線圖")
+        st.write("")
         st.line_chart(main_df["結算總分"], height=320)      
 
 # ---------------------------------------------------------
