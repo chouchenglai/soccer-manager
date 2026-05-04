@@ -270,8 +270,7 @@ with tab2:
             target_file = f"{new_name}.csv" if not new_name.endswith(".csv") else new_name
             if not os.path.exists(target_file):
                 pd.DataFrame(columns=COLUMNS).to_csv(target_file, index=False, encoding='utf-8-sig')
-            
-            st.balloons()
+                      
             st.success(f"✅ 申請已送出！編號：{new_id}")
             time.sleep(1.5)
             st.rerun()
