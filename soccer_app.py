@@ -223,38 +223,38 @@ else:
                     st.rerun()
 
     # ==========================================
-# Tab 4: 報表管理 (商用標準穩定版 - 零特效)
+# Tab 4: 帳號管理 (全域防錯 & 專業優化版)
 # ==========================================
-with tab2:
+with tab4:
     st.header("📂 登錄會員管理中心")
     
-    # --- 1. 初始化檔案與欄位 (標準商用格式) ---
+    # --- 1. 定義標準欄位與檔案路徑 ---
     req_file = "pending_requests.csv"
     req_cols = ["申請編號", "申請日期", "申請名稱", "備註事項", "審核結果"]
 
-    # --- 2. 安全讀取邏輯 (全域防錯保護) ---
+    # --- 2. 安全讀取數據 (全域防護：防止 EmptyDataError) ---
     if os.path.exists(req_file):
         try:
             req_df = pd.read_csv(req_file)
-            # 確保欄位完全符合標準，若不符則重置
+            # 檢查欄位是否正確，若不對則重建
             if not all(col in req_df.columns for col in req_cols):
                 req_df = pd.DataFrame(columns=req_cols)
-        except Exception:
-            # 處理 EmptyDataError 或檔案損壞
+        except:
             req_df = pd.DataFrame(columns=req_cols)
     else:
         req_df = pd.DataFrame(columns=req_cols)
 
-    # --- 3. 區塊 A：提交新報表申請 ---
-    st.subheader("提交新報表申請", anchor=False)
-    new_name = st.text_input("請輸入預計建立的報表名稱", placeholder="例如：Fran Chou")
-    if st.button("確認送出申請"):
-        if new_name:
-            # 自動計算編號與日期
+    # --- 3. 區塊 1：新增報表申請 ---
+    with st.expander("➕ 申請建立新報表帳本", expanded=True):
+        new_name = st.text_input("輸入新報表名稱", placeholder="例如：Fran Chou")
+        create_btn = st.button("送出申請")
+        
+        if create_btn and new_name:
+            # 自動生成編號與日期
             new_id = f"{len(req_df) + 1:04d}"
             today_str = datetime.now().strftime("%Y年%m月%d日")
             
-            new_data = {
+            new_req = {
                 "申請編號": new_id,
                 "申請日期": today_str,
                 "申請名稱": new_name,
@@ -262,61 +262,69 @@ with tab2:
                 "審核結果": "⏳ 審核進行中"
             }
             
-            # 存檔至伺服器
-            updated_df = pd.concat([req_df, pd.DataFrame([new_data])], ignore_index=True)
+            # 合併數據並存檔 (確保帶有 UTF-8-SIG 防止亂碼)
+            updated_df = pd.concat([req_df, pd.DataFrame([new_req])], ignore_index=True)
             updated_df.to_csv(req_file, index=False, encoding='utf-8-sig')
             
-            # 建立物理 CSV 檔案基礎
-            target_csv = f"{new_name}.csv" if not new_name.endswith(".csv") else new_name
-            if not os.path.exists(target_csv):
-                pd.DataFrame(columns=COLUMNS).to_csv(target_csv, index=False, encoding='utf-8-sig')
+            # 建立物理地基檔 (讓切換功能有檔案可切)
+            target_file = f"{new_name}.csv" if not new_name.endswith(".csv") else new_name
+            if not os.path.exists(target_file):
+                pd.DataFrame(columns=COLUMNS).to_csv(target_file, index=False, encoding='utf-8-sig')
             
-            # 標準成功提示
-            st.success(f"系統訊息：已成功登錄申請 (編號: {new_id})")
-            time.sleep(1)
+            st.balloons()
+            st.success(f"✅ 申請已送出！編號：{new_id}")
+            time.sleep(1.5)
             st.rerun()
+
+    st.divider()
+
+    # --- 4. 區塊 2：審核進度查詢 (互動摺疊面板) ---
+    with st.expander("🔍 點擊查看：報表申請與審核詳情", expanded=False):
+        if not req_df.empty:
+            # 最新申請排在最前
+            display_df = req_df.iloc[::-1]
+            
+            # 專業配色樣式
+            def style_audit(val):
+                if '進行中' in val: return 'color: #d32f2f; font-weight: bold; background-color: #fff5f5;'
+                if '通過' in val: return 'color: #2e7d32; font-weight: bold; background-color: #f0fff4;'
+                return ''
+
+            st.dataframe(
+                display_df.style.applymap(style_audit, subset=['審核結果']),
+                use_container_width=True,
+                hide_index=True
+            )
+            st.caption("📋 審核通過後，該報表將出現在下方的可用清單中。")
         else:
-            st.warning("請先輸入名稱再送出。")
+            st.info("💡 目前尚無申請紀錄。")
 
     st.divider()
 
-    # --- 4. 區塊 B：審核進度清單 (標準表格，無樣式干擾) ---
-    st.subheader("報表審核進度詳情", anchor=False)
-    if not req_df.empty:
-        # 最新申請排在最前，使用標準 dataframe 顯示
-        st.dataframe(
-            req_df.iloc[::-1], 
-            use_container_width=True, 
-            hide_index=True
-        )
-    else:
-        st.info("目前尚無申請紀錄。")
-
-    st.divider()
-
-    # --- 5. 區塊 C：可用報表帳本清單 (嚴格審核機制) ---
-    st.subheader("已授權報表清單", anchor=False)
+    # --- 5. 區塊 3：已通過審核之報表清單 (嚴格管理版) ---
+    st.subheader("📂 已通過審核之報表清單", anchor=False)
     
-    # 掃描現有 CSV 檔案
-    physical_files = [f for f in os.listdir('.') if f.endswith('.csv') and f not in [req_file, CHAT_DB]]
+    # 獲取實際存在的 CSV 檔案
+    all_files = [f for f in os.listdir('.') if f.endswith('.csv') and f not in [req_file, CHAT_DB]]
     
-    # 過濾已通過名單
-    passed_names = req_df[req_df['審核結果'].str.contains("通過", na=False)]['申請名稱'].tolist()
+    # 獲取通過名單
+    approved_names = req_df[req_df['審核結果'].str.contains("通過", na=False)]['申請名稱'].tolist()
     
-    # 顯示邏輯：主帳本必出，其餘需審核通過
-    display_targets = [f for f in physical_files if f == DEFAULT_DB or f.replace('.csv','') in passed_names or f in passed_names]
+    # 最終顯示邏輯：主帳本必出，其他帳本需通過審核
+    display_list = [f for f in all_files if f == DEFAULT_DB or f.replace('.csv','') in approved_names or f in approved_names]
 
-    if display_targets:
-        for fname in display_targets:
-            col_a, col_b = st.columns([4, 1])
-            with col_a:
-                st.text(f"📁 {fname}" + (" (系統預設)" if fname == DEFAULT_DB else ""))
-            with col_b:
-                if st.button("啟動", key=f"switch_{fname}"):
-                    st.session_state.current_db = fname
+    if display_list:
+        for r in display_list:
+            c1, c2 = st.columns([3, 1])
+            with c1:
+                label = f"⭐ {r} (主帳本)" if r == DEFAULT_DB else f"📄 {r}"
+                st.write(label)
+            with c2:
+                if st.button("切換", key=f"btn_{r}"):
+                    st.session_state.current_db = r
                     st.rerun()
     else:
-        st.info("暫無已授權之報表。")
+        st.info("尚無可用報表，請於上方送出申請。")
 
     with tab_live:
         # 第一行：大標題
