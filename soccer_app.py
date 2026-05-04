@@ -225,6 +225,7 @@ else:
     with tab2: # 註冊帳號                
         st.subheader("📁 登錄會員管理中心")
         st.markdown("<h2 style='color:#1E90FF; font-weight:bold;'>📝 註冊帳號</h2>", unsafe_allow_html=True)
+                st.markdown("<hr style='border: 2px solid #1E90FF;'>", unsafe_allow_html=True)
         
         # --- 區塊 1：新增帳號 ---
         with st.expander("➕ 新增帳號檔案"):
