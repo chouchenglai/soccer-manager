@@ -281,7 +281,7 @@ with tab2:
     st.divider()
 
     # --- 4. 區塊 B：審核進度清單 (標準表格，無樣式干擾) ---
-    st.subheader("報表審核進度詳情", anchor=False)
+    st.subheader("帳號審核進度詳情", anchor=False)
     if not req_df.empty:
         # 最新申請排在最前，使用標準 dataframe 顯示
         st.dataframe(
