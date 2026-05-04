@@ -108,7 +108,7 @@ if main_df.empty:
         save_data(pd.DataFrame([row])); st.rerun()
 else:
     # 核心：標籤頁定義
-    tab1, tab2, tab_live, tab3, tab4, tab5 = st.tabs(["💰 下單投注", "📝 註冊帳號","⚽ 即時比分", "📋 歷史記錄", "📊 統計圖表",  "💬 討 論 區"])
+    tab1, tab2, tab_live, tab3, tab4, tab5 = st.tabs(["💰 下單投注", "📝 註冊帳號", "⚽ 即時比分", "📋 歷史記錄", "📊 統計圖表",  "💬 討 論 區"])
 
     with tab1: # 下單投注
         try: balance = int(main_df["結算總分"].iloc[-1])
@@ -222,7 +222,7 @@ else:
                     st.session_state.show_add_funds = False
                     st.rerun()
 
-        with tab2: # 註冊帳號
+    with tab2: # 註冊帳號
         st.subheader("📁 登錄會員管理中心")
         
         # --- 區塊 1：新增帳號 ---
