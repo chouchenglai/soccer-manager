@@ -222,102 +222,41 @@ else:
                     st.session_state.show_add_funds = False
                     st.rerun()
 
-    # ==========================================
-# Tab 4: 登錄帳號 (商用標準穩定版 - 零特效)
-# ==========================================
-with tab4:
-    st.header("📂 登錄會員管理中心")
-    
-    # --- 1. 初始化檔案與欄位 (標準商用格式) ---
-    req_file = "pending_requests.csv"
-    req_cols = ["申請編號", "申請日期", "申請名稱", "備註事項", "審核結果"]
+    with tab2: # 註冊帳號   
+        st.subheader("📂 登錄會員管理中心")             
+                   
+        # --- 區塊 1：新增帳號 ---
+        with st.expander("➕ 新增帳號檔案"):
+            n = st.text_input("帳號名稱", placeholder="請輸入您的名稱")
+            if st.button("確認建立帳號"):
+                if n:
+                    file_name = f"{n}.csv"
+                    # 建立一個只有標題欄位的空 CSV
+                    pd.DataFrame(columns=COLUMNS).to_csv(file_name, index=False)
+                    st.success(f"✅ 帳號「{file_name}」已成功建立！")
+                    time.sleep(1)
+                    st.rerun() # 重新執行以更新左側選單列表
+                else:
+                    st.error("⚠️ 請輸入帳號名稱！")
 
-    # --- 2. 安全讀取邏輯 (全域防錯保護) ---
-    if os.path.exists(req_file):
-        try:
-            req_df = pd.read_csv(req_file)
-            # 確保欄位完全符合標準，若不符則重置
-            if not all(col in req_df.columns for col in req_cols):
-                req_df = pd.DataFrame(columns=req_cols)
-        except Exception:
-            # 處理 EmptyDataError 或檔案損壞
-            req_df = pd.DataFrame(columns=req_cols)
-    else:
-        req_df = pd.DataFrame(columns=req_cols)
-
-    # --- 3. 區塊 A：提交新報表申請 ---
-    st.subheader("提交新報表申請", anchor=False)
-    new_name = st.text_input("請輸入預計建立的報表名稱", placeholder="例如：Fran Chou")
-    if st.button("確認送出申請"):
-        if new_name:
-            # 自動計算編號與日期
-            new_id = f"{len(req_df) + 1:04d}"
-            today_str = datetime.now().strftime("%Y年%m月%d日")
+        # --- 區塊 2：註銷帳號 ---
+        with st.expander("🗑️ 註銷登錄帳號"):
+            # 重新獲取一次列表，排除預設資料庫
+            d_list = [f for f in get_all_reports() if f != DEFAULT_DB]
             
-            new_data = {
-                "申請編號": new_id,
-                "申請日期": today_str,
-                "申請名稱": new_name,
-                "備註事項": "",
-                "審核結果": "⏳ 審核進行中"
-            }
-            
-            # 存檔至伺服器
-            updated_df = pd.concat([req_df, pd.DataFrame([new_data])], ignore_index=True)
-            updated_df.to_csv(req_file, index=False, encoding='utf-8-sig')
-            
-            # 建立物理 CSV 檔案基礎
-            target_csv = f"{new_name}.csv" if not new_name.endswith(".csv") else new_name
-            if not os.path.exists(target_csv):
-                pd.DataFrame(columns=COLUMNS).to_csv(target_csv, index=False, encoding='utf-8-sig')
-            
-            # 標準成功提示
-            st.success(f"系統訊息：已成功登錄申請 (編號: {new_id})")
-            time.sleep(1)
-            st.rerun()
-        else:
-            st.warning("請先輸入名稱再送出。")
-
-    st.divider()
-
-    # --- 4. 區塊 B：審核進度清單 (標準表格，無樣式干擾) ---
-    st.subheader("報表審核進度詳情", anchor=False)
-    if not req_df.empty:
-        # 最新申請排在最前，使用標準 dataframe 顯示
-        st.dataframe(
-            req_df.iloc[::-1], 
-            use_container_width=True, 
-            hide_index=True
-        )
-    else:
-        st.info("目前尚無申請紀錄。")
-
-    st.divider()
-
-    # --- 5. 區塊 C：可用報表帳本清單 (嚴格審核機制) ---
-    st.subheader("已授權報表清單", anchor=False)
-    
-    # 掃描現有 CSV 檔案
-    physical_files = [f for f in os.listdir('.') if f.endswith('.csv') and f not in [req_file, CHAT_DB]]
-    
-    # 過濾已通過名單
-    passed_names = req_df[req_df['審核結果'].str.contains("通過", na=False)]['申請名稱'].tolist()
-    
-    # 顯示邏輯：主帳本必出，其餘需審核通過
-    display_targets = [f for f in physical_files if f == DEFAULT_DB or f.replace('.csv','') in passed_names or f in passed_names]
-
-    if display_targets:
-        for fname in display_targets:
-            col_a, col_b = st.columns([4, 1])
-            with col_a:
-                st.text(f"📁 {fname}" + (" (系統預設)" if fname == DEFAULT_DB else ""))
-            with col_b:
-                if st.button("啟動", key=f"switch_{fname}"):
-                    st.session_state.current_db = fname
-                    st.rerun()
-
-    else:
-        st.info("暫無已授權之報表。")
+            if d_list:
+                t = st.selectbox("選擇欲刪除的註銷檔案", d_list)
+                if st.button("確認註銷帳號", type="secondary"):
+                    try:
+                        os.remove(t)
+                        st.session_state.current_db = DEFAULT_DB # 註銷後自動跳回預設檔
+                        st.warning(f"檔案 {t} 已註銷。")
+                        time.sleep(1)
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"註銷失敗：{e}")
+            else:
+                st.info("目前沒有可註銷的會員帳號。")
 
     with tab_live:
         # 第一行：大標題
