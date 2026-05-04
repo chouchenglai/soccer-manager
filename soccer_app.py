@@ -108,7 +108,7 @@ if main_df.empty:
         save_data(pd.DataFrame([row])); st.rerun()
 else:
     # 核心：標籤頁定義
-    tab1, tab_live, tab2, tab3, tab4, tab5 = st.tabs(["💰 下單投注", "⚽ 即時比分", "📋 歷史記錄", "📊 統計圖表", "📈 報表管理", "💬 討 論 區"])
+    tab1, tab2, tab_live, tab3, tab4, tab5 = st.tabs(["💰 下單投注", "📝 註冊帳號","⚽ 即時比分", "📋 歷史記錄", "📊 統計圖表",  "💬 討 論 區"])
 
     with tab1: # 下單投注
         try: balance = int(main_df["結算總分"].iloc[-1])
@@ -222,6 +222,42 @@ else:
                     st.session_state.show_add_funds = False
                     st.rerun()
 
+        with tab2: # 註冊帳號
+        st.subheader("📁 登錄會員管理中心")
+        
+        # --- 區塊 1：新增帳號 ---
+        with st.expander("➕ 新增帳號檔案"):
+            n = st.text_input("帳號名稱", placeholder="請輸入您的名稱")
+            if st.button("確認建立帳號"):
+                if n:
+                    file_name = f"{n}.csv"
+                    # 建立一個只有標題欄位的空 CSV
+                    pd.DataFrame(columns=COLUMNS).to_csv(file_name, index=False)
+                    st.success(f"✅ 帳號「{file_name}」已成功建立！")
+                    time.sleep(1)
+                    st.rerun() # 重新執行以更新左側選單列表
+                else:
+                    st.error("⚠️ 請輸入帳號名稱！")
+
+        # --- 區塊 2：註銷帳號 ---
+        with st.expander("🗑️ 註銷現有帳號"):
+            # 重新獲取一次列表，排除預設資料庫
+            d_list = [f for f in get_all_reports() if f != DEFAULT_DB]
+            
+            if d_list:
+                t = st.selectbox("選擇欲刪除的註銷檔案", d_list)
+                if st.button("確認註銷帳號", type="secondary"):
+                    try:
+                        os.remove(t)
+                        st.session_state.current_db = DEFAULT_DB # 註銷後自動跳回預設檔
+                        st.warning(f"檔案 {t} 已註銷。")
+                        time.sleep(1)
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"註銷失敗：{e}")
+            else:
+                st.info("目前沒有可註銷的會員帳號。")
+
     with tab_live:
         # 第一行：大標題
             st.markdown("### 📡 即時比分同步觀看 (Live)")
@@ -232,7 +268,7 @@ else:
         # 第三行：嵌入外部比分網[cite: 1]
             st.components.v1.iframe("https://live.titan007.com/indexall_big.aspx", height=800, scrolling=True)
 
-    with tab2: # 📋 歷史記錄
+    with tab3: # 📋 歷史記錄
         st.subheader("📜 完整賽事歷史紀錄")
         
         # 1. 定義染色邏輯 (確保縮排正確)
@@ -263,44 +299,8 @@ else:
         else:
             st.info("目前尚無歷史紀錄。")
 
-    with tab3: # 統計圖表[cite: 2]
-        st.line_chart(main_df["結算總分"], height=320)
-
-    with tab4: # 報表管理
-        st.subheader("📁 系統報表管理中心")
-        
-        # --- 區塊 1：新增報表 ---
-        with st.expander("➕ 新增報表檔案"):
-            n = st.text_input("報表名稱", placeholder="請輸入名稱（不需輸入 .csv）")
-            if st.button("確認建立報表"):
-                if n:
-                    file_name = f"{n}.csv"
-                    # 建立一個只有標題欄位的空 CSV
-                    pd.DataFrame(columns=COLUMNS).to_csv(file_name, index=False)
-                    st.success(f"✅ 報表「{file_name}」已成功建立！")
-                    time.sleep(1)
-                    st.rerun() # 重新執行以更新左側選單列表
-                else:
-                    st.error("⚠️ 請輸入報表名稱！")
-
-        # --- 區塊 2：刪除報表 ---
-        with st.expander("🗑️ 刪除現有報表"):
-            # 重新獲取一次列表，排除預設資料庫
-            d_list = [f for f in get_all_reports() if f != DEFAULT_DB]
-            
-            if d_list:
-                t = st.selectbox("選擇欲刪除的報表檔案", d_list)
-                if st.button("確認刪除報表", type="secondary"):
-                    try:
-                        os.remove(t)
-                        st.session_state.current_db = DEFAULT_DB # 刪除後自動跳回預設檔
-                        st.warning(f"檔案 {t} 已刪除。")
-                        time.sleep(1)
-                        st.rerun()
-                    except Exception as e:
-                        st.error(f"刪除失敗：{e}")
-            else:
-                st.info("目前沒有可刪除的自訂報表。")  
+    with tab4: # 統計圖表[cite: 2]
+        st.line_chart(main_df["結算總分"], height=320)      
 
 # ---------------------------------------------------------
     # 5. 討論區模組 (修正版：區分身分顏色 + 引用回覆功能)
