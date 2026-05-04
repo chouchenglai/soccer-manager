@@ -222,7 +222,9 @@ else:
                     st.session_state.show_add_funds = False
                     st.rerun()
 
-    with tab2: # 註冊帳號                                   
+    with tab2: # 註冊帳號   
+        st.subheader("📂 登錄會員管理中心")             
+                   
         # --- 區塊 1：新增帳號 ---
         with st.expander("➕ 新增帳號檔案"):
             n = st.text_input("帳號名稱", placeholder="請輸入您的名稱")
