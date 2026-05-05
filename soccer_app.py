@@ -267,7 +267,7 @@ with tab2:
             admin_pwd = st.text_input("請輸入管理員密鑰", type="password", key="main_admin_pwd")
             
             # --- 💡 在此設定您的專屬密碼 ---
-            if admin_pwd == "alai2026": 
+            if admin_pwd == "Caiyun1031": 
                 is_authenticated = True
                 st.success("🔓 驗證成功：管理操作功能已開啟。")
             elif admin_pwd != "":
