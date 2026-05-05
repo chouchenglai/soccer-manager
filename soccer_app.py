@@ -243,25 +243,28 @@ with tab2:
 
     # --- 關鍵：管理員身分識別 + 密碼驗證 ---
     is_admin = False
-    is_authenticated = False # 密碼驗證狀態
+    is_authenticated = False 
     
     if "current_db" in st.session_state:
+        # 取得目前選中的名稱 (例如 admin)
         current_active_name = st.session_state.current_db.replace('.csv', '')
-        # 先檢查 CSV 權限
-        admin_row = req_df[(req_df['申請名稱'] == current_active_name) & (req_df['權限'].str.upper() == 'ADMIN')]
+        
+        # 尋找該名稱在 CSV 裡的權限
+        admin_row = req_df[req_df['申請名稱'] == current_active_name]
         
         if not admin_row.empty:
-            is_admin = True
-            # 如果是管理員，顯示密碼輸入框
-            st.sidebar.markdown("---")
-            admin_pwd = st.sidebar.text_input("🔑 管理員驗證碼", type="password", help="請輸入您的專屬密鑰以啟用管理功能")
-            
-            # --- 💡 這裡設定您的初始密碼 (例如: alai2026) ---
-            if admin_pwd == "caiyun": 
-                is_authenticated = True
-                st.sidebar.success("🔓 權限已解鎖")
-            elif admin_pwd != "":
-                st.sidebar.error("❌ 密鑰錯誤")
+            user_perm = str(admin_row.iloc[0]['權限']).upper()
+            if user_perm == 'ADMIN':
+                is_admin = True
+                # --- 直接在 Tab 2 上方顯示密碼框，避免 Sidebar 沒跑出來 ---
+                st.info("🔐 偵測到管理員身分，請進行安全驗證：")
+                admin_pwd = st.text_input("輸入管理員密鑰", type="password", key="admin_key_input")
+                
+                if admin_pwd == "alai2026": # 這裡改成您的密碼
+                    is_authenticated = True
+                    st.success("✅ 驗證成功，管理功能已解鎖！")
+                elif admin_pwd != "":
+                    st.error("❌ 密鑰錯誤，無法開啟管理權限。")
 
     # --- 2. 區塊 A：提交新帳號申請 ---
     st.subheader("提交新帳號申請", anchor=False)
