@@ -269,7 +269,10 @@ with tab2:
     st.markdown("<small style='color:red; font-weight:bold;'>⚠️ 系統提醒：名稱僅限「英文與數字」，請勿使用中文或特殊符號。</small>", unsafe_allow_html=True)
     
     with st.expander("**📜 點擊展開：用戶服務協議與免責聲明**"):
-        st.write("1. 本系統僅供數據記錄使用... (略)")
+        st.write("1. 本系統僅供個人賽事數據記錄使用，不具備任何投注功能。
+        2. 用戶需自行承擔數據分析之風險，本平臺不保證任何獲利。
+        3. 申請即表示您同意系統收集您的帳號名稱以進行權限管理。
+        4. 嚴禁任何違反當地法律之行為。")
         is_agree = st.checkbox("我已閱讀並同意上述全部條款")
 
     if st.button("確認送出申請"):
