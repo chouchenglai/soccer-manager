@@ -226,7 +226,7 @@ else:
 # Tab 2: 帳號管理 (一鍵審核 + 強效防錯版)
 # ==========================================
 with tab2:    
-    st.markdown("<h2 style='color:#1E90FF; font-weight:bold;'>📂 登錄會員管理中心</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='color:#1E90FF; font-weight:bold;'>📂 登錄帳號管理中心</h2>", unsafe_allow_html=True)
     st.markdown("<hr style='border: 1px solid #1E90FF; margin-top: -10px;'>", unsafe_allow_html=True)
     
     # --- 1. 初始化檔案與欄位 ---
