@@ -223,67 +223,90 @@ else:
                     st.rerun()
 
     # ==========================================
-# Tab 2: 帳號管理 (商用標準穩定版 - 零特效)
+# Tab 4: 帳號管理 (隱私協議條款及免責聲明)
 # ==========================================
-with tab2:
-    st.header("📂 登錄會員管理中心")
+with tab4:    
+    st.markdown("<h2 style='color:#1E90FF; font-weight:bold;'>📂 登錄會員管理中心</h2>", unsafe_allow_html=True)
+    st.markdown("<hr style='border: 1px solid #1E90FF; margin-top: -10px;'>", unsafe_allow_html=True)
     
-    # --- 1. 初始化檔案與欄位 (標準商用格式) ---
+    # --- 1. 初始化檔案與欄位 ---
     req_file = "pending_requests.csv"
     req_cols = ["申請編號", "申請日期", "申請名稱", "備註事項", "審核結果"]
 
-    # --- 2. 安全讀取邏輯 (全域防錯保護) ---
     if os.path.exists(req_file):
         try:
             req_df = pd.read_csv(req_file, dtype={'申請編號': str})
-            # 確保欄位完全符合標準，若不符則重置
-            if not all(col in req_df.columns for col in req_cols):
-                req_df = pd.DataFrame(columns=req_cols)
         except Exception:
-            # 處理 EmptyDataError 或檔案損壞
             req_df = pd.DataFrame(columns=req_cols)
     else:
         req_df = pd.DataFrame(columns=req_cols)
 
-    # --- 3. 區塊 A：提交新帳號申請 ---
+    # --- 2. 區塊 A：提交新帳號申請 ---
     st.subheader("提交新帳號申請", anchor=False)
     new_name = st.text_input("請輸入您要創建的帳號名稱", placeholder="例如：Visitors")
+    
+    # --- 第一步：打開隱私條款效果 (Expander) ---
+    with st.expander("**📜 點擊展開：CCL-Soccer 用戶服務協議與免責聲明**"):
+        st.info("請詳細閱讀以下條款：")
+        st.write("""
+        1. 本系統僅供個人賽事數據記錄使用，不具備任何投注功能。
+        2. 用戶需自行承擔數據分析之風險，本平臺不保證任何獲利。
+        3. 申請即表示您同意系統收集您的帳號名稱以進行權限管理。
+        4. 嚴禁任何違反當地法律之行為。
+        """)
+        # 設置同意勾選框
+        is_agree = st.checkbox("我已閱讀並同意上述全部條款")
+
+    # --- 第二步：確認送出申請邏輯 ---
     if st.button("確認送出申請"):
-        if new_name:
-            # 自動計算編號與日期
+        if not new_name:
+            st.warning("請先輸入名稱再送出。")
+        elif not is_agree:
+            st.error("❌ 請先勾選「同意服務協議」方可送出申請。")
+        else:
+            # 產生編號與日期
             new_id = f"{len(req_df) + 1:04d}"
             today_str = datetime.now().strftime("%Y年%m月%d日")
             
+            # --- 第三步：創建個人 CSV 檔案並寫入免責首行 ---
+            target_csv = f"{new_name}.csv" if not new_name.endswith(".csv") else new_name
+            
+            # 準備首行宣告文字與會員存證欄位
+            disclaimer_text = "以下名單資料，表示同意免責聲明全部條款"
+            member_info_header = f"保存會員資料：申請編號【{new_id}】、申請名稱【{new_name}】、申請日期【{today_str}】"
+            
+            # 建立檔案：先寫入兩行標題，再接標準欄位
+            with open(target_csv, "w", encoding="utf-8-sig") as f:
+                f.write(f"{disclaimer_text}\n")
+                f.write(f"{member_info_header}\n")
+            
+            # 將標準數據欄位(COLUMNS)附加到檔案中
+            df_init = pd.DataFrame(columns=COLUMNS)
+            df_init.to_csv(target_csv, index=False, encoding='utf-8-sig', mode='a')
+            
+            # --- 第四步：更新總表並顯示到【報表審核進度詳情】 ---
             new_data = {
                 "申請編號": new_id,
                 "申請日期": today_str,
                 "申請名稱": new_name,
-                "備註事項": "",
+                "備註事項": "已簽署免責聲明",
                 "審核結果": "⏳ 審核進行中"
             }
             
-            # 存檔至伺服器
             updated_df = pd.concat([req_df, pd.DataFrame([new_data])], ignore_index=True)
             updated_df.to_csv(req_file, index=False, encoding='utf-8-sig')
             
-            # 建立物理 CSV 檔案基礎
-            target_csv = f"{new_name}.csv" if not new_name.endswith(".csv") else new_name
-            if not os.path.exists(target_csv):
-                pd.DataFrame(columns=COLUMNS).to_csv(target_csv, index=False, encoding='utf-8-sig')
-            
-            # 標準成功提示
-            st.success(f"系統訊息：已成功登錄申請 (編號: {new_id})")
+            st.success(f"✅ 申請已成功！編號：{new_id}。請靜候審核結果。")
             time.sleep(1)
             st.rerun()
-        else:
-            st.warning("請先輸入名稱再送出。")
 
     st.divider()
 
-    # --- 4. 區塊 B：審核進度清單 (標準表格，無樣式干擾) ---
+    # --- 3. 區塊 B：審核進度詳情 (完成後顯示的效果) ---        
     st.subheader("帳號審核進度詳情", anchor=False)
+    st.caption("💡 溫馨提示：審核進度需要24～48小時才能完成，服務器建立檔案後才能啟用服務。")
+           
     if not req_df.empty:
-        # 最新申請排在最前，使用標準 dataframe 顯示
         st.dataframe(
             req_df.iloc[::-1], 
             use_container_width=True, 
@@ -294,27 +317,31 @@ with tab2:
 
     st.divider()
 
-    # --- 5. 區塊 C：可用報表帳本清單 (嚴格審核機制) ---
+    # --- 4. 區塊 C：已授權帳號清單 (修正篩選邏輯) ---    
     st.subheader("已授權帳號清單", anchor=False)
+    st.caption("💡 溫馨提示：點擊啟動後將跳轉至主頁，請於左側選單切換至您的專屬帳號。")
     
     # 掃描現有 CSV 檔案
     physical_files = [f for f in os.listdir('.') if f.endswith('.csv') and f not in [req_file, CHAT_DB]]
     
-    # 過濾已通過名單
-    passed_names = req_df[req_df['審核結果'].str.contains("通過", na=False)]['申請名稱'].tolist()
+    # --- 這裡最重要：增加對 "過關" 的支援 ---
+    passed_names = req_df[req_df['審核結果'].str.contains("過關|通過|OK", na=False)]['申請名稱'].tolist()
     
-    # 顯示邏輯：主帳本必出，其餘需審核通過
+    # 建立顯示清單
     display_targets = [f for f in physical_files if f == DEFAULT_DB or f.replace('.csv','') in passed_names or f in passed_names]
 
     if display_targets:
         for fname in display_targets:
-            col_a, col_b = st.columns([4, 1])
+            # 排除掉 pending_requests 本身（雙重保險）
+            if fname == req_file: continue
+            
+            col_a, col_b = st.columns([3, 1.2])
             with col_a:
-                st.text(f"📁 {fname}" + (" (系統預設)" if fname == DEFAULT_DB else ""))
+                st.markdown(f"📁 **{fname}**" + (" <span style='color:gray;'>(系統預設)</span>" if fname == DEFAULT_DB else ""), unsafe_allow_html=True)
+            
             with col_b:
-                if st.button("啟動", key=f"switch_{fname}"):
-                    st.session_state.current_db = fname
-                    st.rerun()
+                # 傳送門按鈕
+                st.link_button("🚀 啟動系統", "https://chouchenglai.streamlit.app/", use_container_width=True)
     else:
         st.info("暫無已授權之清單。")
 
