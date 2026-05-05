@@ -260,7 +260,7 @@ with tab2:
                 st.info("🔐 偵測到管理員身分，請進行安全驗證：")
                 admin_pwd = st.text_input("輸入管理員密鑰", type="password", key="admin_key_input")
                 
-                if admin_pwd == "alai2026": # 這裡改成您的密碼
+                if admin_pwd == "caiyun": # 這裡改成您的密碼
                     is_authenticated = True
                     st.success("✅ 驗證成功，管理功能已解鎖！")
                 elif admin_pwd != "":
