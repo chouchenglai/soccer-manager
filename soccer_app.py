@@ -223,9 +223,9 @@ else:
                     st.rerun()
 
     # ==========================================
-# Tab 4: 帳號管理 (隱私協議條款及免責聲明)
+# Tab 2: 帳號管理 (隱私協議條款及免責聲明)
 # ==========================================
-with tab4:    
+with tab2:    
     st.markdown("<h2 style='color:#1E90FF; font-weight:bold;'>📂 登錄會員管理中心</h2>", unsafe_allow_html=True)
     st.markdown("<hr style='border: 1px solid #1E90FF; margin-top: -10px;'>", unsafe_allow_html=True)
     
