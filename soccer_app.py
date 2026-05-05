@@ -222,8 +222,8 @@ else:
                     st.session_state.show_add_funds = False
                     st.rerun()
 
-   # ==========================================
-# Tab 2: 帳號管理 (終極防錯與權限管理版)
+  # ==========================================
+# Tab 2: 帳號管理 (一鍵審核 + 強效防錯版)
 # ==========================================
 with tab2:    
     st.markdown("<h2 style='color:#1E90FF; font-weight:bold;'>📂 登錄會員管理中心</h2>", unsafe_allow_html=True)
@@ -244,11 +244,11 @@ with tab2:
     else:
         req_df = pd.DataFrame(columns=req_cols)
 
-    # --- 關鍵：管理員身分識別 ---
+    # --- 關鍵：管理員身分識別 (不分大小寫) ---
     is_admin = False
     if "current_db" in st.session_state:
         current_active_name = st.session_state.current_db.replace('.csv', '')
-        # 不分大小寫檢查 Admin 權限
+        # 只要 CSV 裡的權限是 ADMIN/Admin/admin 都算通過
         admin_check = req_df[(req_df['申請名稱'] == current_active_name) & (req_df['權限'].str.upper() == 'ADMIN')]
         if not admin_check.empty:
             is_admin = True
@@ -270,9 +270,9 @@ with tab2:
         """)
         is_agree = st.checkbox("我已閱讀並同意上述全部條款")
 
-    # 【按鈕邏輯：多重攔截防線】
+    # 【按鈕邏輯：中文攔截防線】
     if st.button("確認送出申請"):
-        # 防線 1：中文偵測
+        # 偵測是否包含中文字元
         has_chinese = any('\u4e00' <= char <= '\u9fff' for char in new_name)
         
         if not new_name:
@@ -282,7 +282,7 @@ with tab2:
         elif not is_agree:
             st.error("❌ 請先勾選「同意服務協議」方可送出申請。")
         else:
-            # 防線通過，執行建立邏輯
+            # 通過校驗，執行建立
             new_id = f"{len(req_df) + 1:04d}"
             today_str = datetime.now().strftime("%Y年%m月%d日")
             target_csv = f"{new_name}.csv" if not new_name.endswith(".csv") else new_name
@@ -294,7 +294,7 @@ with tab2:
             
             pd.DataFrame(columns=COLUMNS).to_csv(target_csv, index=False, encoding='utf-8-sig', mode='a')
             
-            # 更新總表
+            # 更新總表 (預設權限為 User)
             new_data = {
                 "申請編號": new_id, "申請日期": today_str, "申請名稱": new_name,
                 "備註事項": "已簽署免責聲明", "審核結果": "⏳ 審核進行中", "權限": "User"
@@ -302,20 +302,47 @@ with tab2:
             updated_df = pd.concat([req_df, pd.DataFrame([new_data])], ignore_index=True)
             updated_df.to_csv(req_file, index=False, encoding='utf-8-sig')
             
-            # --- 🚀 這裡可以觸發之前寫好的 notify_admin_by_email(new_id, new_name) ---
-            
             st.success(f"✅ 申請已成功！編號：{new_id}")
             time.sleep(1)
             st.rerun()
 
     st.divider()
 
-    # --- 3. 區塊 B：審核進度詳情 ---        
+    # --- 3. 區塊 B：審核進度詳情 (管理員互動版) ---[cite: 1]       
     st.subheader("帳號審核進度詳情", anchor=False)
     st.caption("💡 溫馨提示：審核進度需要24～48小時才能完成，伺服器建立檔案後才能啟用服務。")
            
     if not req_df.empty:
-        st.dataframe(req_df.iloc[::-1], use_container_width=True, hide_index=True)
+        if is_admin:
+            # 管理員視角：顯示可操作的列表
+            h1, h2, h3, h4 = st.columns([1, 2, 2, 1.5])
+            h1.write("**編號**")
+            h2.write("**名稱**")
+            h3.write("**狀態**")
+            h4.write("**管理操作**")
+            st.divider()
+
+            for idx, row in req_df.iloc[::-1].iterrows():
+                c1, c2, c3, c4 = st.columns([1, 2, 2, 1.5])
+                c1.write(row["申請編號"])
+                c2.write(row["申請名稱"])
+                
+                status = row["審核結果"]
+                if "進行中" in status:
+                    c3.warning(status)
+                    # 一鍵通過按鈕[cite: 1]
+                    if c4.button("✅ 通過", key=f"approve_{idx}"):
+                        req_df.at[idx, "審核結果"] = "通過"
+                        req_df.to_csv(req_file, index=False, encoding='utf-8-sig')
+                        st.toast(f"已核准 {row['申請名稱']}！")
+                        time.sleep(1)
+                        st.rerun()
+                else:
+                    c3.success(status)
+                    c4.write("---")
+        else:
+            # 一般用戶視角：唯讀表格
+            st.dataframe(req_df.iloc[::-1], use_container_width=True, hide_index=True)
     else:
         st.info("目前尚無申請記錄。")
 
@@ -339,7 +366,7 @@ with tab2:
             with col2:
                 st.link_button("🚀 啟動", "https://chouchenglai.streamlit.app/", use_container_width=True)
             with col3:
-                # 只有 Admin 且非預設檔才顯示刪除
+                # 刪除功能：僅限 Admin 且受保護[cite: 1]
                 if is_admin and fname != DEFAULT_DB:
                     if st.button("🗑️ 刪除", key=f"del_{fname}"):
                         os.remove(fname)
