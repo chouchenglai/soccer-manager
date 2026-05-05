@@ -257,7 +257,7 @@ with tab2:
             admin_pwd = st.sidebar.text_input("🔑 管理員驗證碼", type="password", help="請輸入您的專屬密鑰以啟用管理功能")
             
             # --- 💡 這裡設定您的初始密碼 (例如: alai2026) ---
-            if admin_pwd == "alai2026": 
+            if admin_pwd == "caiyun": 
                 is_authenticated = True
                 st.sidebar.success("🔓 權限已解鎖")
             elif admin_pwd != "":
@@ -268,11 +268,14 @@ with tab2:
     new_name = st.text_input("請輸入您要創建的帳號名稱", placeholder="例如：Visitors")
     st.markdown("<small style='color:red; font-weight:bold;'>⚠️ 系統提醒：名稱僅限「英文與數字」，請勿使用中文或特殊符號。</small>", unsafe_allow_html=True)
     
-    with st.expander("**📜 點擊展開：用戶服務協議與免責聲明**"):
-        st.write("1. 本系統僅供個人賽事數據記錄使用，不具備任何投注功能。
+    with st.expander("**📜 點擊展開：CCL-Soccer 用戶服務協議與免責聲明**"):
+        st.info("請詳細閱讀以下條款：")
+        st.write("""
+        1. 本系統僅供個人賽事數據記錄使用，不具備任何投注功能。
         2. 用戶需自行承擔數據分析之風險，本平臺不保證任何獲利。
         3. 申請即表示您同意系統收集您的帳號名稱以進行權限管理。
-        4. 嚴禁任何違反當地法律之行為。")
+        4. 嚴禁任何違反當地法律之行為。
+        """)
         is_agree = st.checkbox("我已閱讀並同意上述全部條款")
 
     if st.button("確認送出申請"):
