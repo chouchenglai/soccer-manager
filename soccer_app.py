@@ -145,20 +145,96 @@ def show_chat_room():
     st.markdown("### 💬 足球現場實況滾球推薦")
     try:
         df = load_chat()
-        # 💡 強制檢查日期欄位
-        if '日期' not in df.columns and '時間' in df.columns:
-            df = df.rename(columns={'時間': '日期'})
+# ==========================================
+# 🚀 CCL-Soccer 討論區與自動導航系統 (終極整合版)
+# ==========================================
+
+# 1. 導航狀態初始化 (放在代碼較上方位置)
+if "tab_focus" not in st.session_state:
+    st.session_state.tab_focus = "Normal"
+
+# 2. 顯示討論區的專用函數 (確保不報 NameError)
+def show_chat_room():
+    st.markdown("### 💬 足球現場實況滾球推薦")
+    try:
+        # 讀取數據
+        chat_df = load_chat() 
         
-        # ... 原本的留言發布與顯示代碼 ...
-        # (請確保發布留言時儲存的欄位名稱是 '日期')
-        # new_post = {"日期": datetime.now().strftime("%Y-%m-%d %H:%M:%S"), ...}
+        # --- 留言輸入區 ---
+        with st.expander("➕ 我要留言 / 推薦賽事", expanded=False):
+            u_name = st.text_input("您的暱稱：", placeholder="留空將分配訪客代號")
+            u_msg = st.text_area("內容：", height=100)
+            if st.button("發送留言"):
+                if u_msg.strip():
+                    # 處理訪客名稱邏輯
+                    final_name = u_name.strip()
+                    if not final_name:
+                        v_count = len(chat_df[chat_df['暱稱'].str.contains('訪客', na=False)]) + 1
+                        final_name = f"訪客-{v_count:02d}"
+                    
+                    # 儲存
+                    new_data = pd.DataFrame([{"日期": datetime.now().strftime("%Y-%m-%d %H:%M:%S"), 
+                                              "暱稱": final_name, "內容": u_msg}])
+                    save_chat(new_data)
+                    st.success(f"✅ 留言成功！(身份：{final_name})")
+                    time.sleep(1)
+                    st.rerun()
         
-        # 顯示時檢查
-        for _, row in df.iloc[::-1].head(15).iterrows():
-            d_val = row.get('日期', '無時間記錄')
-            st.write(f"【{d_val}】 {row['暱稱']}: {row['內容']}")
+        # --- 顯示留言列表 ---
+        if not chat_df.empty:
+            for index, row in chat_df.iloc[::-1].head(20).iterrows():
+                # 區分管理員顏色
+                is_adm = str(row['暱稱']).lower() in ['admin', '超級用戶', '站長']
+                bg_color = "linear-gradient(90deg, #1E90FF, #00008B)" if is_adm else "#f0f2f6"
+                text_color = "white" if is_adm else "black"
+                
+                st.markdown(f"""
+                    <div style="background: {bg_color}; color: {text_color}; padding: 10px; border-radius: 10px; margin-bottom: 5px;">
+                        <b>{row['暱稱']}</b> <small style="opacity:0.7;">({row['日期']})</small><br>
+                        {row['內容']}
+                    </div>
+                """, unsafe_allow_html=True)
+        else:
+            st.info("目前尚無留言，快來搶沙發！")
     except Exception as e:
-        st.error(f"討論區異常：您的 CSV 可能缺少 '日期' 欄位，請檢查。")
+        st.error(f"載入失敗: {e}")
+
+# 3. 建立標籤頁
+tab_list = ["💰 下單投注", "📝 註冊帳號", "⚽ 即時比分", "📋 歷史記錄", "📊 統計圖表", "💬 討 論 區"]
+tab1, tab2, tab_live, tab3, tab4, tab5 = st.tabs(tab_list)
+
+# --- Tab 1 邏輯 (包含自動跳轉功能) ---
+with tab1:
+    if st.session_state.tab_focus == "GoChat":
+        # 👑 這是點擊通知後的「傳送門」狀態
+        st.warning("🚀 您點擊了即時通知，已為您優先開啟討論區：")
+        if st.button("⬅️ 返回主操作頁面"):
+            st.session_state.tab_focus = "Normal"
+            st.rerun()
+        st.divider()
+        show_chat_room() # 在首頁直接顯示討論區內容
+    else:
+        # 🏠 原本的主頁/下單內容
+        # 這裡放入您原本 tab1 的邏輯代碼
+        if st.session_state.current_db == "ccl-soccer.csv":
+            st.write("這裡是主頁封面內容...") # 您的封面 Markdown
+        else:
+            st.write("這裡是個人下單內容...") # 您的下單介面
+
+# --- 其他 Tab 正常顯示 ---
+with tab2: st.write("註冊帳號內容")
+with tab_live: st.write("即時比分內容")
+with tab3: st.write("歷史記錄內容")
+with tab4: st.write("統計圖表內容")
+with tab5:
+    # 這裡也放一份，讓手動點擊也有效
+    show_chat_room()
+
+# 4. 廣播按鈕的配合 (請確認廣播部分的按鈕 key 一致)
+# if c_notif1.button("🔍 立即查看", key="btn_view_chat"):
+#     st.session_state.last_chat_count = new_msg_count
+#     st.session_state.tab_focus = "GoChat"  # 💡 啟動傳送門
+#     st.rerun()
 
 # --- Sidebar (側邊欄) ---
 with st.sidebar:
