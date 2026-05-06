@@ -82,36 +82,43 @@ if os.path.exists(img_path):
 # 🚀 廣播系統：管理員訊息強制穿透版
 # ==========================================
 
-# 1. 側邊欄：不論是誰，都提供「廣播開關」
-with st.sidebar:
-    st.divider()
-    # 這裡將 show_notif 的主控權還給管理員本人
-    show_notif = st.toggle("接收討論區新訊息廣播", value=True, help="開啟後將接收通知。若為管理員訊息，則無視此開關強制提醒。")
-    if current_is_admin:
-        st.caption("🛡️ 管理員身分已驗證")
-
-# 2. 數據獲取與計數比對
+# 1. 數據準備
 current_chat_data = load_chat()
 new_msg_count = len(current_chat_data)
 
 if 'last_chat_count' not in st.session_state:
     st.session_state.last_chat_count = new_msg_count
 
-# 3. 核心邏輯判斷
+# 2. 直接在這裡抓取身分權限 (解決報錯關鍵)
+check_is_admin = False
+req_file = "pending_requests.csv"
+if "current_db" in st.session_state and os.path.exists(req_file):
+    try:
+        r_df = pd.read_csv(req_file)
+        curr_name = st.session_state.current_db.replace('.csv', '')
+        admin_match = r_df[(r_df['申請名稱'] == curr_name) & (r_df['權限'].str.upper() == 'ADMIN')]
+        if not admin_match.empty:
+            check_is_admin = True
+    except:
+        pass
+
+# 3. 側邊欄開關 (使用我們剛才算好的 check_is_admin)
+with st.sidebar:
+    st.divider()
+    # 提供開關給用戶，不論是誰都能控制自己的接收狀態
+    show_notif = st.toggle("接收討論區新訊息廣播", value=True)
+    if check_is_admin:
+        st.caption("🛡️ 管理員身分已驗證")
+
+# 4. 提醒邏輯：管理員發言穿透 OR 用戶開啟開關
 if new_msg_count > st.session_state.last_chat_count:
     latest_msg = current_chat_data.iloc[-1]
     
-    # 判斷發言者身分
     sender_name = str(latest_msg['暱稱']).lower()
     is_sender_admin = sender_name in ['管理員', 'admin']
     
-    # --- 💡 這裡就是您定義的正確邏輯 ---
-    # 觸發提醒的情況只有兩種：
-    # A. 這條訊息是管理員發的 (強制穿透)
-    # B. 用戶(包含管理員自己)開啟了接收開關 AND 這是一般訊息
     if is_sender_admin or show_notif:
-        
-        # 樣式區分：管理員發言用尊榮深藍色，一般人發言用亮藍色[cite: 1]
+        # 判斷樣式
         if is_sender_admin:
             box_style = "background: linear-gradient(90deg, #1E90FF, #00008B); border-left: 10px solid #FFD700;"
             title_tag = "🔥 【管理員指令】"
@@ -131,10 +138,10 @@ if new_msg_count > st.session_state.last_chat_count:
         """, unsafe_allow_html=True)
         
         c_notif1, c_notif2 = st.columns([2.8, 7.2])
-        if c_notif1.button("🔍 立即查看", key="notif_go_final_v5"):
+        if c_notif1.button("🔍 立即查看", key="notif_go_v6"):
             st.session_state.last_chat_count = new_msg_count
             st.rerun()
-        if c_notif2.button("🆗 我知道了", key="notif_close_final_v5"):
+        if c_notif2.button("🆗 我知道了", key="notif_close_v6"):
             st.session_state.last_chat_count = new_msg_count
             st.rerun()
 
