@@ -303,28 +303,30 @@ else:
 # Tab 2: 帳號管理 (一鍵審核 + 強效防錯版)
 # ==========================================
 with tab2:    
-    # --- 🧹 終極清理模式：連預設檔也能刪 ---
-    st.subheader("🗑️ 核心檔案清理 (含預設檔)", anchor=False)
+    st.subheader("🗑️ 核心檔案清理 (強制模式)", anchor=False)
+    st.warning("注意：此模式下連預設檔案也會顯示刪除按鈕！")
     
-    # 💡 這次不排除任何檔案，除了正在運行的 pending_requests.csv 和討論區
+    # 💡 這次「不排除」DEFAULT_DB，讓它無所遁形
     all_files = [f for f in os.listdir('.') if f.endswith('.csv') and f not in [req_file, CHAT_DB]]
     
     if all_files:
         for fname in all_files:
             col1, col2 = st.columns([3, 1])
-            # 如果是 CCL.csv，我們加個提醒
-            is_ccl = "CCL" in fname.upper()
-            display_name = f"🔥 {fname} (預設名稱)" if is_ccl else f"📁 {fname}"
             
-            col1.write(display_name)
+            # 標註出 CCL 或預設檔
+            is_target = "CCL" in fname.upper() or fname == DEFAULT_DB
+            display_text = f"🔥 {fname} (預設名稱)" if is_target else f"📁 {fname}"
             
-            if col2.button("徹底抹除", key=f"force_clean_{fname}", type="primary"):
+            col1.write(display_text)
+            
+            # 💡 一鍵抹除邏輯
+            if col2.button("徹底抹除", key=f"ultimate_del_{fname}", type="primary"):
                 try:
-                    # 1. 刪除實體檔案 (如果存在)
+                    # 1. 刪除實體檔案 (如果檔案存在)
                     if os.path.exists(fname):
                         os.remove(fname)
                     
-                    # 2. 從申請紀錄中徹底抹除紀錄 (讓左側選單消失)
+                    # 2. 核心動作：從申請紀錄中完全抹除，這樣左側選單才會消失！
                     req_df = req_df[req_df['申請名稱'] != fname.replace('.csv','')]
                     req_df.to_csv(req_file, index=False, encoding='utf-8-sig')
                     
@@ -332,9 +334,9 @@ with tab2:
                     time.sleep(0.5)
                     st.rerun()
                 except Exception as e:
-                    st.error(f"清除出錯: {e}")
+                    st.error(f"清除失敗: {e}")
     else:
-        st.success("乾乾淨淨！連預設檔紀錄都清空了。")
+        st.success("清爽無比！目前所有舊紀錄與預設檔皆已清除。")
 
     with tab_live:
         # 第一行：大標題
