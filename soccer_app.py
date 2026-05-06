@@ -139,16 +139,29 @@ if new_msg_count > st.session_state.last_chat_count:
         
         c_notif1, c_notif2 = st.columns([2.8, 7.2])
         
-        if c_notif1.button("🔍 立即查看", key="notif_go_v8"):
-            # A. 更新計數器，這會讓提醒條立刻消失
-            st.session_state.last_chat_count = new_msg_count
-            
-            # B. 由於 st.tabs 暫不支援程式強制切換，我們發出提示引導用戶
-            st.toast("✅ 提醒已讀！請手動點擊下方『💬 討 論 區』查看內容。", icon="🔍")
-            
-            # C. 延遲一下讓用戶看到提示，然後刷新頁面清空提醒條
-            time.sleep(1)
-            st.rerun()
+        # 1. 在標籤定義之前，檢查是否剛點過「立即查看」
+if "force_chat_view" not in st.session_state:
+    st.session_state.force_chat_view = False
+
+# 2. 如果點了按鈕，我們設定一個標記
+if c_notif1.button("🔍 立即查看", key="notif_go_v9"):
+    st.session_state.last_chat_count = new_msg_count
+    st.session_state.force_chat_view = True # 💡 開啟「強制看討論區」模式
+    st.rerun()
+
+# 3. 在下方顯示區域
+if st.session_state.force_chat_view:
+    # 這裡直接把討論區的內容「拔出來」顯示在最上面！
+    st.warning("🚀 您正在快速檢視討論區訊息：")
+    show_chat_room() # 呼叫您顯示討論區的函數
+    if st.button("⬅️ 返回主操作區"):
+        st.session_state.force_chat_view = False
+        st.rerun()
+else:
+    # 正常顯示您的 6 個 Tabs
+    tab1, tab2, tab_live, tab3, tab4, tab5 = st.tabs(tab_names)
+    with tab1: # ... 原本的邏輯
+    with tab5: show_chat_room()
 
 # --- Sidebar (側邊欄) ---
 with st.sidebar:
