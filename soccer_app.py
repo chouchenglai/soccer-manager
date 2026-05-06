@@ -303,73 +303,47 @@ else:
 # Tab 2: 帳號管理 (一鍵審核 + 強效防錯版)
 # ==========================================
 with tab2:    
-    st.subheader("🗑️ 快速清理模式", anchor=False)
-    
-    # 自動抓取所有 CSV (排除必要檔案)
-    all_csv = [f for f in os.listdir('.') if f.endswith('.csv') and f not in [req_file, CHAT_DB, DEFAULT_DB]]
-    
-    if all_csv:
-        for fname in all_csv:
-            col1, col2 = st.columns([3, 1])
-            col1.write(f"📁 {fname}")
-            # 💡 這裡完全不設限，點擊就刪除檔案 + 抹除申請紀錄
-            if col2.button("徹底刪除", key=f"quick_del_{fname}", type="primary"):
-                try:
-                    # 1. 刪除硬碟檔案
-                    if os.path.exists(fname):
-                        os.remove(fname)
-                    # 2. 抹除 pending_requests.csv 裡的紀錄 (這是左側選單消失的關鍵)
-                    req_df = req_df[req_df['申請名稱'] != fname.replace('.csv','')]
-                    req_df.to_csv(req_file, index=False, encoding='utf-8-sig')
-                    
-                    st.toast(f"已清除: {fname}")
-                    time.sleep(0.5)
-                    st.rerun()
-                except:
-                    st.error("刪除失敗")
-    else:
-        st.success("清理乾淨了！目前無舊報表。")
-
-    st.divider()
-
-    # --- 5. 區塊 C：已授權帳號清單 (具備密碼保護) ---
-    st.subheader("已授權帳號清單", anchor=False)
-    st.caption("💡 溫馨提示：點擊啟動後將跳轉至主頁。")
+    # --- ⚠️ 強力清除專用：區塊 C (暫時解除密碼限制) ---
+    st.subheader("🧹 舊報表名稱清理中心", anchor=False)
+    st.info("管理員您好，目前已解除密鑰限制，您可以直接刪除不需要的舊報表名稱。")
     
     physical_files = [f for f in os.listdir('.') if f.endswith('.csv') and f not in [req_file, CHAT_DB]]
     passed_names = req_df[req_df['審核結果'].str.contains("過關|通過|OK", na=False)]['申請名稱'].tolist()
-    display_targets = [f for f in physical_files if f == DEFAULT_DB or f.replace('.csv','') in passed_names]
+    display_targets = [f for f in physical_files if f == DEFAULT_DB or f.replace('.csv','') in passed_names or f in passed_names]
 
     if display_targets:
         for fname in display_targets:
             if fname == req_file: continue
             
-            col1, col2, col3 = st.columns([2.5, 1, 1])
+            col1, col2, col3 = st.columns([2.5, 1, 1.2])
             
             with col1:
-                st.markdown(f"📁 **{fname}**" + (" <span style='color:gray;'>(預設)</span>" if fname == DEFAULT_DB else ""), unsafe_allow_html=True)
+                st.markdown(f"📁 **{fname}**", unsafe_allow_html=True)
             
             with col2:
-                st.link_button("🚀 啟動", "https://chouchenglai.streamlit.app/", use_container_width=True)
+                st.link_button("🚀 開啟", "https://chouchenglai.streamlit.app/", use_container_width=True)
             
             with col3:
-                # 💡 只有當「是管理員」且「密鑰正確」且「不是預設檔」時，才顯示刪除按鈕
-                if is_admin and is_authenticated and fname != DEFAULT_DB:
-                    if st.button("🗑️ 刪除", key=f"del_file_{fname}", use_container_width=True):
+                # 💡 這裡移除了 is_authenticated，只要是 Admin 且不是預設檔就能刪除
+                if is_admin and fname != DEFAULT_DB:
+                    if st.button("🗑️ 徹底刪除", key=f"force_del_{fname}", type="primary", use_container_width=True):
                         try:
-                            # 1. 物理刪除檔案
-                            os.remove(fname)
-                            # 2. 從申請紀錄中移除該帳號
+                            # 1. 刪除實體 CSV 檔案
+                            if os.path.exists(fname):
+                                os.remove(fname)
+                            
+                            # 2. 同時從申請紀錄 pending_requests.csv 中抹除
+                            # 這樣左側選單才不會一直抓到這個舊名字
                             req_df = req_df[req_df['申請名稱'] != fname.replace('.csv','')]
                             req_df.to_csv(req_file, index=False, encoding='utf-8-sig')
-                            # 3. 提示並刷新
-                            st.toast(f"✅ 檔案 {fname} 已安全移除")
+                            
+                            st.toast(f"💥 {fname} 已徹底清除！")
                             time.sleep(0.5)
                             st.rerun()
                         except Exception as e:
-                            st.error(f"刪除失敗: {e}")
+                            st.error(f"清除失敗: {e}")
     else:
-        st.info("暫無已授權之清單。")
+        st.success("全部清理完畢！目前沒有多餘的報表名稱。")
 
     with tab_live:
         # 第一行：大標題
