@@ -343,8 +343,7 @@ with tab2:
         current_active_name = st.session_state.current_db.replace('.csv', '')
         # 檢查是否為 Admin 帳號
         admin_row = req_df[(req_df['申請名稱'] == current_active_name) & (req_df['權限'].str.upper() == 'ADMIN')]
-        
-        if not admin_row.empty:
+                
             is_admin = True
             st.warning("🔐 **偵測到管理員身分：請輸入管理員密鑰以解鎖高級功能**")
             
