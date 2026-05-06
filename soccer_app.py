@@ -303,47 +303,38 @@ else:
 # Tab 2: 帳號管理 (一鍵審核 + 強效防錯版)
 # ==========================================
 with tab2:    
-    # --- ⚠️ 強力清除專用：區塊 C (暫時解除密碼限制) ---
-    st.subheader("🧹 舊報表名稱清理中心", anchor=False)
-    st.info("管理員您好，目前已解除密鑰限制，您可以直接刪除不需要的舊報表名稱。")
+    # --- 🧹 終極清理模式：連預設檔也能刪 ---
+    st.subheader("🗑️ 核心檔案清理 (含預設檔)", anchor=False)
     
-    physical_files = [f for f in os.listdir('.') if f.endswith('.csv') and f not in [req_file, CHAT_DB]]
-    passed_names = req_df[req_df['審核結果'].str.contains("過關|通過|OK", na=False)]['申請名稱'].tolist()
-    display_targets = [f for f in physical_files if f == DEFAULT_DB or f.replace('.csv','') in passed_names or f in passed_names]
-
-    if display_targets:
-        for fname in display_targets:
-            if fname == req_file: continue
+    # 💡 這次不排除任何檔案，除了正在運行的 pending_requests.csv 和討論區
+    all_files = [f for f in os.listdir('.') if f.endswith('.csv') and f not in [req_file, CHAT_DB]]
+    
+    if all_files:
+        for fname in all_files:
+            col1, col2 = st.columns([3, 1])
+            # 如果是 CCL.csv，我們加個提醒
+            is_ccl = "CCL" in fname.upper()
+            display_name = f"🔥 {fname} (預設名稱)" if is_ccl else f"📁 {fname}"
             
-            col1, col2, col3 = st.columns([2.5, 1, 1.2])
+            col1.write(display_name)
             
-            with col1:
-                st.markdown(f"📁 **{fname}**", unsafe_allow_html=True)
-            
-            with col2:
-                st.link_button("🚀 開啟", "https://chouchenglai.streamlit.app/", use_container_width=True)
-            
-            with col3:
-                # 💡 這裡移除了 is_authenticated，只要是 Admin 且不是預設檔就能刪除
-                if is_admin and fname != DEFAULT_DB:
-                    if st.button("🗑️ 徹底刪除", key=f"force_del_{fname}", type="primary", use_container_width=True):
-                        try:
-                            # 1. 刪除實體 CSV 檔案
-                            if os.path.exists(fname):
-                                os.remove(fname)
-                            
-                            # 2. 同時從申請紀錄 pending_requests.csv 中抹除
-                            # 這樣左側選單才不會一直抓到這個舊名字
-                            req_df = req_df[req_df['申請名稱'] != fname.replace('.csv','')]
-                            req_df.to_csv(req_file, index=False, encoding='utf-8-sig')
-                            
-                            st.toast(f"💥 {fname} 已徹底清除！")
-                            time.sleep(0.5)
-                            st.rerun()
-                        except Exception as e:
-                            st.error(f"清除失敗: {e}")
+            if col2.button("徹底抹除", key=f"force_clean_{fname}", type="primary"):
+                try:
+                    # 1. 刪除實體檔案 (如果存在)
+                    if os.path.exists(fname):
+                        os.remove(fname)
+                    
+                    # 2. 從申請紀錄中徹底抹除紀錄 (讓左側選單消失)
+                    req_df = req_df[req_df['申請名稱'] != fname.replace('.csv','')]
+                    req_df.to_csv(req_file, index=False, encoding='utf-8-sig')
+                    
+                    st.toast(f"已徹底清除核心紀錄: {fname}")
+                    time.sleep(0.5)
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"清除出錯: {e}")
     else:
-        st.success("全部清理完畢！目前沒有多餘的報表名稱。")
+        st.success("乾乾淨淨！連預設檔紀錄都清空了。")
 
     with tab_live:
         # 第一行：大標題
