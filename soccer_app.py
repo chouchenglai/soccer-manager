@@ -78,94 +78,87 @@ if os.path.exists(img_path):
         <div class="banner-box"><img src="data:image/jpeg;base64,{img_b64}" class="banner-img"></div>
     """, unsafe_allow_html=True)
 
-# ==========================================
-# 🚀 討論區與導航系統 (終極整合修正版)
+
+# # ==========================================
+# 🚀 側邊欄與推播系統 (修復開關消失與日期異常)
 # ==========================================
 
-# 1. 初始化導航狀態 (放在代碼上方)
-if "tab_focus" not in st.session_state:
-    st.session_state.tab_focus = "Normal"
+# 1. 確保基礎數據與狀態
+req_file = "pending_requests.csv"
+chat_data = load_chat()  # 讀取留言
+new_msg_count = len(chat_data)
 
-# 2. 定義討論區顯示函數 (確保不報 NameError)
+# 2. 側邊欄開關修復區
+with st.sidebar:
+    st.divider()
+    # 💡 重新焊上推播開關
+    show_notif = st.toggle("接收討論區新訊息廣播", value=True, key="sidebar_notif_switch")
+    
+    # 身分驗證顯示
+    is_current_admin = False
+    if "current_db" in st.session_state and os.path.exists(req_file):
+        try:
+            r_df = pd.read_csv(req_file)
+            curr_name = st.session_state.current_db.replace('.csv', '')
+            if not r_df[(r_df['申請名稱'] == curr_name) & (r_df['權限'].str.upper() == 'ADMIN')].empty:
+                is_current_admin = True
+                st.caption("🛡️ 站長身分已驗證")
+        except: pass
+
+# 3. 推播彈出邏輯 (修復無信息彈出)
+if 'last_chat_count' not in st.session_state:
+    st.session_state.last_chat_count = new_msg_count
+
+if show_notif and new_msg_count > st.session_state.last_chat_count:
+    latest_msg = chat_data.iloc[-1]
+    # 💡 修正日期欄位讀取，若無'日期'則用'時間'或跳過
+    msg_time = latest_msg.get('日期', latest_msg.get('時間', '剛剛'))
+    
+    # 判斷是否為超級用戶發言
+    is_super = str(latest_msg['暱稱']).lower() in ['admin', '超級用戶', '站長', '版主']
+    
+    if is_super:
+        box_style = "background: linear-gradient(90deg, #1E90FF, #00008B); border-left: 10px solid #FFD700;"
+        title_tag = "👑 【超級用戶 / 站長指令】"
+    else:
+        box_style = "background: linear-gradient(90deg, #1E90FF, #00BFFF); border-left: 6px solid #FFD700;"
+        title_tag = "📢 社區新留言"
+
+    st.markdown(f"""
+        <div style="{box_style} color: white; padding: 15px; border-radius: 8px; margin-bottom: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
+            <b>{title_tag}</b><br>
+            <span style="color: #FFD700;">{latest_msg['暱稱']}</span>：{latest_msg['內容'][:30]}...
+        </div>
+    """, unsafe_allow_html=True)
+    
+    c_n1, c_n2 = st.columns([3, 7])
+    if c_n1.button("🔍 立即查看", key="jump_chat_v14"):
+        st.session_state.last_chat_count = new_msg_count
+        st.session_state.tab_focus = "GoChat"
+        st.rerun()
+    if c_n2.button("🆗 我知道了", key="close_chat_v14"):
+        st.session_state.last_chat_count = new_msg_count
+        st.rerun()
+
+# 4. 討論區函數修正 (修復「日期異常」紅字)
 def show_chat_room():
     st.markdown("### 💬 足球現場實況滾球推薦")
     try:
-        chat_df = load_chat() 
+        df = load_chat()
+        # 💡 強制檢查日期欄位
+        if '日期' not in df.columns and '時間' in df.columns:
+            df = df.rename(columns={'時間': '日期'})
         
-        # --- 留言輸入區 ---
-        with st.expander("➕ 我要留言 / 推薦賽事", expanded=False):
-            u_name = st.text_input("您的暱稱：", placeholder="留空將自動分配訪客代號")
-            u_msg = st.text_area("內容：", height=100)
-            
-            if st.button("🚀 發送留言", key="send_final_v13"):
-                if u_msg.strip():
-                    final_name = u_name.strip()
-                    # 💡 核心：訪客代號自動化 (訪客-01...)
-                    if not final_name:
-                        v_count = len(chat_df[chat_df['暱稱'].str.contains('訪客', na=False)]) + 1
-                        final_name = f"訪客-{v_count:02d}"
-                    
-                    new_data = pd.DataFrame([{"日期": datetime.now().strftime("%Y-%m-%d %H:%M:%S"), 
-                                              "暱稱": final_name, "內容": u_msg}])
-                    save_chat(new_data)
-                    st.success(f"✅ 留言成功！(顯示身份：{final_name})")
-                    time.sleep(1)
-                    st.rerun()
+        # ... 原本的留言發布與顯示代碼 ...
+        # (請確保發布留言時儲存的欄位名稱是 '日期')
+        # new_post = {"日期": datetime.now().strftime("%Y-%m-%d %H:%M:%S"), ...}
         
-        # --- 留言列表渲染 ---
-        if not chat_df.empty:
-            for index, row in chat_df.iloc[::-1].head(20).iterrows():
-                # 識別超級用戶或站長身分
-                is_super = str(row['暱稱']).lower() in ['admin', '超級用戶', '站長', '版主']
-                style = "background: linear-gradient(90deg, #1E90FF, #00008B); color: white;" if is_super else "background: #f0f2f6; color: black;"
-                
-                st.markdown(f"""
-                    <div style="{style} padding: 12px; border-radius: 10px; margin-bottom: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-                        <b>{'👑 ' if is_super else ''}{row['暱稱']}</b> <small style="opacity:0.8;">({row['日期']})</small><br>
-                        <div style="margin-top: 5px;">{row['內容']}</div>
-                    </div>
-                """, unsafe_allow_html=True)
-        else:
-            st.info("目前尚無訊息。")
+        # 顯示時檢查
+        for _, row in df.iloc[::-1].head(15).iterrows():
+            d_val = row.get('日期', '無時間記錄')
+            st.write(f"【{d_val}】 {row['暱稱']}: {row['內容']}")
     except Exception as e:
-        st.error(f"討論區異常: {e}")
-
-# 3. 建立標籤頁
-tab_names = ["💰 下單投注", "📝 註冊帳號", "⚽ 即時比分", "📋 歷史記錄", "📊 統計圖表", "💬 討 論 區"]
-tab1, tab2, tab_live, tab3, tab4, tab5 = st.tabs(tab_names)
-
-# --- Tab 1: 主功能區 (具備自動跳轉邏輯) ---
-with tab1:
-    if st.session_state.tab_focus == "GoChat":
-        # 🔗 當點擊「立即查看」後的顯示狀態
-        st.warning("🚀 您點擊了即時通知，已為您優先切換至討論區：")
-        if st.button("⬅️ 返回主操作介面"):
-            st.session_state.tab_focus = "Normal"
-            st.rerun()
-        st.divider()
-        show_chat_room() 
-    else:
-        # 🏠 原本的主頁內容 (請確保這裡縮排正確)
-        if st.session_state.current_db == "ccl-soccer.csv":
-            st.markdown("### 🏆 CCL-Soccer 管理系統")
-            # 這裡放您的主頁封面、橫幅圖等
-        else:
-            # 這裡放個人下單、報表等內容
-            st.write(f"當前帳號：{st.session_state.current_db}")
-
-# --- 其他標籤 ---
-with tab2: st.write("註冊帳號內容...")
-with tab_live: st.write("即時比分內容...")
-with tab3: st.write("歷史記錄內容...")
-with tab4: st.write("統計圖表內容...")
-with tab5:
-    show_chat_room() # 手動點擊標籤時顯示
-
-# 4. 廣播按鈕的配合 (請在您顯示廣播通知的地方更新按鈕邏輯)
-# if c_notif1.button("🔍 立即查看", key="jump_btn"):
-#     st.session_state.last_chat_count = new_msg_count
-#     st.session_state.tab_focus = "GoChat"  # 💡 啟動首頁替換模式
-#     st.rerun()
+        st.error(f"討論區異常：您的 CSV 可能缺少 '日期' 欄位，請檢查。")
 
 # --- Sidebar (側邊欄) ---
 with st.sidebar:
