@@ -156,14 +156,14 @@ if new_msg_count > st.session_state.last_chat_count:
             st.session_state.last_chat_count = new_msg_count
             st.rerun()
 
-with tab5:
-    # 💡 這裡不要寫 show_chat_room()，改寫您原本顯示討論區的代碼
-    # 例如您原本可能是這樣寫的：
-    chat_data = load_chat()
-    st.dataframe(chat_data, use_container_width=True)
-    
-    # 或者是呼叫您正確的函數名稱 (請檢查您代碼上方定義的名稱)
-    # display_chat()
+def show_chat_room():
+    st.subheader("💬 討論區正在載入...")
+    # 這裡放入您原本的討論區顯示邏輯
+    try:
+        data = load_chat()
+        st.table(data.tail(10)) # 先隨便顯示幾筆測試
+    except:
+        st.write("目前尚無訊息")
 
 # --- Sidebar (側邊欄) ---
 with st.sidebar:
