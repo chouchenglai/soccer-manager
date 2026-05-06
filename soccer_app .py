@@ -298,6 +298,7 @@ else:
                 if c_cancel.form_submit_button("取消"):
                     st.session_state.show_add_funds = False
                     st.rerun()
+     with tab2:
 
   st.subheader("🗑️ 快速清理模式", anchor=False)
     
