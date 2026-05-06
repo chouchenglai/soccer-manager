@@ -330,7 +330,29 @@ with tab2:
         if not admin_check.empty:
             is_admin = True
 
-    # --- 2. 區塊 A：提交新帳號申請 ---
+        # --- 2. 關鍵：管理員身分識別與強制密碼校驗 ---
+    is_admin = False
+    is_authenticated = False 
+    
+    if "current_db" in st.session_state:
+        current_active_name = st.session_state.current_db.replace('.csv', '')
+        # 檢查是否為 Admin 帳號
+        admin_row = req_df[(req_df['申請名稱'] == current_active_name) & (req_df['權限'].str.upper() == 'ADMIN')]
+        
+        if not admin_row.empty:
+            is_admin = True
+            st.warning("🔐 **偵測到管理員身分：請輸入管理員密鑰以解鎖高級功能**")
+            # 使用唯一 key 確保不會衝突
+            admin_pwd = st.text_input("請輸入管理員密鑰", type="password", key="main_admin_pwd")
+            
+            # --- 💡 在此設定您的專屬密碼 ---
+            if admin_pwd == "alai2026": 
+                is_authenticated = True
+                st.success("🔓 驗證成功：管理操作功能已開啟。")
+            elif admin_pwd != "":
+                st.error("❌ 密鑰錯誤：保護模式已啟動，功能暫時鎖定。")
+
+    # --- 3. 區塊 A：提交新帳號申請 ---
     st.subheader("提交新帳號申請", anchor=False)
     new_name = st.text_input("請輸入您要創建的帳號名稱", placeholder="例如：Visitors")
     
@@ -385,7 +407,7 @@ with tab2:
 
     st.divider()
 
-    # --- 3. 區塊 B：審核進度詳情 (管理員互動版) ---[cite: 1]       
+    # --- 4. 區塊 B：審核進度詳情 (管理員互動版) ---[cite: 1]       
     st.subheader("帳號審核進度詳情", anchor=False)
     st.caption("💡 溫馨提示：審核進度需要24～48小時才能完成，伺服器建立檔案後才能啟用服務。")
            
@@ -425,7 +447,7 @@ with tab2:
 
     st.divider()
 
-    # --- 4. 區塊 C：已授權帳號清單 ---    
+    # --- 5. 區塊 C：已授權帳號清單 ---    
     st.subheader("已授權帳號清單", anchor=False)
     st.caption("💡 溫馨提示：點擊啟動後將跳轉至主頁，請於左側選單切換至您的專屬帳號。")
     
