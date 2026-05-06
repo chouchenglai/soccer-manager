@@ -299,41 +299,44 @@ else:
                     st.session_state.show_add_funds = False
                     st.rerun()
 
-  # --- 🧹 終極清理模式：專門對付「CCL」等預設檔 ---
-    st.subheader("🗑️ 核心檔案清理 (強制模式)", anchor=False)
-    st.warning("注意：此模式下連預設檔案也會顯示刪除按鈕！")
+  # --- ☢️ 終極暴力清理：強制洗平模式 ---
+    st.subheader("☢️ 系統強制重置 (針對頑固檔案)", anchor=False)
     
-    # 💡 這次「不排除」DEFAULT_DB，讓它無所遁形
-    all_files = [f for f in os.listdir('.') if f.endswith('.csv') and f not in [req_file, CHAT_DB]]
+    # 手動指定那些刪不掉的頑固份子
+    stubborn_files = ["CCL.csv", "CCL", "soccer_data.csv"] 
     
-    if all_files:
-        for fname in all_files:
-            col1, col2 = st.columns([3, 1])
-            
-            # 標註出 CCL 或預設檔
-            is_target = "CCL" in fname.upper() or fname == DEFAULT_DB
-            display_text = f"🔥 {fname} (預設名稱)" if is_target else f"📁 {fname}"
-            
-            col1.write(display_text)
-            
-            # 💡 一鍵抹除邏輯
-            if col2.button("徹底抹除", key=f"ultimate_del_{fname}", type="primary"):
+    for fname in stubborn_files:
+        full_name = fname if ".csv" in fname else f"{fname}.csv"
+        
+        if os.path.exists(full_name):
+            st.warning(f"偵測到殘留物：{full_name}")
+            if st.button(f"💥 強制粉碎 {full_name}", key=f"nuke_{full_name}"):
                 try:
-                    # 1. 刪除實體檔案 (如果檔案存在)
-                    if os.path.exists(fname):
-                        os.remove(fname)
+                    # 1. 第一步：不刪除檔案，直接把檔案內容寫成「空」
+                    # 這樣就算檔案被鎖定，通常也能強制寫入空數據
+                    with open(full_name, "w", encoding="utf-8-sig") as f:
+                        f.write("") 
                     
-                    # 2. 核心動作：從申請紀錄中完全抹除，這樣左側選單才會消失！
-                    req_df = req_df[req_df['申請名稱'] != fname.replace('.csv','')]
-                    req_df.to_csv(req_file, index=False, encoding='utf-8-sig')
+                    # 2. 第二步：嘗試物理刪除
+                    os.remove(full_name)
                     
-                    st.toast(f"已徹底清除核心紀錄: {fname}")
-                    time.sleep(0.5)
+                    # 3. 第三步：徹底從 pending_requests.csv 抹除紀錄 (如果有這份檔案)
+                    if os.path.exists("pending_requests.csv"):
+                        tmp_df = pd.read_csv("pending_requests.csv")
+                        tmp_df = tmp_df[tmp_df['申請名稱'] != full_name.replace('.csv','')]
+                        tmp_df.to_csv("pending_requests.csv", index=False, encoding='utf-8-sig')
+                    
+                    st.success(f"已粉碎紀錄：{full_name}")
                     st.rerun()
                 except Exception as e:
-                    st.error(f"清除失敗: {e}")
-    else:
-        st.success("清爽無比！目前所有舊紀錄與預設檔皆已清除。")
+                    st.error(f"仍被鎖定中。請看下方『最終殺手鐧』。")
+        else:
+            st.info(f"✅ 硬碟檢查：{full_name} 已消失。")
+
+    st.divider()
+    st.error("🚨 最終殺手鐧：如果左側選單還有 CCL")
+    st.write("請直接去修改 `soccer_app.py` 最上方的這行：")
+    st.code('DEFAULT_DB = "NONE.csv"  # 👈 把 CCL.csv 改成一個不存在的名字')
 
     with tab_live:
         # 第一行：大標題
