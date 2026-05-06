@@ -330,28 +330,25 @@ with tab2:
         if not admin_check.empty:
             is_admin = True
 
-        # --- 2. 關鍵：管理員身分識別與強制密碼校驗 ---
+       # --- 2. 關鍵：管理員身分識別與強制密碼校驗 ---
     is_admin = False
     is_authenticated = False 
     
     if "current_db" in st.session_state:
         current_active_name = st.session_state.current_db.replace('.csv', '')
-        # 檢查是否為 Admin 帳號
+        # 檢查是否為 Admin 帳號 (不分大小寫)
         admin_row = req_df[(req_df['申請名稱'] == current_active_name) & (req_df['權限'].str.upper() == 'ADMIN')]
         
-        if "current_db" in st.session_state:
-        current_active_name = st.session_state.current_db.replace('.csv', '')
-        # 檢查是否為 Admin 帳號
-        admin_row = req_df[(req_df['申請名稱'] == current_active_name) & (req_df['權限'].str.upper() == 'ADMIN')]
-                
+        # 💡 只有當查詢結果不為空時，才執行後續動作
+        if not admin_row.empty:
             is_admin = True
             st.warning("🔐 **偵測到管理員身分：請輸入管理員密鑰以解鎖高級功能**")
             
-            # 💡 修正這裡：key 改成固定的字串，不要用變數 fname
+            # 💡 使用固定 Key 避免報錯
             admin_pwd = st.text_input("請輸入管理員密鑰", type="password", key="admin_auth_lock")
             
             # 驗證密碼
-            if admin_pwd == "alai2026": 
+            if admin_pwd == "Caiyun1031": 
                 is_authenticated = True
                 st.success("🔓 驗證成功：管理操作功能已開啟。")
             elif admin_pwd != "":
