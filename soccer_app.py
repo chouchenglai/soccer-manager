@@ -303,36 +303,33 @@ else:
 # Tab 2: 帳號管理 (一鍵審核 + 強效防錯版)
 # ==========================================
 with tab2:    
-    # --- 🧹 終極清理：跳過佔用錯誤模式 ---
-    st.subheader("🗑️ 強制清理 (忽略檔案鎖定)", anchor=False)
+    # --- 🧹 臨時清理專用代碼 (清理完請換回原版) ---
+    st.subheader("🗑️ 快速清理模式", anchor=False)
     
-    # 列出所有 CSV
-    all_files = [f for f in os.listdir('.') if f.endswith('.csv') and f not in [req_file, CHAT_DB]]
+    # 自動抓取所有 CSV (排除必要檔案)
+    all_csv = [f for f in os.listdir('.') if f.endswith('.csv') and f not in [req_file, CHAT_DB, DEFAULT_DB]]
     
-    if all_files:
-        for fname in all_files:
+    if all_csv:
+        for fname in all_csv:
             col1, col2 = st.columns([3, 1])
-            is_ccl = "CCL" in fname.upper()
-            display_text = f"🔥 {fname} (佔用中)" if is_ccl else f"📁 {fname}"
-            col1.write(display_text)
-            
-            if col2.button("強制抹除", key=f"force_clean_{fname}", type="primary"):
-                # 1. 先從 CSV 紀錄中刪除 (這步最重要，決定左側選單)
-                req_df = req_df[req_df['申請名稱'] != fname.replace('.csv','')]
-                req_df.to_csv(req_file, index=False, encoding='utf-8-sig')
-                
-                # 2. 嘗試物理刪除檔案，如果被佔用就跳過不報錯
+            col1.write(f"📁 {fname}")
+            # 💡 這裡完全不設限，點擊就刪除檔案 + 抹除申請紀錄
+            if col2.button("徹底刪除", key=f"quick_del_{fname}", type="primary"):
                 try:
+                    # 1. 刪除硬碟檔案
                     if os.path.exists(fname):
                         os.remove(fname)
-                    st.toast(f"✅ {fname} 已從清單移除並刪除檔案")
-                except PermissionError:
-                    st.warning(f"⚠️ 檔案 {fname} 正被系統佔用，已先從選單抹除，檔案請稍後手動刪除。")
-                
-                time.sleep(0.5)
-                st.rerun()
+                    # 2. 抹除 pending_requests.csv 裡的紀錄 (這是左側選單消失的關鍵)
+                    req_df = req_df[req_df['申請名稱'] != fname.replace('.csv','')]
+                    req_df.to_csv(req_file, index=False, encoding='utf-8-sig')
+                    
+                    st.toast(f"已清除: {fname}")
+                    time.sleep(0.5)
+                    st.rerun()
+                except:
+                    st.error("刪除失敗")
     else:
-        st.success("清爽！所有顯示紀錄已清空。")
+        st.success("清理乾淨了！目前無舊報表。")
 
     with tab_live:
         # 第一行：大標題
