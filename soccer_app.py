@@ -145,7 +145,7 @@ if new_msg_count > st.session_state.last_chat_count:
             # 2. 💡 關鍵：強制設定當前標籤為「討論區」
             # 假設您的討論區是第 6 個 Tab (索引通常是 5)，或者是您設定的特定 Key
             # 如果您之前有在 st.tabs 加上 key="main_tabs"，可以使用 Query Params 或 Session State
-            st.session_state.active_tab = "💬 討論區" 
+            st.session_state.active_tab = "main_tab5" 
             
             st.toast("正在前往討論區...")
             time.sleep(0.5)
