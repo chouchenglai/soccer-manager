@@ -608,6 +608,7 @@ with tab2:
                                     st.rerun()
                             
                             # 3. 刪除按鈕
+                                                        if is_admin and is_authenticated and fname != DEFAULT_DB:
                             if st.button("🗑️ 刪除", key=f"dl_{u_key}", use_container_width=True):
                                 chat_data.drop(idx).to_csv(CHAT_DB, index=False, encoding='utf-8-sig')
                                 st.rerun()
