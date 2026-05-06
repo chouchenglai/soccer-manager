@@ -109,7 +109,7 @@ with st.sidebar:
     # 讓用戶自主控制開關
     show_notif = st.toggle("接收討論區新訊息廣播", value=True)
     if is_current_admin:
-        st.caption("🛡️ 管理員身分已驗證")
+        st.caption("🛡️ 超級用戶身分已驗證 (具備全局廣播權限)")
 
 # 5. 提醒核心邏輯
 if new_msg_count > st.session_state.last_chat_count:
@@ -121,11 +121,12 @@ if new_msg_count > st.session_state.last_chat_count:
     # 判斷觸發條件：管理員發言(強制) OR 用戶開啟開關
     if is_sender_admin or show_notif:
         # 設定樣式
-        if is_sender_admin:
-            box_style = "background: linear-gradient(90deg, #1E90FF, #00008B); border-left: 10px solid #FFD700;"
-            title_tag = "🔥 【管理員指令】"
-        else:
-            box_style = "background: linear-gradient(90deg, #1E90FF, #00BFFF); border-left: 6px solid #FFD700;"
+        # --- 廣播樣式優化版 ---
+if is_sender_admin:  
+    box_style = "background: linear-gradient(90deg, #1E90FF, #00008B); border-left: 10px solid #FFD700;"
+    title_tag = "👑 【超級用戶指令】" 
+else:
+    box_style = "background: linear-gradient(90deg, #1E90FF, #00BFFF); border-left: 6px solid #FFD700;"
             title_tag = "📢 新留言提醒"
 
         # 顯示提醒框
@@ -144,12 +145,14 @@ if new_msg_count > st.session_state.last_chat_count:
         c_notif1, c_notif2 = st.columns([2.8, 7.2])
         
         # 按鈕 1：立即查看 (點擊後提醒會消失)
-        if c_notif1.button("🔍 立即查看", key="btn_view_chat"):
-            st.session_state.last_chat_count = new_msg_count
-            st.toast("✅ 提醒已讀！請手動點擊下方「💬 討 論 區」查看內容。", icon="🔍")
-            # 延遲一下讓用戶看到提示再刷新
-            time.sleep(1)
+        if st.session_state.tab_focus == "GoChat":
+        # 💡 當用戶點了「立即查看」，Tab 1 會暫時變成討論區
+        st.markdown("### 🚀 快速導航：討論區最新訊息")
+        if st.button("⬅️ 返回主操作頁面"):
+            st.session_state.tab_focus = "Normal"
             st.rerun()
+        st.divider()
+                show_chat_room()
             
         # 按鈕 2：我知道了
         if c_notif2.button("🆗 我知道了", key="btn_close_notif"):
