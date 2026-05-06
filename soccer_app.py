@@ -79,44 +79,65 @@ if os.path.exists(img_path):
     """, unsafe_allow_html=True)
 
 # ==========================================
-# 🚀 全局討論區新訊息提醒系統 (置於 Tabs 之前)
+# 🚀 全局討論區提醒系統 (用戶關閉後仍可接收管理員通知)
 # ==========================================
-# 1. 獲取討論區數據
+
+# 1. 獲取討論區數據與當前計數
 current_chat_data = load_chat()
 new_msg_count = len(current_chat_data)
 
-# 2. 初始化計數器 (第一次執行時)
 if 'last_chat_count' not in st.session_state:
     st.session_state.last_chat_count = new_msg_count
 
-# 3. 檢查是否有新留言 (排除管理員自己在討論區發言時的重複提醒)
+# 2. 側邊欄設定：用戶開關
+with st.sidebar:
+    st.divider()
+    if is_admin:
+        # 管理員本人永遠開啟，且不顯示開關
+        show_notif = True
+        st.caption("🛡️ 管理員模式：廣播通知已強制開啟")
+    else:
+        # 一般用戶可切換開關[cite: 2]
+        show_notif = st.toggle("接收討論區新訊息廣播", value=True)
+
+# 3. 檢查是否有新留言[cite: 2]
 if new_msg_count > st.session_state.last_chat_count:
     latest_msg = current_chat_data.iloc[-1]
     
-    # 顯示滾動式提醒條
-    st.markdown(f"""
-        <div style="background: linear-gradient(90deg, #1E90FF, #00BFFF); 
-                    color: white; padding: 12px 20px; border-radius: 8px; 
-                    border-left: 6px solid #FFD700; margin-bottom: 15px;
-                    box-shadow: 0 4px 15px rgba(0,0,0,0.1); animation: slideIn 0.5s ease-out;">
-            <span style="font-size: 1.2em;">📢</span> <b>新留言提醒：</b> 
-            <span style="color: #FFD700; font-weight: bold;">{latest_msg['暱稱']}</span> 
-            剛剛說：「{latest_msg['內容'][:25]}...」
-        </div>
-        <style>
-            @keyframes slideIn {{ from {{ transform: translateY(-20px); opacity: 0; }} to {{ transform: translateY(0); opacity: 1; }} }}
-        </style>
-    """, unsafe_allow_html=True)
+    # --- 關鍵點：判斷這則訊息是誰發的？ ---[cite: 2]
+    sender_name = str(latest_msg['暱稱']).lower()
+    is_sender_admin = sender_name in ['管理員', 'admin']
     
-    c_notif1, c_notif2 = st.columns([2, 8])
-    if c_notif1.button("👁️ 進入討論", use_container_width=True):
-        st.session_state.last_chat_count = new_msg_count # 更新計數器，關閉提醒
-        st.toast("請點擊下方【💬 討 論 區】參與互動！")
-        time.sleep(0.5)
-        st.rerun()
-    if c_notif2.button("我知道了 (關閉提醒)", use_container_width=False):
-        st.session_state.last_chat_count = new_msg_count
-        st.rerun()
+    # 執行提醒的條件：
+    # (如果是管理員發布的內容 -> 強制跳出) OR (是用戶發布的內容 -> 檢查用戶開關是否開啟)[cite: 2]
+    if is_sender_admin or show_notif:
+        
+        # 針對管理員發言設定「尊榮金邊」樣式，區隔一般訊息[cite: 2]
+        if is_sender_admin:
+            box_style = "background: linear-gradient(90deg, #1E90FF, #00008B); border-left: 10px solid #FFD700;"
+            title_text = "🔥 【管理員重要通知】"
+        else:
+            box_style = "background: linear-gradient(90deg, #1E90FF, #00BFFF); border-left: 6px solid #FFD700;"
+            title_text = "📢 新留言提醒"
+
+        st.markdown(f"""
+            <div style="{box_style} color: white; padding: 15px 20px; border-radius: 8px; 
+                        margin-bottom: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); 
+                        animation: slideIn 0.5s ease-out;">
+                <b>{title_text}</b><br>
+                <span style="color: #FFD700; font-weight: bold;">{latest_msg['暱稱']}</span> 
+                說：「{latest_msg['內容'][:30]}...」
+            </div>
+            <style>@keyframes slideIn {{ from {{ transform: translateY(-20px); opacity: 0; }} to {{ transform: translateY(0); opacity: 1; }} }}</style>
+        """, unsafe_allow_html=True)
+        
+        c_notif1, c_notif2 = st.columns([2, 8])
+        if c_notif1.button("🔍 立即查看", key="notif_go_final"):
+            st.session_state.last_chat_count = new_msg_count
+            st.rerun()
+        if c_notif2.button("🆗 我知道了", key="notif_close_final"):
+            st.session_state.last_chat_count = new_msg_count
+            st.rerun()
 
 # --- 接下來才是您原本的標籤頁宣告 ---
 # tab1, tab2, tab_live... = st.tabs(...)
