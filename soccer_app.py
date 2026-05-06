@@ -78,6 +78,49 @@ if os.path.exists(img_path):
         <div class="banner-box"><img src="data:image/jpeg;base64,{img_b64}" class="banner-img"></div>
     """, unsafe_allow_html=True)
 
+# ==========================================
+# 🚀 全局討論區新訊息提醒系統 (置於 Tabs 之前)
+# ==========================================
+# 1. 獲取討論區數據
+current_chat_data = load_chat()
+new_msg_count = len(current_chat_data)
+
+# 2. 初始化計數器 (第一次執行時)
+if 'last_chat_count' not in st.session_state:
+    st.session_state.last_chat_count = new_msg_count
+
+# 3. 檢查是否有新留言 (排除管理員自己在討論區發言時的重複提醒)
+if new_msg_count > st.session_state.last_chat_count:
+    latest_msg = current_chat_data.iloc[-1]
+    
+    # 顯示滾動式提醒條
+    st.markdown(f"""
+        <div style="background: linear-gradient(90deg, #1E90FF, #00BFFF); 
+                    color: white; padding: 12px 20px; border-radius: 8px; 
+                    border-left: 6px solid #FFD700; margin-bottom: 15px;
+                    box-shadow: 0 4px 15px rgba(0,0,0,0.1); animation: slideIn 0.5s ease-out;">
+            <span style="font-size: 1.2em;">📢</span> <b>新留言提醒：</b> 
+            <span style="color: #FFD700; font-weight: bold;">{latest_msg['暱稱']}</span> 
+            剛剛說：「{latest_msg['內容'][:25]}...」
+        </div>
+        <style>
+            @keyframes slideIn {{ from {{ transform: translateY(-20px); opacity: 0; }} to {{ transform: translateY(0); opacity: 1; }} }}
+        </style>
+    """, unsafe_allow_html=True)
+    
+    c_notif1, c_notif2 = st.columns([2, 8])
+    if c_notif1.button("👁️ 進入討論", use_container_width=True):
+        st.session_state.last_chat_count = new_msg_count # 更新計數器，關閉提醒
+        st.toast("請點擊下方【💬 討 論 區】參與互動！")
+        time.sleep(0.5)
+        st.rerun()
+    if c_notif2.button("我知道了 (關閉提醒)", use_container_width=False):
+        st.session_state.last_chat_count = new_msg_count
+        st.rerun()
+
+# --- 接下來才是您原本的標籤頁宣告 ---
+# tab1, tab2, tab_live... = st.tabs(...)
+
 # --- Sidebar (側邊欄) ---
 with st.sidebar:
     st.header("💰 資金與統計中心")
