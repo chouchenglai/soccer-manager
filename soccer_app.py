@@ -79,46 +79,48 @@ if os.path.exists(img_path):
     """, unsafe_allow_html=True)
 
 # ==========================================
-# 🚀 廣播系統：管理員訊息強制穿透版
+# 🚀 討論區提醒與導航系統 (排版修正終極版)
 # ==========================================
 
-# 1. 數據準備
+# 1. 權限與數據預備
+req_file = "pending_requests.csv"
 current_chat_data = load_chat()
 new_msg_count = len(current_chat_data)
 
-if 'last_chat_count' not in st.session_state:
-    st.session_state.last_chat_count = new_msg_count
-
-# 2. 直接在這裡抓取身分權限 (解決報錯關鍵)
-check_is_admin = False
-req_file = "pending_requests.csv"
+# 2. 自動識別身分 (避免 NameError)
+is_current_admin = False
 if "current_db" in st.session_state and os.path.exists(req_file):
     try:
         r_df = pd.read_csv(req_file)
         curr_name = st.session_state.current_db.replace('.csv', '')
         admin_match = r_df[(r_df['申請名稱'] == curr_name) & (r_df['權限'].str.upper() == 'ADMIN')]
         if not admin_match.empty:
-            check_is_admin = True
+            is_current_admin = True
     except:
         pass
 
-# 3. 側邊欄開關 (使用我們剛才算好的 check_is_admin)
+# 3. 初始化計數器
+if 'last_chat_count' not in st.session_state:
+    st.session_state.last_chat_count = new_msg_count
+
+# 4. 側邊欄開關與公告
 with st.sidebar:
     st.divider()
-    # 提供開關給用戶，不論是誰都能控制自己的接收狀態
+    # 讓用戶自主控制開關
     show_notif = st.toggle("接收討論區新訊息廣播", value=True)
-    if check_is_admin:
+    if is_current_admin:
         st.caption("🛡️ 管理員身分已驗證")
 
-# 4. 提醒邏輯：管理員發言穿透 OR 用戶開啟開關
+# 5. 提醒核心邏輯
 if new_msg_count > st.session_state.last_chat_count:
     latest_msg = current_chat_data.iloc[-1]
     
     sender_name = str(latest_msg['暱稱']).lower()
     is_sender_admin = sender_name in ['管理員', 'admin']
     
+    # 判斷觸發條件：管理員發言(強制) OR 用戶開啟開關
     if is_sender_admin or show_notif:
-        # 判斷樣式
+        # 設定樣式
         if is_sender_admin:
             box_style = "background: linear-gradient(90deg, #1E90FF, #00008B); border-left: 10px solid #FFD700;"
             title_tag = "🔥 【管理員指令】"
@@ -126,6 +128,7 @@ if new_msg_count > st.session_state.last_chat_count:
             box_style = "background: linear-gradient(90deg, #1E90FF, #00BFFF); border-left: 6px solid #FFD700;"
             title_tag = "📢 新留言提醒"
 
+        # 顯示提醒框
         st.markdown(f"""
             <div style="{box_style} color: white; padding: 15px 20px; border-radius: 8px; 
                         margin-bottom: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); 
@@ -137,32 +140,29 @@ if new_msg_count > st.session_state.last_chat_count:
             <style>@keyframes slideIn {{ from {{ transform: translateY(-20px); opacity: 0; }} to {{ transform: translateY(0); opacity: 1; }} }}</style>
         """, unsafe_allow_html=True)
         
+        # 按鈕區
         c_notif1, c_notif2 = st.columns([2.8, 7.2])
         
-        # 1. 在標籤定義之前，檢查是否剛點過「立即查看」
-if "force_chat_view" not in st.session_state:
-    st.session_state.force_chat_view = False
-
-# 2. 如果點了按鈕，我們設定一個標記
-if c_notif1.button("🔍 立即查看", key="notif_go_v10"):
+        # 按鈕 1：立即查看 (點擊後提醒會消失)
+        if c_notif1.button("🔍 立即查看", key="btn_view_chat"):
             st.session_state.last_chat_count = new_msg_count
-            # 設定索引為 5 (討論區)，讓系統知道要去哪
-            st.session_state.current_tab_index = 5 
+            st.toast("✅ 提醒已讀！請手動點擊下方「💬 討 論 區」查看內容。", icon="🔍")
+            # 延遲一下讓用戶看到提示再刷新
+            time.sleep(1)
+            st.rerun()
+            
+        # 按鈕 2：我知道了
+        if c_notif2.button("🆗 我知道了", key="btn_close_notif"):
+            st.session_state.last_chat_count = new_msg_count
             st.rerun()
 
-# 3. 在下方顯示區域
-if st.session_state.force_chat_view:
-    # 這裡直接把討論區的內容「拔出來」顯示在最上面！
-    st.warning("🚀 您正在快速檢視討論區訊息：")
-    show_chat_room() # 呼叫您顯示討論區的函數
-    if st.button("⬅️ 返回主操作區"):
-        st.session_state.force_chat_view = False
-        st.rerun()
-else:
-    # 正常顯示您的 6 個 Tabs
-    tab1, tab2, tab_live, tab3, tab4, tab5 = st.tabs(tab_names)
-        with tab1: # ... 原本的邏輯
-        with tab5: show_chat_room()
+# --- 接下來是您的標籤定義區 (確保縮排正確) ---
+tab_names = ["💰 下單投注", "**📝 註冊帳號**", "⚽ 即時比分", "📋 歷史記錄", "📊 統計圖表", "💬 討 論 區"]
+tab1, tab2, tab_live, tab3, tab4, tab5 = st.tabs(tab_names)
+
+with tab5:
+    # 💡 確保這一行前面有縮排！
+    show_chat_room()
 
 # --- Sidebar (側邊欄) ---
 with st.sidebar:
