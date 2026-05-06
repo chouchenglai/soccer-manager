@@ -138,11 +138,17 @@ if new_msg_count > st.session_state.last_chat_count:
         """, unsafe_allow_html=True)
         
         c_notif1, c_notif2 = st.columns([2.8, 7.2])
-        if c_notif1.button("🔍 立即查看", key="notif_go_v6"):
+        if c_notif1.button("🔍 立即查看", key="notif_go_fixed_v7"):
+            # 1. 更新最後讀取的計數，讓提醒條消失
             st.session_state.last_chat_count = new_msg_count
-            st.rerun()
-        if c_notif2.button("🆗 我知道了", key="notif_close_v6"):
-            st.session_state.last_chat_count = new_msg_count
+            
+            # 2. 💡 關鍵：強制設定當前標籤為「討論區」
+            # 假設您的討論區是第 6 個 Tab (索引通常是 5)，或者是您設定的特定 Key
+            # 如果您之前有在 st.tabs 加上 key="main_tabs"，可以使用 Query Params 或 Session State
+            st.session_state.active_tab = "💬 討論區" 
+            
+            st.toast("正在前往討論區...")
+            time.sleep(0.5)
             st.rerun()
 
 # --- Sidebar (側邊欄) ---
@@ -334,7 +340,7 @@ with tab2:
             admin_pwd = st.text_input("請輸入管理員密鑰", type="password", key="main_admin_pwd")
             
             # --- 💡 在此設定您的專屬密碼 ---
-            if admin_pwd == "alai2026": 
+            if admin_pwd == "Caiyun1031": 
                 is_authenticated = True
                 st.success("🔓 驗證成功：管理操作功能已開啟。")
             elif admin_pwd != "":
