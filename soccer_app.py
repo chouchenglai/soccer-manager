@@ -608,10 +608,16 @@ with tab2:
                                     st.rerun()
                             
                             # 3. 刪除按鈕
+                            
                             if is_admin and is_authenticated and fname != DEFAULT_DB:
-                            if st.button("🗑️ 刪除", key=f"dl_{u_key}", use_container_width=True):
-                                chat_data.drop(idx).to_csv(CHAT_DB, index=False, encoding='utf-8-sig')
-                                st.rerun()
+                    if st.button("🗑️ 刪除", key=f"del_{fname}"):
+                        os.remove(fname)
+                        req_df = req_df[req_df['申請名稱'] != fname.replace('.csv','')]
+                        req_df.to_csv(req_file, index=False, encoding='utf-8-sig')
+                        st.toast(f"檔案 {fname} 已移除")
+                        time.sleep(1)
+                        st.rerun()                            
+
                     st.write("") 
             else:
                 st.write("目前尚無討論。")
