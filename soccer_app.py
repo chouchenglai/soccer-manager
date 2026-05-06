@@ -351,14 +351,7 @@ with tab2:
                 is_authenticated = True
                 st.success("🔓 驗證成功：管理操作功能已開啟。")
             elif admin_pwd != "":
-                st.error("❌ 密鑰錯誤：保護模式已啟動，功能暫時鎖定。")
-            
-            # --- 💡 在此設定您的專屬密碼 ---
-            if admin_pwd == "alai2026": 
-                is_authenticated = True
-                st.success("🔓 驗證成功：管理操作功能已開啟。")
-            elif admin_pwd != "":
-                st.error("❌ 密鑰錯誤：保護模式已啟動，功能暫時鎖定。")
+                st.error("❌ 密鑰錯誤：保護模式已啟動，功能暫時鎖定。")        
 
     # --- 3. 區塊 A：提交新帳號申請 ---
     st.subheader("提交新帳號申請", anchor=False)
