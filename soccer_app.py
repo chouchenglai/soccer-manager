@@ -331,8 +331,8 @@ with tab2:
             is_admin = True
 
         # --- 2. 關鍵：管理員身分識別與強制密碼校驗 ---
-    is_admin = True
-    is_authenticated = True 
+    is_admin = False
+    is_authenticated = False 
     
     if "current_db" in st.session_state:
         current_active_name = st.session_state.current_db.replace('.csv', '')
@@ -343,7 +343,7 @@ with tab2:
             is_admin = True
             st.warning("🔐 **偵測到管理員身分：請輸入管理員密鑰以解鎖高級功能**")
             # 使用唯一 key 確保不會衝突
-            admin_pwd = st.text_input("請輸入管理員密鑰", type="password", key="main_admin_pwd")
+            admin_pwd = st.text_input("請輸入管理員密鑰", type="password", key=f"del_file_{fname}")
             
             # --- 💡 在此設定您的專屬密碼 ---
             if admin_pwd == "alai2026": 
