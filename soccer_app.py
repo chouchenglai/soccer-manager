@@ -334,7 +334,12 @@ with tab2:
     is_admin = False
     is_authenticated = False 
     
-    iif "current_db" in st.session_state:
+    if "current_db" in st.session_state:
+        current_active_name = st.session_state.current_db.replace('.csv', '')
+        # 檢查是否為 Admin 帳號
+        admin_row = req_df[(req_df['申請名稱'] == current_active_name) & (req_df['權限'].str.upper() == 'ADMIN')]
+        
+        if "current_db" in st.session_state:
         current_active_name = st.session_state.current_db.replace('.csv', '')
         # 檢查是否為 Admin 帳號
         admin_row = req_df[(req_df['申請名稱'] == current_active_name) & (req_df['權限'].str.upper() == 'ADMIN')]
@@ -351,7 +356,7 @@ with tab2:
                 is_authenticated = True
                 st.success("🔓 驗證成功：管理操作功能已開啟。")
             elif admin_pwd != "":
-                st.error("❌ 密鑰錯誤：保護模式已啟動，功能暫時鎖定。")        
+                st.error("❌ 密鑰錯誤：保護模式已啟動，功能暫時鎖定。")
 
     # --- 3. 區塊 A：提交新帳號申請 ---
     st.subheader("提交新帳號申請", anchor=False)
