@@ -9,7 +9,7 @@ from datetime import datetime, timedelta, timezone
 st.set_page_config(page_title="CCL-Soccer 足球賽事管理系統", page_icon="⚽", layout="wide")
 
 # --- 基本設定 ---
-DEFAULT_DB = "ccl-soccer_data.csv"
+DEFAULT_DB = "ccl-soccer.csv"
 CHAT_DB = "ccl_chat_log.csv"
 COLUMNS = ["日期", "賽事項目", "類型", "金額", "盈虧金額", "結算總分"]
 CHAT_COLUMNS = ["時間", "暱稱", "內容", "標籤"]
