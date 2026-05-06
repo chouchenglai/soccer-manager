@@ -299,36 +299,41 @@ else:
                     st.session_state.show_add_funds = False
                     st.rerun()
 
-  # ==========================================
-# Tab 2: 帳號管理 (一鍵審核 + 強效防錯版)
-# ==========================================
-with tab2:    
-    st.subheader("🗑️ 快速清理模式", anchor=False)
+  # --- 🧹 終極清理模式：專門對付「CCL」等預設檔 ---
+    st.subheader("🗑️ 核心檔案清理 (強制模式)", anchor=False)
+    st.warning("注意：此模式下連預設檔案也會顯示刪除按鈕！")
     
-    # 自動抓取所有 CSV (排除必要檔案)
-    all_csv = [f for f in os.listdir('.') if f.endswith('.csv') and f not in [req_file, CHAT_DB, DEFAULT_DB]]
+    # 💡 這次「不排除」DEFAULT_DB，讓它無所遁形
+    all_files = [f for f in os.listdir('.') if f.endswith('.csv') and f not in [req_file, CHAT_DB]]
     
-    if all_csv:
-        for fname in all_csv:
+    if all_files:
+        for fname in all_files:
             col1, col2 = st.columns([3, 1])
-            col1.write(f"📁 {fname}")
-            # 💡 這裡完全不設限，點擊就刪除檔案 + 抹除申請紀錄
-            if col2.button("徹底刪除", key=f"quick_del_{fname}", type="primary"):
+            
+            # 標註出 CCL 或預設檔
+            is_target = "CCL" in fname.upper() or fname == DEFAULT_DB
+            display_text = f"🔥 {fname} (預設名稱)" if is_target else f"📁 {fname}"
+            
+            col1.write(display_text)
+            
+            # 💡 一鍵抹除邏輯
+            if col2.button("徹底抹除", key=f"ultimate_del_{fname}", type="primary"):
                 try:
-                    # 1. 刪除硬碟檔案
+                    # 1. 刪除實體檔案 (如果檔案存在)
                     if os.path.exists(fname):
                         os.remove(fname)
-                    # 2. 抹除 pending_requests.csv 裡的紀錄 (這是左側選單消失的關鍵)
+                    
+                    # 2. 核心動作：從申請紀錄中完全抹除，這樣左側選單才會消失！
                     req_df = req_df[req_df['申請名稱'] != fname.replace('.csv','')]
                     req_df.to_csv(req_file, index=False, encoding='utf-8-sig')
                     
-                    st.toast(f"已清除: {fname}")
+                    st.toast(f"已徹底清除核心紀錄: {fname}")
                     time.sleep(0.5)
                     st.rerun()
-                except:
-                    st.error("刪除失敗")
+                except Exception as e:
+                    st.error(f"清除失敗: {e}")
     else:
-        st.success("清理乾淨了！目前無舊報表。")
+        st.success("清爽無比！目前所有舊紀錄與預設檔皆已清除。")
 
     with tab_live:
         # 第一行：大標題
