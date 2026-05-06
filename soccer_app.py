@@ -138,17 +138,16 @@ if new_msg_count > st.session_state.last_chat_count:
         """, unsafe_allow_html=True)
         
         c_notif1, c_notif2 = st.columns([2.8, 7.2])
-        if c_notif1.button("🔍 立即查看", key="notif_go_fixed_v7"):
-            # 1. 更新最後讀取的計數，讓提醒條消失
+        
+        if c_notif1.button("🔍 立即查看", key="notif_go_v8"):
+            # A. 更新計數器，這會讓提醒條立刻消失
             st.session_state.last_chat_count = new_msg_count
             
-            # 2. 💡 關鍵：強制設定當前標籤為「討論區」
-            # 假設您的討論區是第 6 個 Tab (索引通常是 5)，或者是您設定的特定 Key
-            # 如果您之前有在 st.tabs 加上 key="main_tabs"，可以使用 Query Params 或 Session State
-            st.session_state.active_tab = "main_tab5" 
+            # B. 由於 st.tabs 暫不支援程式強制切換，我們發出提示引導用戶
+            st.toast("✅ 提醒已讀！請手動點擊下方『💬 討 論 區』查看內容。", icon="🔍")
             
-            st.toast("正在前往討論區...")
-            time.sleep(0.5)
+            # C. 延遲一下讓用戶看到提示，然後刷新頁面清空提醒條
+            time.sleep(1)
             st.rerun()
 
 # --- Sidebar (側邊欄) ---
