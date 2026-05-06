@@ -303,40 +303,29 @@ else:
 # Tab 2: 帳號管理 (一鍵審核 + 強效防錯版)
 # ==========================================
 with tab2:    
-    st.subheader("🗑️ 核心檔案清理 (強制模式)", anchor=False)
-    st.warning("注意：此模式下連預設檔案也會顯示刪除按鈕！")
+    # --- 🧹 終極空白清理版 (不讀取任何紀錄) ---
+    st.subheader("🗑️ 系統強制重置中", anchor=False)
     
-    # 💡 這次「不排除」DEFAULT_DB，讓它無所遁形
-    all_files = [f for f in os.listdir('.') if f.endswith('.csv') and f not in [req_file, CHAT_DB]]
+    # 💡 這一行是關鍵：我們直接手動定義一個清單，裡面只放你想刪除的那個檔案
+    target_to_kill = ["CCL.csv", "CCL"] 
     
-    if all_files:
-        for fname in all_files:
+    for fname in target_to_kill:
+        if os.path.exists(fname):
             col1, col2 = st.columns([3, 1])
-            
-            # 標註出 CCL 或預設檔
-            is_target = "CCL" in fname.upper() or fname == DEFAULT_DB
-            display_text = f"🔥 {fname} (預設名稱)" if is_target else f"📁 {fname}"
-            
-            col1.write(display_text)
-            
-            # 💡 一鍵抹除邏輯
-            if col2.button("徹底抹除", key=f"ultimate_del_{fname}", type="primary"):
+            col1.write(f"🔥 發現殘留核心檔案: {fname}")
+            if col2.button("強制粉碎", key=f"nuke_{fname}", type="primary"):
                 try:
-                    # 1. 刪除實體檔案 (如果檔案存在)
-                    if os.path.exists(fname):
-                        os.remove(fname)
-                    
-                    # 2. 核心動作：從申請紀錄中完全抹除，這樣左側選單才會消失！
-                    req_df = req_df[req_df['申請名稱'] != fname.replace('.csv','')]
-                    req_df.to_csv(req_file, index=False, encoding='utf-8-sig')
-                    
-                    st.toast(f"已徹底清除核心紀錄: {fname}")
+                    # 強制關閉檔案連結並刪除
+                    os.remove(fname)
+                    st.toast(f"已物理粉碎: {fname}")
                     time.sleep(0.5)
                     st.rerun()
                 except Exception as e:
-                    st.error(f"清除失敗: {e}")
-    else:
-        st.success("清爽無比！目前所有舊紀錄與預設檔皆已清除。")
+                    st.error(f"檔案被鎖定中，請重啟服務器後再試，或更換預設檔名。")
+        else:
+            st.success(f"✅ 檢查完畢：{fname} 已不存在於硬碟中。")
+
+    st.info("💡 如果左側選單還有 CCL，請將代碼最上方的 DEFAULT_DB 改成別的名字！")
 
     with tab_live:
         # 第一行：大標題
