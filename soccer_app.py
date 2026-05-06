@@ -334,7 +334,7 @@ with tab2:
     is_admin = False
     is_authenticated = False 
     
-    if "current_db" in st.session_state:
+    iif "current_db" in st.session_state:
         current_active_name = st.session_state.current_db.replace('.csv', '')
         # 檢查是否為 Admin 帳號
         admin_row = req_df[(req_df['申請名稱'] == current_active_name) & (req_df['權限'].str.upper() == 'ADMIN')]
@@ -342,8 +342,16 @@ with tab2:
         if not admin_row.empty:
             is_admin = True
             st.warning("🔐 **偵測到管理員身分：請輸入管理員密鑰以解鎖高級功能**")
-            # 使用唯一 key 確保不會衝突
-            admin_pwd = st.text_input("請輸入管理員密鑰", type="password", key=f"del_file_{fname}")
+            
+            # 💡 修正這裡：key 改成固定的字串，不要用變數 fname
+            admin_pwd = st.text_input("請輸入管理員密鑰", type="password", key="admin_auth_lock")
+            
+            # 驗證密碼
+            if admin_pwd == "alai2026": 
+                is_authenticated = True
+                st.success("🔓 驗證成功：管理操作功能已開啟。")
+            elif admin_pwd != "":
+                st.error("❌ 密鑰錯誤：保護模式已啟動，功能暫時鎖定。")
             
             # --- 💡 在此設定您的專屬密碼 ---
             if admin_pwd == "alai2026": 
