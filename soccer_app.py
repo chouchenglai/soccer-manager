@@ -130,6 +130,10 @@ def show_chat_room():
     except Exception as e:
         st.error(f"討論區異常: {e}")
 
+# 3. 建立標籤頁
+tab_names = ["💰 下單投注", "📝 註冊帳號", "⚽ 即時比分", "📋 歷史記錄", "📊 統計圖表", "💬 討 論 區"]
+tab1, tab2, tab_live, tab3, tab4, tab5 = st.tabs(tab_names)
+
 # --- Tab 1: 主功能區 (具備自動跳轉邏輯) ---
 with tab1:
     if st.session_state.tab_focus == "GoChat":
