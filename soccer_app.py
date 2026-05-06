@@ -303,7 +303,7 @@ else:
 # Tab 2: 帳號管理 (一鍵審核 + 強效防錯版)
 # ==========================================
 with tab2:    
-    t.subheader("🗑️ 快速清理模式", anchor=False)
+    st.subheader("🗑️ 快速清理模式", anchor=False)
     
     # 自動抓取所有 CSV (排除必要檔案)
     all_csv = [f for f in os.listdir('.') if f.endswith('.csv') and f not in [req_file, CHAT_DB, DEFAULT_DB]]
