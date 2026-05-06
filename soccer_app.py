@@ -307,7 +307,7 @@ with tab2:
     st.subheader("🗑️ 系統強制重置中", anchor=False)
     
     # 💡 這一行是關鍵：我們直接手動定義一個清單，裡面只放你想刪除的那個檔案
-    target_to_kill = ["CCL.csv", "CCL"] 
+    target_to_kill = ["soccer_data.csv", "soccer_data"] 
     
     for fname in target_to_kill:
         if os.path.exists(fname):
@@ -325,7 +325,7 @@ with tab2:
         else:
             st.success(f"✅ 檢查完畢：{fname} 已不存在於硬碟中。")
 
-    st.info("💡 如果左側選單還有 CCL，請將代碼最上方的 DEFAULT_DB 改成別的名字！")
+    st.info("💡 如果左側選單還有 soccer_data，請將代碼最上方的 DEFAULT_DB 改成別的名字！")
 
     with tab_live:
         # 第一行：大標題
