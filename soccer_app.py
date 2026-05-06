@@ -144,10 +144,11 @@ if "force_chat_view" not in st.session_state:
     st.session_state.force_chat_view = False
 
 # 2. 如果點了按鈕，我們設定一個標記
-if c_notif1.button("🔍 立即查看", key="notif_go_v9"):
-    st.session_state.last_chat_count = new_msg_count
-    st.session_state.force_chat_view = True # 💡 開啟「強制看討論區」模式
-    st.rerun()
+if c_notif1.button("🔍 立即查看", key="notif_go_v10"):
+            st.session_state.last_chat_count = new_msg_count
+            # 設定索引為 5 (討論區)，讓系統知道要去哪
+            st.session_state.current_tab_index = 5 
+            st.rerun()
 
 # 3. 在下方顯示區域
 if st.session_state.force_chat_view:
@@ -160,8 +161,8 @@ if st.session_state.force_chat_view:
 else:
     # 正常顯示您的 6 個 Tabs
     tab1, tab2, tab_live, tab3, tab4, tab5 = st.tabs(tab_names)
-    with tab1: # ... 原本的邏輯
-    with tab5: show_chat_room()
+        with tab1: # ... 原本的邏輯
+        with tab5: show_chat_room()
 
 # --- Sidebar (側邊欄) ---
 with st.sidebar:
