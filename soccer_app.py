@@ -79,40 +79,49 @@ if os.path.exists(img_path):
     """, unsafe_allow_html=True)
 
 # ==========================================
-# 🚀 全局討論區提醒系統 (用戶關閉後仍可接收管理員通知)
+# 🚀 全局討論區提醒系統 (修正變數未定義版本)
 # ==========================================
 
-# 1. 獲取討論區數據與當前計數
+# 1. 先讀取必要數據
+req_file = "pending_requests.csv"
 current_chat_data = load_chat()
 new_msg_count = len(current_chat_data)
 
+# 2. 🔍 修正關鍵：在這裡先定義當前用戶是否為管理員[cite: 1]
+current_is_admin = False
+if "current_db" in st.session_state and os.path.exists(req_file):
+    try:
+        r_df = pd.read_csv(req_file)
+        curr_name = st.session_state.current_db.replace('.csv', '')
+        # 檢查當前切換的報表名稱是否具備 Admin 權限
+        admin_match = r_df[(r_df['申請名稱'] == curr_name) & (r_df['權限'].str.upper() == 'ADMIN')]
+        if not admin_match.empty:
+            current_is_admin = True
+    except:
+        pass
+
+# 3. 初始化計數器
 if 'last_chat_count' not in st.session_state:
     st.session_state.last_chat_count = new_msg_count
 
-# 2. 側邊欄設定：用戶開關
+# 4. 側邊欄設定：用戶開關
 with st.sidebar:
     st.divider()
-    if is_admin:
-        # 管理員本人永遠開啟，且不顯示開關
+    if current_is_admin:
         show_notif = True
         st.caption("🛡️ 管理員模式：廣播通知已強制開啟")
     else:
-        # 一般用戶可切換開關[cite: 2]
         show_notif = st.toggle("接收討論區新訊息廣播", value=True)
 
-# 3. 檢查是否有新留言[cite: 2]
+# 5. 檢查是否有新留言
 if new_msg_count > st.session_state.last_chat_count:
     latest_msg = current_chat_data.iloc[-1]
     
-    # --- 關鍵點：判斷這則訊息是誰發的？ ---[cite: 2]
     sender_name = str(latest_msg['暱稱']).lower()
     is_sender_admin = sender_name in ['管理員', 'admin']
     
-    # 執行提醒的條件：
-    # (如果是管理員發布的內容 -> 強制跳出) OR (是用戶發布的內容 -> 檢查用戶開關是否開啟)[cite: 2]
+    # 執行提醒判斷：管理員發言強制穿透 OR 用戶開啟開關
     if is_sender_admin or show_notif:
-        
-        # 針對管理員發言設定「尊榮金邊」樣式，區隔一般訊息[cite: 2]
         if is_sender_admin:
             box_style = "background: linear-gradient(90deg, #1E90FF, #00008B); border-left: 10px solid #FFD700;"
             title_text = "🔥 【管理員重要通知】"
@@ -131,11 +140,11 @@ if new_msg_count > st.session_state.last_chat_count:
             <style>@keyframes slideIn {{ from {{ transform: translateY(-20px); opacity: 0; }} to {{ transform: translateY(0); opacity: 1; }} }}</style>
         """, unsafe_allow_html=True)
         
-        c_notif1, c_notif2 = st.columns([2, 8])
-        if c_notif1.button("🔍 立即查看", key="notif_go_final"):
+        c_notif1, c_notif2 = st.columns([2.8, 7.2])
+        if c_notif1.button("🔍 立即查看", key="notif_go_fixed"):
             st.session_state.last_chat_count = new_msg_count
             st.rerun()
-        if c_notif2.button("🆗 我知道了", key="notif_close_final"):
+        if c_notif2.button("🆗 我知道了", key="notif_close_fixed"):
             st.session_state.last_chat_count = new_msg_count
             st.rerun()
 
