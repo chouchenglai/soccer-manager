@@ -9,7 +9,7 @@ from datetime import datetime, timedelta, timezone
 st.set_page_config(page_title="CCL-Soccer 足球賽事管理系統", page_icon="⚽", layout="wide")
 
 # --- 基本設定 ---
-DEFAULT_DB = "soccer_data.csv"
+DEFAULT_DB = "ccl-soccer.csv"
 CHAT_DB = "ccl_chat_log.csv"
 COLUMNS = ["日期", "賽事項目", "類型", "金額", "盈虧金額", "結算總分"]
 CHAT_COLUMNS = ["時間", "暱稱", "內容", "標籤"]
@@ -267,7 +267,7 @@ with tab2:
             admin_pwd = st.text_input("請輸入管理員密鑰", type="password", key="main_admin_pwd")
             
             # --- 💡 在此設定您的專屬密碼 ---
-            if admin_pwd == "Caiyun1031": 
+            if admin_pwd == "alai2026": 
                 is_authenticated = True
                 st.success("🔓 驗證成功：管理操作功能已開啟。")
             elif admin_pwd != "":
