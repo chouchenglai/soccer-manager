@@ -161,8 +161,13 @@ tab_names = ["💰 下單投注", "**📝 註冊帳號**", "⚽ 即時比分", "
 tab1, tab2, tab_live, tab3, tab4, tab5 = st.tabs(tab_names)
 
 with tab5:
-    # 💡 確保這一行前面有縮排！
-    show_chat_room()
+    # 💡 這裡不要寫 show_chat_room()，改寫您原本顯示討論區的代碼
+    # 例如您原本可能是這樣寫的：
+    chat_data = load_chat()
+    st.dataframe(chat_data, use_container_width=True)
+    
+    # 或者是呼叫您正確的函數名稱 (請檢查您代碼上方定義的名稱)
+    # display_chat()
 
 # --- Sidebar (側邊欄) ---
 with st.sidebar:
