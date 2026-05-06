@@ -156,10 +156,6 @@ if new_msg_count > st.session_state.last_chat_count:
             st.session_state.last_chat_count = new_msg_count
             st.rerun()
 
-# --- 接下來是您的標籤定義區 (確保縮排正確) ---
-tab_names = ["💰 下單投注", "**📝 註冊帳號**", "⚽ 即時比分", "📋 歷史記錄", "📊 統計圖表", "💬 討 論 區"]
-tab1, tab2, tab_live, tab3, tab4, tab5 = st.tabs(tab_names)
-
 with tab5:
     # 💡 這裡不要寫 show_chat_room()，改寫您原本顯示討論區的代碼
     # 例如您原本可能是這樣寫的：
