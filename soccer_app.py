@@ -78,6 +78,133 @@ if os.path.exists(img_path):
         <div class="banner-box"><img src="data:image/jpeg;base64,{img_b64}" class="banner-img"></div>
     """, unsafe_allow_html=True)
 
+# ==========================================
+# 🚀 全局討論區提醒系統 
+# ==========================================
+
+# 1. 數據準備
+current_chat_data = load_chat()
+new_msg_count = len(current_chat_data)
+
+if 'last_chat_count' not in st.session_state:
+    st.session_state.last_chat_count = new_msg_count
+
+# 2. 直接在這裡抓取身分權限 (解決報錯關鍵)
+check_is_admin = False
+req_file = "pending_requests.csv"
+if "current_db" in st.session_state and os.path.exists(req_file):
+    try:
+        r_df = pd.read_csv(req_file)
+        curr_name = st.session_state.current_db.replace('.csv', '')
+        admin_match = r_df[(r_df['申請名稱'] == curr_name) & (r_df['權限'].str.upper() == 'ADMIN')]
+        if not admin_match.empty:
+            check_is_admin = True
+    except:
+        pass
+
+# 3. 側邊欄開關 (使用我們剛才算好的 check_is_admin)
+with st.sidebar:
+    st.divider()
+    # 提供開關給用戶，不論是誰都能控制自己的接收狀態
+    show_notif = st.toggle("接收討論區新訊息廣播", value=True)
+    if check_is_admin:
+        st.caption("🛡️ 管理員身分已驗證")
+
+# 4. 提醒邏輯：管理員發言穿透 OR 用戶開啟開關
+if new_msg_count > st.session_state.last_chat_count:
+    latest_msg = current_chat_data.iloc[-1]
+    
+    sender_name = str(latest_msg['暱稱']).lower()
+    is_sender_admin = sender_name in ['管理員', 'admin']
+    
+    if is_sender_admin or show_notif:
+        # 判斷樣式
+        if is_sender_admin:
+            box_style = "background: linear-gradient(90deg, #1E90FF, #00008B); border-left: 10px solid #FFD700;"
+            title_tag = "🔥 【管理員指令】"
+        else:
+            box_style = "background: linear-gradient(90deg, #1E90FF, #00BFFF); border-left: 6px solid #FFD700;"
+            title_tag = "📢 新留言提醒"
+
+        st.markdown(f"""
+            <div style="{box_style} color: white; padding: 15px 20px; border-radius: 8px; 
+                        margin-bottom: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); 
+                        animation: slideIn 0.5s ease-out;">
+                <b>{title_tag}</b><br>
+                <span style="color: #FFD700; font-weight: bold;">{latest_msg['暱稱']}</span> 
+                說：「{latest_msg['內容'][:30]}...」
+            </div>
+            <style>@keyframes slideIn {{ from {{ transform: translateY(-20px); opacity: 0; }} to {{ transform: translateY(0); opacity: 1; }} }}</style>
+        """, unsafe_allow_html=True)
+        
+        c_notif1, c_notif2 = st.columns([2.8, 7.2])
+        # ==========================================
+# 🚀 全局討論區提醒系統 (修正 current_is_admin 報錯版)
+# ==========================================
+
+# 1. 數據準備
+current_chat_data = load_chat()
+new_msg_count = len(current_chat_data)
+
+if 'last_chat_count' not in st.session_state:
+    st.session_state.last_chat_count = new_msg_count
+
+# 2. 直接在這裡抓取身分權限 (解決報錯關鍵)
+check_is_admin = False
+req_file = "pending_requests.csv"
+if "current_db" in st.session_state and os.path.exists(req_file):
+    try:
+        r_df = pd.read_csv(req_file)
+        curr_name = st.session_state.current_db.replace('.csv', '')
+        admin_match = r_df[(r_df['申請名稱'] == curr_name) & (r_df['權限'].str.upper() == 'ADMIN')]
+        if not admin_match.empty:
+            check_is_admin = True
+    except:
+        pass
+
+# 3. 側邊欄開關 (使用我們剛才算好的 check_is_admin)
+with st.sidebar:
+    st.divider()
+    # 提供開關給用戶，不論是誰都能控制自己的接收狀態
+    show_notif = st.toggle("接收討論區新訊息廣播", value=True)
+    if check_is_admin:
+        st.caption("🛡️ 管理員身分已驗證")
+
+# 4. 提醒邏輯：管理員發言穿透 OR 用戶開啟開關
+if new_msg_count > st.session_state.last_chat_count:
+    latest_msg = current_chat_data.iloc[-1]
+    
+    sender_name = str(latest_msg['暱稱']).lower()
+    is_sender_admin = sender_name in ['管理員', 'admin']
+    
+    if is_sender_admin or show_notif:
+        # 判斷樣式
+        if is_sender_admin:
+            box_style = "background: linear-gradient(90deg, #1E90FF, #00008B); border-left: 10px solid #FFD700;"
+            title_tag = "🔥 【管理員指令】"
+        else:
+            box_style = "background: linear-gradient(90deg, #1E90FF, #00BFFF); border-left: 6px solid #FFD700;"
+            title_tag = "📢 新留言提醒"
+
+        st.markdown(f"""
+            <div style="{box_style} color: white; padding: 15px 20px; border-radius: 8px; 
+                        margin-bottom: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); 
+                        animation: slideIn 0.5s ease-out;">
+                <b>{title_tag}</b><br>
+                <span style="color: #FFD700; font-weight: bold;">{latest_msg['暱稱']}</span> 
+                說：「{latest_msg['內容'][:30]}...」
+            </div>
+            <style>@keyframes slideIn {{ from {{ transform: translateY(-20px); opacity: 0; }} to {{ transform: translateY(0); opacity: 1; }} }}</style>
+        """, unsafe_allow_html=True)
+        
+        c_notif1, c_notif2 = st.columns([2.8, 7.2])
+        if c_notif1.button("🔍 立即查看", key="notif_go_v6"):
+            st.session_state.last_chat_count = new_msg_count
+            st.rerun()
+        if c_notif2.button("🆗 我知道了", key="notif_close_v6"):
+            st.session_state.last_chat_count = new_msg_count
+            st.rerun()
+
 # --- Sidebar (側邊欄) ---
 with st.sidebar:
     st.header("💰 資金與統計中心")
