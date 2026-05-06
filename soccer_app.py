@@ -79,61 +79,51 @@ if os.path.exists(img_path):
     """, unsafe_allow_html=True)
 
 # ==========================================
-# 🚀 全局討論區提醒系統 (修正變數未定義版本)
+# 🚀 廣播系統：管理員訊息強制穿透版
 # ==========================================
 
-# 1. 先讀取必要數據
-req_file = "pending_requests.csv"
+# 1. 側邊欄：不論是誰，都提供「廣播開關」
+with st.sidebar:
+    st.divider()
+    # 這裡將 show_notif 的主控權還給管理員本人
+    show_notif = st.toggle("接收討論區新訊息廣播", value=True, help="開啟後將接收通知。若為管理員訊息，則無視此開關強制提醒。")
+    if current_is_admin:
+        st.caption("🛡️ 管理員身分已驗證")
+
+# 2. 數據獲取與計數比對
 current_chat_data = load_chat()
 new_msg_count = len(current_chat_data)
 
-# 2. 🔍 修正關鍵：在這裡先定義當前用戶是否為管理員[cite: 1]
-current_is_admin = False
-if "current_db" in st.session_state and os.path.exists(req_file):
-    try:
-        r_df = pd.read_csv(req_file)
-        curr_name = st.session_state.current_db.replace('.csv', '')
-        # 檢查當前切換的報表名稱是否具備 Admin 權限
-        admin_match = r_df[(r_df['申請名稱'] == curr_name) & (r_df['權限'].str.upper() == 'ADMIN')]
-        if not admin_match.empty:
-            current_is_admin = True
-    except:
-        pass
-
-# 3. 初始化計數器
 if 'last_chat_count' not in st.session_state:
     st.session_state.last_chat_count = new_msg_count
 
-# 4. 側邊欄設定：用戶開關
-with st.sidebar:
-    st.divider()
-    if current_is_admin:
-        show_notif = True
-        st.caption("🛡️ 管理員模式：廣播通知已強制開啟")
-    else:
-        show_notif = st.toggle("接收討論區新訊息廣播", value=True)
-
-# 5. 檢查是否有新留言
+# 3. 核心邏輯判斷
 if new_msg_count > st.session_state.last_chat_count:
     latest_msg = current_chat_data.iloc[-1]
     
+    # 判斷發言者身分
     sender_name = str(latest_msg['暱稱']).lower()
     is_sender_admin = sender_name in ['管理員', 'admin']
     
-    # 執行提醒判斷：管理員發言強制穿透 OR 用戶開啟開關
+    # --- 💡 這裡就是您定義的正確邏輯 ---
+    # 觸發提醒的情況只有兩種：
+    # A. 這條訊息是管理員發的 (強制穿透)
+    # B. 用戶(包含管理員自己)開啟了接收開關 AND 這是一般訊息
     if is_sender_admin or show_notif:
+        
+        # 樣式區分：管理員發言用尊榮深藍色，一般人發言用亮藍色[cite: 1]
         if is_sender_admin:
             box_style = "background: linear-gradient(90deg, #1E90FF, #00008B); border-left: 10px solid #FFD700;"
-            title_text = "🔥 【管理員重要通知】"
+            title_tag = "🔥 【管理員指令】"
         else:
             box_style = "background: linear-gradient(90deg, #1E90FF, #00BFFF); border-left: 6px solid #FFD700;"
-            title_text = "📢 新留言提醒"
+            title_tag = "📢 新留言提醒"
 
         st.markdown(f"""
             <div style="{box_style} color: white; padding: 15px 20px; border-radius: 8px; 
                         margin-bottom: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); 
                         animation: slideIn 0.5s ease-out;">
-                <b>{title_text}</b><br>
+                <b>{title_tag}</b><br>
                 <span style="color: #FFD700; font-weight: bold;">{latest_msg['暱稱']}</span> 
                 說：「{latest_msg['內容'][:30]}...」
             </div>
@@ -141,15 +131,12 @@ if new_msg_count > st.session_state.last_chat_count:
         """, unsafe_allow_html=True)
         
         c_notif1, c_notif2 = st.columns([2.8, 7.2])
-        if c_notif1.button("🔍 立即查看", key="notif_go_fixed"):
+        if c_notif1.button("🔍 立即查看", key="notif_go_final_v5"):
             st.session_state.last_chat_count = new_msg_count
             st.rerun()
-        if c_notif2.button("🆗 我知道了", key="notif_close_fixed"):
+        if c_notif2.button("🆗 我知道了", key="notif_close_final_v5"):
             st.session_state.last_chat_count = new_msg_count
             st.rerun()
-
-# --- 接下來才是您原本的標籤頁宣告 ---
-# tab1, tab2, tab_live... = st.tabs(...)
 
 # --- Sidebar (側邊欄) ---
 with st.sidebar:
