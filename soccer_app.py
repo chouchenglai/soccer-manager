@@ -305,190 +305,29 @@ else:
 # Tab 2: 帳號管理 (一鍵審核 + 強效防錯版)
 # ==========================================
 with tab2:    
-    st.markdown("<h2 style='color:#1E90FF; font-weight:bold;'>📂 登錄會員管理中心</h2>", unsafe_allow_html=True)
-    st.markdown("<hr style='border: 1px solid #1E90FF; margin-top: -10px;'>", unsafe_allow_html=True)
+    # --- 🧹 終極空白清理版 (不讀取任何紀錄) ---
+    st.subheader("🗑️ 系統強制重置中", anchor=False)
     
-    # --- 1. 初始化檔案與欄位 ---
-    req_file = "pending_requests.csv"
-    req_cols = ["申請編號", "申請日期", "申請名稱", "備註事項", "審核結果", "權限"]
-
-    if os.path.exists(req_file):
-        try:
-            req_df = pd.read_csv(req_file, dtype={'申請編號': str})
-            if "權限" not in req_df.columns:
-                req_df["權限"] = "User"
-                req_df.to_csv(req_file, index=False, encoding='utf-8-sig')
-        except Exception:
-            req_df = pd.DataFrame(columns=req_cols)
-    else:
-        req_df = pd.DataFrame(columns=req_cols)
-
-    # --- 關鍵：管理員身分識別 (不分大小寫) ---
-    is_admin = False
-    if "current_db" in st.session_state:
-        current_active_name = st.session_state.current_db.replace('.csv', '')
-        # 只要 CSV 裡的權限是 ADMIN/Admin/admin 都算通過
-        admin_check = req_df[(req_df['申請名稱'] == current_active_name) & (req_df['權限'].str.upper() == 'ADMIN')]
-        if not admin_check.empty:
-            is_admin = True
-
-       # --- 2. 關鍵：管理員身分識別與強制密碼校驗 ---
-    is_admin = False
-    is_authenticated = False 
+    # 💡 這一行是關鍵：我們直接手動定義一個清單，裡面只放你想刪除的那個檔案
+    target_to_kill = ["soccer_data.csv", "soccer_data.csv"] 
     
-    if "current_db" in st.session_state:
-        current_active_name = st.session_state.current_db.replace('.csv', '')
-        # 檢查是否為 Admin 帳號 (不分大小寫)
-        admin_row = req_df[(req_df['申請名稱'] == current_active_name) & (req_df['權限'].str.upper() == 'ADMIN')]
-        
-        # 💡 只有當查詢結果不為空時，才執行後續動作
-        if not admin_row.empty:
-            is_admin = True
-            st.warning("🔐 **偵測到管理員身分：請輸入管理員密鑰以解鎖高級功能**")
-            
-            # 💡 使用固定 Key 避免報錯
-            admin_pwd = st.text_input("請輸入管理員密鑰", type="password", key="admin_auth_lock")
-            
-            # 驗證密碼
-            if admin_pwd == "Caiyun1031": 
-                is_authenticated = True
-                st.success("🔓 驗證成功：管理操作功能已開啟。")
-            elif admin_pwd != "":
-                st.error("❌ 密鑰錯誤：保護模式已啟動，功能暫時鎖定。")
-
-    # --- 3. 區塊 A：提交新帳號申請 ---
-    st.subheader("提交新帳號申請", anchor=False)
-    new_name = st.text_input("請輸入您要創建的帳號名稱", placeholder="例如：Visitors")
-    
-    # 【視覺提醒】
-    st.markdown("<small style='color:red; font-weight:bold;'>⚠️ 系統提醒：名稱僅限「英文與數字」，請勿使用中文或特殊符號，以免檔案建立失敗。</small>", unsafe_allow_html=True)
-    
-    with st.expander("**📜 點擊展開：CCL-Soccer 用戶服務協議與免責聲明**"):
-        st.info("請詳細閱讀以下條款：")
-        st.write("""
-        1. 本系統僅供個人賽事數據記錄使用，不具備任何投注功能。
-        2. 用戶需自行承擔數據分析之風險，本平臺不保證任何獲利。
-        3. 申請即表示您同意系統收集您的帳號名稱以進行權限管理。
-        4. 嚴禁任何違反當地法律之行為。
-        """)
-        is_agree = st.checkbox("我已閱讀並同意上述全部條款")
-
-    # 【按鈕邏輯：中文攔截防線】
-    if st.button("確認送出申請"):
-        # 偵測是否包含中文字元
-        has_chinese = any('\u4e00' <= char <= '\u9fff' for char in new_name)
-        
-        if not new_name:
-            st.warning("請先輸入名稱再送出。")
-        elif has_chinese:
-            st.error("❌ 建立失敗：報表名稱不可包含中文字，請修改為純英文或數字名稱。")[cite: 1]
-        elif not is_agree:
-            st.error("❌ 請先勾選「同意服務協議」方可送出申請。")
+    for fname in target_to_kill:
+        if os.path.exists(fname):
+            col1, col2 = st.columns([3, 1])
+            col1.write(f"🔥 發現殘留核心檔案: {fname}")
+            if col2.button("強制粉碎", key=f"nuke_{fname}", type="primary"):
+                try:
+                    # 強制關閉檔案連結並刪除
+                    os.remove(fname)
+                    st.toast(f"已物理粉碎: {fname}")
+                    time.sleep(0.5)
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"檔案被鎖定中，請重啟服務器後再試，或更換預設檔名。")
         else:
-            # 通過校驗，執行建立
-            new_id = f"{len(req_df) + 1:04d}"
-            today_str = datetime.now().strftime("%Y年%m月%d日")
-            target_csv = f"{new_name}.csv" if not new_name.endswith(".csv") else new_name
-            
-            # 建立個人檔案並寫入免責首行
-            with open(target_csv, "w", encoding="utf-8-sig") as f:
-                f.write("以下名單資料，表示同意免責聲明全部條款\n")
-                f.write(f"保存會員資料：申請編號【{new_id}】、申請名稱【{new_name}】、申請日期【{today_str}】\n")
-            
-            pd.DataFrame(columns=COLUMNS).to_csv(target_csv, index=False, encoding='utf-8-sig', mode='a')
-            
-            # 更新總表 (預設權限為 User)
-            new_data = {
-                "申請編號": new_id, "申請日期": today_str, "申請名稱": new_name,
-                "備註事項": "已簽署免責聲明", "審核結果": "⏳ 審核進行中", "權限": "User"
-            }
-            updated_df = pd.concat([req_df, pd.DataFrame([new_data])], ignore_index=True)
-            updated_df.to_csv(req_file, index=False, encoding='utf-8-sig')
-            
-            st.success(f"✅ 申請已成功！編號：{new_id}")
-            time.sleep(1)
-            st.rerun()
+            st.success(f"✅ 檢查完畢：{fname} 已不存在於硬碟中。")
 
-    st.divider()
-
-    # --- 4. 區塊 B：審核進度詳情 (管理員互動版) ---[cite: 1]       
-    st.subheader("帳號審核進度詳情", anchor=False)
-    st.caption("💡 溫馨提示：審核進度需要24～48小時才能完成，伺服器建立檔案後才能啟用服務。")
-           
-    if not req_df.empty:
-        if is_admin:
-            # 管理員視角：顯示可操作的列表
-            h1, h2, h3, h4 = st.columns([1, 2, 2, 1.5])
-            h1.write("**編號**")
-            h2.write("**名稱**")
-            h3.write("**狀態**")
-            h4.write("**管理操作**")
-            st.divider()
-
-            for idx, row in req_df.iloc[::-1].iterrows():
-                c1, c2, c3, c4 = st.columns([1, 2, 2, 1.5])
-                c1.write(row["申請編號"])
-                c2.write(row["申請名稱"])
-                
-                status = row["審核結果"]
-                if "進行中" in status:
-                    c3.warning(status)
-                    # 一鍵通過按鈕[cite: 1]
-                    if c4.button("✅ 通過", key=f"approve_{idx}"):
-                        req_df.at[idx, "審核結果"] = "通過"
-                        req_df.to_csv(req_file, index=False, encoding='utf-8-sig')
-                        st.toast(f"已核准 {row['申請名稱']}！")
-                        time.sleep(1)
-                        st.rerun()
-                else:
-                    c3.success(status)
-                    c4.write("---")
-        else:
-            # 一般用戶視角：唯讀表格
-            st.dataframe(req_df.iloc[::-1], use_container_width=True, hide_index=True)
-    else:
-        st.info("目前尚無申請記錄。")
-
-    st.divider()
-
-    # --- 5. 區塊 C：已授權帳號清單 (具備密碼保護) ---
-    st.subheader("已授權帳號清單", anchor=False)
-    st.caption("💡 溫馨提示：點擊啟動後將跳轉至主頁。")
-    
-    physical_files = [f for f in os.listdir('.') if f.endswith('.csv') and f not in [req_file, CHAT_DB]]
-    passed_names = req_df[req_df['審核結果'].str.contains("過關|通過|OK", na=False)]['申請名稱'].tolist()
-    display_targets = [f for f in physical_files if f == DEFAULT_DB or f.replace('.csv','') in passed_names]
-
-    if display_targets:
-        for fname in display_targets:
-            if fname == req_file: continue
-            
-            col1, col2, col3 = st.columns([2.5, 1, 1])
-            
-            with col1:
-                st.markdown(f"📁 **{fname}**" + (" <span style='color:gray;'>(預設)</span>" if fname == DEFAULT_DB else ""), unsafe_allow_html=True)
-            
-            with col2:
-                st.link_button("🚀 啟動", "https://chouchenglai.streamlit.app/", use_container_width=True)
-            
-            with col3:
-                # 💡 只有當「是管理員」且「密鑰正確」且「不是預設檔」時，才顯示刪除按鈕
-                if is_admin and is_authenticated and fname != DEFAULT_DB:
-                    if st.button("🗑️ 刪除", key=f"del_file_{fname}", use_container_width=True):
-                        try:
-                            # 1. 物理刪除檔案
-                            os.remove(fname)
-                            # 2. 從申請紀錄中移除該帳號
-                            req_df = req_df[req_df['申請名稱'] != fname.replace('.csv','')]
-                            req_df.to_csv(req_file, index=False, encoding='utf-8-sig')
-                            # 3. 提示並刷新
-                            st.toast(f"✅ 檔案 {fname} 已安全移除")
-                            time.sleep(0.5)
-                            st.rerun()
-                        except Exception as e:
-                            st.error(f"刪除失敗: {e}")
-    else:
-        st.info("暫無已授權之清單。")
+    st.info("💡 如果左側選單還有 soccer_data.csv，請將代碼最上方的 DEFAULT_DB 改成別的名字！")
 
     with tab_live:
         # 第一行：大標題
