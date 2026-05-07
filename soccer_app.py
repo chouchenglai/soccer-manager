@@ -9,7 +9,7 @@ from datetime import datetime, timedelta, timezone
 st.set_page_config(page_title="CCL-Soccer 足球賽事管理系統", page_icon="⚽", layout="wide")
 
 # --- 基本設定 ---
-DEFAULT_DB = "ccl-soccer.csv"
+DEFAULT_DB = "soccer_data.csv"
 CHAT_DB = "ccl_chat_log.csv"
 COLUMNS = ["日期", "賽事項目", "類型", "金額", "盈虧金額", "結算總分"]
 CHAT_COLUMNS = ["時間", "暱稱", "內容", "標籤"]
@@ -303,33 +303,29 @@ else:
 # Tab 2: 帳號管理 (一鍵審核 + 強效防錯版)
 # ==========================================
 with tab2:    
-    # --- 🧹 臨時清理專用代碼 (清理完請換回原版) ---
-    st.subheader("🗑️ 快速清理模式", anchor=False)
+    # --- 🧹 終極空白清理版 (不讀取任何紀錄) ---
+    st.subheader("🗑️ 系統強制重置中", anchor=False)
     
-    # 自動抓取所有 CSV (排除必要檔案)
-    all_csv = [f for f in os.listdir('.') if f.endswith('.csv') and f not in [req_file, CHAT_DB, DEFAULT_DB]]
+    # 💡 這一行是關鍵：我們直接手動定義一個清單，裡面只放你想刪除的那個檔案
+    target_to_kill = ["pending_requests.csv", "pending_requests.csv"] 
     
-    if all_csv:
-        for fname in all_csv:
+    for fname in target_to_kill:
+        if os.path.exists(fname):
             col1, col2 = st.columns([3, 1])
-            col1.write(f"📁 {fname}")
-            # 💡 這裡完全不設限，點擊就刪除檔案 + 抹除申請紀錄
-            if col2.button("徹底刪除", key=f"quick_del_{fname}", type="primary"):
+            col1.write(f"🔥 發現殘留核心檔案: {fname}")
+            if col2.button("強制粉碎", key=f"nuke_{fname}", type="primary"):
                 try:
-                    # 1. 刪除硬碟檔案
-                    if os.path.exists(fname):
-                        os.remove(fname)
-                    # 2. 抹除 pending_requests.csv 裡的紀錄 (這是左側選單消失的關鍵)
-                    req_df = req_df[req_df['申請名稱'] != fname.replace('.csv','')]
-                    req_df.to_csv(req_file, index=False, encoding='utf-8-sig')
-                    
-                    st.toast(f"已清除: {fname}")
+                    # 強制關閉檔案連結並刪除
+                    os.remove(fname)
+                    st.toast(f"已物理粉碎: {fname}")
                     time.sleep(0.5)
                     st.rerun()
-                except:
-                    st.error("刪除失敗")
-    else:
-        st.success("清理乾淨了！目前無舊報表。")
+                except Exception as e:
+                    st.error(f"檔案被鎖定中，請重啟服務器後再試，或更換預設檔名。")
+        else:
+            st.success(f"✅ 檢查完畢：{fname} 已不存在於硬碟中。")
+
+    st.info("💡 如果左側選單還有 pending_requests.csv，請將代碼最上方的 DEFAULT_DB 改成別的名字！")
 
     with tab_live:
         # 第一行：大標題
