@@ -55,6 +55,33 @@ def get_grouped_reports():
             
     return groups
 
+# --- 2. 側邊欄雙級導航 UI ---
+def sidebar_advanced_menu():
+    st.sidebar.markdown(f"<h2 style='color:#1E90FF;'>🏆 CCL-Soccer</h2>", unsafe_allow_html=True)
+    
+    # 獲取自動分組數據
+    all_groups = get_grouped_reports()
+    
+    # 第一級：選擇組別
+    available_groups = [k for k, v in all_groups.items() if len(v) > 0]
+    selected_group = st.sidebar.radio("📁 帳號分組索引：", available_groups, horizontal=False)
+    
+    # 第二級：在該組別內搜尋/選擇
+    group_files = all_groups[selected_group]
+    
+    selected_db = st.sidebar.selectbox(
+        f"👤 選擇 {selected_group} 內的帳號：",
+        options=group_files,
+        index=0,
+        help="輸入關鍵字可快速過濾",
+        key="pro_db_selector"
+    )
+    
+    st.sidebar.divider()
+    st.sidebar.caption(f"🚀 系統已優化：支持千人級別自動檢索")
+    
+    return selected_db
+
 def ensure_files():
     if not os.path.exists(DEFAULT_DB):
         pd.DataFrame(columns=COLUMNS).to_csv(DEFAULT_DB, index=False)
