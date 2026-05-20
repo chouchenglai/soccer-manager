@@ -474,110 +474,126 @@ for i in range(1, st.session_state.extra_match_count + 1):
         col_win, col_lose = st.columns(2)
 
         # =====================
-        # 過關
+# 過關
+# =====================
+
+if col_win.button(
+    f"✅ 第{i}場過關",
+    key=f"win_{i}"
+):
+
+    if match_info.strip() == "":
+
+        st.warning(
+            f"請先輸入第{i}場賽事資訊"
+        )
+
+    else:
+
+        latest_df = load_data()
+
+        latest_balance = int(
+            latest_df["結算總分"].iloc[-1]
+        )
+
+        # 只增加盈利
+        new_balance = (
+            latest_balance + int(gain_amt)
+        )
+
+        new_row = {
+
+            "日期": get_now_time(),
+
+            "賽事項目": match_info,
+
+            "類型": "贏 (+)",
+
+            # 顯示下注本金
+            "金額": int(bet_amt),
+
+            # 顯示真正盈利
+            "盈虧金額": int(gain_amt),
+
+            "結算總分": new_balance
+        }
+
+        updated_df = pd.concat(
+            [
+                latest_df,
+                pd.DataFrame([new_row])
+            ],
+            ignore_index=True
+        )
+
+        save_data(updated_df)
+
+        st.success(
+            f"第{i}場已記錄為過關"
+        )
+
+        st.rerun()
+
         # =====================
+# 未過關
+# =====================
 
-        if col_win.button(
-            f"✅ 第{i}場過關",
-            key=f"win_{i}"
-        ):
+if col_lose.button(
+    f"❌ 第{i}場未過關",
+    key=f"lose_{i}"
+):
 
-            if match_info.strip() == "":
+    if match_info.strip() == "":
 
-                st.warning(
-                    f"請先輸入第{i}場賽事資訊"
-                )
+        st.warning(
+            f"請先輸入第{i}場賽事資訊"
+        )
 
-            else:
+    else:
 
-                latest_df = load_data()
+        latest_df = load_data()
 
-                latest_balance = int(
-                    latest_df["結算總分"].iloc[-1]
-                )
+        latest_balance = int(
+            latest_df["結算總分"].iloc[-1]
+        )
 
-                new_balance = (
-                    latest_balance + int(gain_amt)
-                )
+        # 扣除本金
+        new_balance = (
+            latest_balance - int(bet_amt)
+        )
 
-                new_row = {
-                    "日期": get_now_time(),
-                    "賽事項目": match_info,
-                    "類型": "贏 (+)",
-                    "金額": int(gain_amt),
-                    "盈虧金額": int(gain_amt),
-                    "結算總分": new_balance
-                }
+        new_row = {
 
-                updated_df = pd.concat(
-                    [
-                        latest_df,
-                        pd.DataFrame([new_row])
-                    ],
-                    ignore_index=True
-                )
+            "日期": get_now_time(),
 
-                save_data(updated_df)
+            "賽事項目": match_info,
 
-                st.success(
-                    f"第{i}場已記錄為過關"
-                )
+            "類型": "輸 (-)",
 
-                st.rerun()
+            # 顯示本金
+            "金額": int(bet_amt),
 
-        # =====================
-        # 未過關
-        # =====================
+            # 顯示負盈利
+            "盈虧金額": -int(bet_amt),
 
-        if col_lose.button(
-            f"❌ 第{i}場未過關",
-            key=f"lose_{i}"
-        ):
+            "結算總分": new_balance
+        }
 
-            if match_info.strip() == "":
+        updated_df = pd.concat(
+            [
+                latest_df,
+                pd.DataFrame([new_row])
+            ],
+            ignore_index=True
+        )
 
-                st.warning(
-                    f"請先輸入第{i}場賽事資訊"
-                )
+        save_data(updated_df)
 
-            else:
+        st.error(
+            f"第{i}場已記錄為未過關"
+        )
 
-                latest_df = load_data()
-
-                latest_balance = int(
-                    latest_df["結算總分"].iloc[-1]
-                )
-
-                new_balance = (
-                    latest_balance - int(bet_amt)
-                )
-
-                new_row = {
-                    "日期": get_now_time(),
-                    "賽事項目": match_info,
-                    "類型": "輸 (-)",
-                    "金額": int(bet_amt),
-                    "盈虧金額": -int(bet_amt),
-                    "結算總分": new_balance
-                }
-
-                updated_df = pd.concat(
-                    [
-                        latest_df,
-                        pd.DataFrame([new_row])
-                    ],
-                    ignore_index=True
-                )
-
-                save_data(updated_df)
-
-                st.error(
-                    f"第{i}場已記錄為未過關"
-                )
-
-                st.rerun()
-
-    st.divider()
+        st.rerun()
 
 # =========================
 # 更多賽事
