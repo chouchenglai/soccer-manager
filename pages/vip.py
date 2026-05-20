@@ -132,15 +132,14 @@ html, body, [class*="css"]  {
 .buy-btn{
     width:100%;
     padding:14px;
+    border:none;
     border-radius:15px;
     background:linear-gradient(90deg,#1565c0,#1e88e5);
-    color:white !important;
+    color:white;
     font-size:1.05rem;
     font-weight:900;
     margin-top:18px;
     cursor:pointer;
-    display:block;
-    text-align:center;
 }
 
 .buy-btn:hover{
@@ -404,16 +403,10 @@ with col1:
     ✔ 雲端保存報表  
     ✔ 模擬倉永久保存  
     ✔ 會員統計功能  
-    
-    <a href="https://www.paypal.com/ncp/payment/FJG3KFN3T7JRG"
-   target="_blank"
-   style="text-decoration:none;">
 
     <button class="buy-btn">
     立即升級
     </button>
-
-</a>
 
     </div>
 
@@ -539,7 +532,7 @@ with col4:
 
 st.markdown("<br><br>", unsafe_allow_html=True)
 
-st.info("💡 PayPal Pte. Ltd. 提供付款功能，現在架構中，即將推出新服務，敬請關注期待！。")
+st.info("💡 PayPal Pte. Ltd. 提供付款功能，結帳時自動以美元結算！。")
 
 st.markdown("""
 
