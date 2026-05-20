@@ -404,9 +404,15 @@ with col1:
     ✔ 模擬倉永久保存  
     ✔ 會員統計功能  
 
+    <a href="https://www.paypal.com/ncp/payment/FJG3KFN3T7JRG"
+   target="_blank"
+   style="text-decoration:none;">
+
     <button class="buy-btn">
     立即升級
     </button>
+
+</a>
 
     </div>
 
