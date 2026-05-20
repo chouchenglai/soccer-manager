@@ -532,7 +532,7 @@ with col4:
 
 st.markdown("<br><br>", unsafe_allow_html=True)
 
-st.info("💡 綠界金流付款功能，可於後續直接串接至本頁按鈕。")
+st.info("💡 PayPal Pte. Ltd. 提供付款功能，結帳時自動以美元結算！。")
 
 st.markdown("""
 
