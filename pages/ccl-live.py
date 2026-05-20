@@ -498,8 +498,7 @@ if col_win.button(
 
         # 只增加盈利
         new_balance = (
-            latest_balance + int(gain_amt)
-        )
+    latest_balance - int(gain_amt)
 
         new_row = {
 
@@ -574,7 +573,7 @@ if col_lose.button(
             "金額": int(bet_amt),
 
             # 顯示負盈利
-            "盈虧金額": -int(bet_amt),
+            "盈虧金額": -int(gain_amt),
 
             "結算總分": new_balance
         }
