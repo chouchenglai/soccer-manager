@@ -132,14 +132,15 @@ html, body, [class*="css"]  {
 .buy-btn{
     width:100%;
     padding:14px;
-    border:none;
     border-radius:15px;
     background:linear-gradient(90deg,#1565c0,#1e88e5);
-    color:white;
+    color:white !important;
     font-size:1.05rem;
     font-weight:900;
     margin-top:18px;
     cursor:pointer;
+    display:block;
+    text-align:center;
 }
 
 .buy-btn:hover{
@@ -403,7 +404,7 @@ with col1:
     ✔ 雲端保存報表  
     ✔ 模擬倉永久保存  
     ✔ 會員統計功能  
-
+    
     <a href="https://www.paypal.com/ncp/payment/FJG3KFN3T7JRG"
    target="_blank"
    style="text-decoration:none;">
