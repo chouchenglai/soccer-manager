@@ -9,7 +9,7 @@ from datetime import datetime, timedelta, timezone
 st.set_page_config(page_title="CCL-Live 體育賽事管理系統", page_icon="⚽", layout="wide")
 
 # --- 基本設定 ---
-DEFAULT_DB = "ccl-live.csv"
+DEFAULT_DB = "ccl-soccer.csv"
 CHAT_DB = "ccl_chat_log.csv"
 COLUMNS = ["日期", "賽事項目", "類型", "金額", "盈虧金額", "結算總分"]
 CHAT_COLUMNS = ["時間", "暱稱", "內容", "標籤"]
@@ -257,50 +257,7 @@ else:
     </style>
     """, unsafe_allow_html=True)  
 
-# --- 💡 專業 CSS 樣式：本站專屬藍色按鈕 (無下劃線版) ---
-st.markdown("""
-<style>
-    .vip-btn {
-        background: linear-gradient(135deg, #1e40af, #0f172a); /* 深邃標誌藍漸層 */
-        color: white !important;
-        padding: 10px 22px;
-        text-align: center;
-        text-decoration: none !important; /* 💡 徹底移除下劃線 */
-        display: inline-block;
-        font-size: 16px;
-        font-weight: bold;
-        border-radius: 50px; /* 圓角改為膠囊型，更有現代感 */
-        border: none;
-        box-shadow: 0 4px 15px rgba(30, 64, 175, 0.3);
-        transition: 0.3s all ease;
-        cursor: pointer;
-    }
-    .vip-btn:hover {
-        background: linear-gradient(135deg, #2563eb, #1e40af); /* 懸停時變亮 */
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
-        color: white !important;
-        text-decoration: none !important; /* 確保懸停也沒有下劃線 */
-    }
-</style>
-""", unsafe_allow_html=True)
-
-# --- 1. 標題與專業按鈕並排區塊 ---
-col_title, col_pro = st.columns([4, 1.2])
-
-with col_pro:
-    # 這裡的 class="vip-btn" 會套用上面的樣式
-    st.markdown(f"""
-        <div style="text-align: right; padding-top: 15px;">
-            <a href="/vip" target="_self" class="vip-btn">
-                升 級 帳 號  P R O
-            </a>
-        </div>
-    """, unsafe_allow_html=True)
-
-st.divider()
-
-col1, col2 = st.columns([1,1])
+col1, col2 = st.columns(2)
 
 with col1:
     if st.button("🏠 返回首頁"):
@@ -310,96 +267,14 @@ with col2:
     if st.button("🎯 返回主平台"):
         st.switch_page("pages/ccl-live.py")
 
-st.write("")
+# 下單投注
 
-st.components.v1.html("""
-<style>
-    #clock-container {
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
+    st.write("")
+    st.markdown(
+    '<div id="top_page"></div>',
+    unsafe_allow_html=True
+)
 
-    padding-left: 22px;
-
-    background: linear-gradient(
-        90deg,
-        #f8f9fb,
-        #eef3ff
-    );
-
-        padding: 10px 18px;
-
-        border-radius: 10px;
-
-        border-left: 6px solid #ff4b4b;
-
-        font-family: sans-serif;
-
-        margin-top: 5px;
-        margin-bottom: 15px;
-
-        box-shadow:
-            0 3px 10px rgba(0,0,0,0.08);
-    }
-
-    #clock {
-        font-size: 16px;
-        font-weight: 700;
-        color: #1e2a44;
-        letter-spacing: 1px;
-    }
-
-    .prefix {
-        font-size: 14px;
-        color: #666;
-        margin-right: 12px;
-    }
-</style>
-
-<div id="clock-container">
-
-    <span class="prefix">
-        台北標準時間 (GMT+8)：
-    </span>
-
-    <span id="clock">
-        載入中...
-    </span>
-
-</div>
-
-<script>
-
-function updateClock() {
-
-    const now = new Date();
-
-    const hh = String(
-        now.getHours()
-    ).padStart(2, '0');
-
-    const mm = String(
-        now.getMinutes()
-    ).padStart(2, '0');
-
-    const ss = String(
-        now.getSeconds()
-    ).padStart(2, '0');
-
-    document.getElementById('clock')
-        .textContent =
-        now.toLocaleDateString()
-        + " "
-        + hh + ":" + mm + ":" + ss;
-}
-
-setInterval(updateClock, 1000);
-
-updateClock();
-
-</script>
-""", height=65)
-       
     try:
         balance = int(main_df["結算總分"].iloc[-1])
 
@@ -483,8 +358,6 @@ updateClock();
 # =========================
 # 賽事資訊
 # =========================
-
-st.info("💡 提示：升級帳號前，使用模擬倉操作，數據將不會被保留，升級帳號完成，伺服器建檔後，才能建立報表保存數據！")
 
 st.markdown("## 🏆 賽事資訊")
 
