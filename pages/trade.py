@@ -402,8 +402,6 @@ updateClock();
 
 st.info("💡 提示：升級帳號前，使用模擬倉操作，數據將不會被保留，升級帳號完成，伺服器建檔後，才能建立報表保存數據！")
        
-with tab1:  # 下單投注
-
     st.markdown(
     '<div id="top_page"></div>',
     unsafe_allow_html=True
