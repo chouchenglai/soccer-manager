@@ -257,7 +257,7 @@ else:
     </style>
     """, unsafe_allow_html=True)  
 
-col1, col2 = st.columns(2)
+col1, col2 = st.columns([1,1])
 
 with col1:
     if st.button("🏠 返回首頁"):
@@ -267,91 +267,95 @@ with col2:
     if st.button("🎯 返回主平台"):
         st.switch_page("pages/ccl-live.py")
 
-# 下單投注
+st.write("")
 
-    st.write("")
-    st.markdown(
-    '<div id="top_page"></div>',
-    unsafe_allow_html=True
-)
+st.components.v1.html("""
+<style>
+    #clock-container {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
 
-    try:
-        balance = int(main_df["結算總分"].iloc[-1])
+    padding-left: 22px;
 
-    except:
-        balance = 0
+    background: linear-gradient(
+        90deg,
+        #f8f9fb,
+        #eef3ff
+    );
 
-    # =========================
-    # 台北時間
-    # =========================
+        padding: 10px 18px;
 
-    st.components.v1.html("""
-        <style>
-            #clock-container {
-                display: flex;
-                align-items: center;
-                background-color: #f8f9fb;
-                padding: 8px 15px;
-                border-radius: 6px;
-                border-left: 5px solid #ff4b4b;
-                font-family: sans-serif;
-                margin-bottom: 5px;
-            }
+        border-radius: 10px;
 
-            #clock {
-                font-size: 15px;
-                font-weight: 600;
-                color: #31333f;
-                letter-spacing: 0.8px;
-            }
+        border-left: 6px solid #ff4b4b;
 
-            .prefix {
-                font-size: 14px;
-                color: #666;
-                margin-right: 12px;
-            }
-        </style>
+        font-family: sans-serif;
 
-        <div id="clock-container">
-            <span class="prefix">
-                台北標準時間 (GMT+8) :
-            </span>
+        margin-top: 5px;
+        margin-bottom: 15px;
 
-            <span id="clock">
-                載入中...
-            </span>
-        </div>
+        box-shadow:
+            0 3px 10px rgba(0,0,0,0.08);
+    }
 
-        <script>
-            function updateClock() {
+    #clock {
+        font-size: 16px;
+        font-weight: 700;
+        color: #1e2a44;
+        letter-spacing: 1px;
+    }
 
-                const now = new Date();
+    .prefix {
+        font-size: 14px;
+        color: #666;
+        margin-right: 12px;
+    }
+</style>
 
-                const hh = String(
-                    now.getHours()
-                ).padStart(2, '0');
+<div id="clock-container">
 
-                const mm = String(
-                    now.getMinutes()
-                ).padStart(2, '0');
+    <span class="prefix">
+        台北標準時間 (GMT+8)：
+    </span>
 
-                const ss = String(
-                    now.getSeconds()
-                ).padStart(2, '0');
+    <span id="clock">
+        載入中...
+    </span>
 
-                document.getElementById('clock')
-                    .textContent =
-                    now.toLocaleDateString()
-                    + " "
-                    + hh + ":" + mm + ":" + ss;
-            }
+</div>
 
-            setInterval(updateClock, 1000);
+<script>
 
-            updateClock();
-        </script>
+function updateClock() {
 
-    """, height=52)
+    const now = new Date();
+
+    const hh = String(
+        now.getHours()
+    ).padStart(2, '0');
+
+    const mm = String(
+        now.getMinutes()
+    ).padStart(2, '0');
+
+    const ss = String(
+        now.getSeconds()
+    ).padStart(2, '0');
+
+    document.getElementById('clock')
+        .textContent =
+        now.toLocaleDateString()
+        + " "
+        + hh + ":" + mm + ":" + ss;
+}
+
+setInterval(updateClock, 1000);
+
+updateClock();
+
+</script>
+""", height=65)
 
     st.write("")
 
