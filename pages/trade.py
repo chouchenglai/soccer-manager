@@ -257,6 +257,50 @@ else:
     </style>
     """, unsafe_allow_html=True)  
 
+# --- 💡 專業 CSS 樣式：本站專屬藍色按鈕 (無下劃線版) ---
+st.markdown("""
+<style>
+    .vip-btn {
+        background: linear-gradient(135deg, #1e40af, #0f172a); /* 深邃標誌藍漸層 */
+        color: white !important;
+        padding: 10px 22px;
+        text-align: center;
+        text-decoration: none !important; /* 💡 徹底移除下劃線 */
+        display: inline-block;
+        font-size: 16px;
+        font-weight: bold;
+        border-radius: 50px; /* 圓角改為膠囊型，更有現代感 */
+        border: none;
+        box-shadow: 0 4px 15px rgba(30, 64, 175, 0.3);
+        transition: 0.3s all ease;
+        cursor: pointer;
+    }
+    .vip-btn:hover {
+        background: linear-gradient(135deg, #2563eb, #1e40af); /* 懸停時變亮 */
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
+        color: white !important;
+        text-decoration: none !important; /* 確保懸停也沒有下劃線 */
+    }
+</style>
+""", unsafe_allow_html=True)
+
+# --- 1. 標題與專業按鈕並排區塊 ---
+col_title, col_pro = st.columns([4, 1.2])
+
+with col_pro:
+    # 這裡的 class="vip-btn" 會套用上面的樣式
+    st.markdown(f"""
+        <div style="text-align: right; padding-top: 15px;">
+            <a href="/vip" target="_self" class="vip-btn">
+                升 級 帳 號  P R O
+            </a>
+        </div>
+    """, unsafe_allow_html=True)
+
+st.divider()
+
+
 col1, col2 = st.columns([1,1])
 
 with col1:
