@@ -532,7 +532,7 @@ with col4:
 
 st.markdown("<br><br>", unsafe_allow_html=True)
 
-st.info("💡 PayPal Pte. Ltd. 提供付款功能，結帳時自動以美元結算！。")
+st.info("💡 PayPal Pte. Ltd. 提供付款功能，目前架設中，敬請關注期待！。")
 
 st.markdown("""
 
