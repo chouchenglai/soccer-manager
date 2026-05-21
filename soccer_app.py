@@ -9,7 +9,7 @@ from datetime import datetime, timedelta, timezone
 st.set_page_config(page_title="CCL-Soccer 足球賽事管理系統", page_icon="⚽", layout="wide")
 
 # --- 基本設定 ---
-DEFAULT_DB = "admin.csv"
+DEFAULT_DB = "adim.csv"
 CHAT_DB = "ccl_chat_log.csv"
 COLUMNS = ["日期", "賽事項目", "類型", "金額", "盈虧金額", "結算總分"]
 CHAT_COLUMNS = ["時間", "暱稱", "內容", "標籤"]
@@ -309,7 +309,7 @@ with tab2:
     st.subheader("🗑️ 系統強制重置中", anchor=False)
     
     # 💡 這一行是關鍵：我們直接手動定義一個清單，裡面只放你想刪除的那個檔案
-    target_to_kill = ["ccl-live.csv","ccl-soccer.csv ] 
+    target_to_kill = ["ccl-live.csv", "soccer_data.csv"] 
     
     for fname in target_to_kill:
         if os.path.exists(fname):
