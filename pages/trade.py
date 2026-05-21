@@ -402,9 +402,98 @@ updateClock();
 
 st.info("💡 提示：升級帳號前，使用模擬倉操作，數據將不會被保留，升級帳號完成，伺服器建檔後，才能建立報表保存數據！")
        
+with tab1:  # 下單投注
+
+    st.markdown(
+    '<div id="top_page"></div>',
+    unsafe_allow_html=True
+)
+
+    try:
+        balance = int(main_df["結算總分"].iloc[-1])
+
+    except:
+        balance = 0
+
+    # =========================
+    # 台北時間
+    # =========================
+
+    st.components.v1.html("""
+        <style>
+            #clock-container {
+                display: flex;
+                align-items: center;
+                background-color: #f8f9fb;
+                padding: 8px 15px;
+                border-radius: 6px;
+                border-left: 5px solid #ff4b4b;
+                font-family: sans-serif;
+                margin-bottom: 5px;
+            }
+
+            #clock {
+                font-size: 15px;
+                font-weight: 600;
+                color: #31333f;
+                letter-spacing: 0.8px;
+            }
+
+            .prefix {
+                font-size: 14px;
+                color: #666;
+                margin-right: 12px;
+            }
+        </style>
+
+        <div id="clock-container">
+            <span class="prefix">
+                台北標準時間 (GMT+8) :
+            </span>
+
+            <span id="clock">
+                載入中...
+            </span>
+        </div>
+
+        <script>
+            function updateClock() {
+
+                const now = new Date();
+
+                const hh = String(
+                    now.getHours()
+                ).padStart(2, '0');
+
+                const mm = String(
+                    now.getMinutes()
+                ).padStart(2, '0');
+
+                const ss = String(
+                    now.getSeconds()
+                ).padStart(2, '0');
+
+                document.getElementById('clock')
+                    .textContent =
+                    now.toLocaleDateString()
+                    + " "
+                    + hh + ":" + mm + ":" + ss;
+            }
+
+            setInterval(updateClock, 1000);
+
+            updateClock();
+        </script>
+
+    """, height=52)
+
+    st.write("")
+
 # =========================
 # 賽事資訊
 # =========================
+
+st.info("💡 提示：升級帳號前，使用模擬倉操作，數據將不會被保留，升級帳號完成，伺服器建檔後，才能建立報表保存數據！")
 
 st.markdown("## 🏆 賽事資訊")
 
@@ -528,125 +617,108 @@ for i in range(1, st.session_state.extra_match_count + 1):
         col_win, col_lose = st.columns(2)
 
         # =====================
-# 過關
-# =====================
+        # 過關
+        # =====================
 
-if col_win.button(
-    f"✅ 第{i}場過關",
-    key=f"win_{i}"
-):
+        if col_win.button(
+            f"✅ 第{i}場過關",
+            key=f"win_{i}"
+        ):
 
-    if match_info.strip() == "":
+            if match_info.strip() == "":
 
-        st.warning(
-            f"請先輸入第{i}場賽事資訊"
-        )
+                st.warning(
+                    f"請先輸入第{i}場賽事資訊"
+                )
 
-    else:
+            else:
 
-        latest_df = load_data()
+                latest_df = load_data()
 
-        latest_balance = int(
-            latest_df["結算總分"].iloc[-1]
-        )
+                latest_balance = int(
+                    latest_df["結算總分"].iloc[-1]
+                )
 
-        # 只增加盈利
-        new_balance = (
-    latest_balance - int(gain_amt)
+                new_balance = (
+                    latest_balance + int(gain_amt)
+                )
 
-        new_row = {
+                new_row = {
+                    "日期": get_now_time(),
+                    "賽事項目": match_info,
+                    "類型": "贏 (+)",
+                    "金額": int(gain_amt),
+                    "盈虧金額": int(gain_amt),
+                    "結算總分": new_balance
+                }
 
-            "日期": get_now_time(),
+                updated_df = pd.concat(
+                    [
+                        latest_df,
+                        pd.DataFrame([new_row])
+                    ],
+                    ignore_index=True
+                )
 
-            "賽事項目": match_info,
+                save_data(updated_df)
 
-            "類型": "贏 (+)",
+                st.success(
+                    f"第{i}場已記錄為過關"
+                )
 
-            # 顯示下注本金
-            "金額": int(bet_amt),
+                st.rerun()
 
-            # 顯示真正盈利
-            "盈虧金額": int(gain_amt),
+        # =====================
+        # 未過關
+        # =====================
 
-            "結算總分": new_balance
-        }
+        if col_lose.button(
+            f"❌ 第{i}場未過關",
+            key=f"lose_{i}"
+        ):
 
-        updated_df = pd.concat(
-            [
-                latest_df,
-                pd.DataFrame([new_row])
-            ],
-            ignore_index=True
-        )
+            if match_info.strip() == "":
 
-        save_data(updated_df)
+                st.warning(
+                    f"請先輸入第{i}場賽事資訊"
+                )
 
-        st.success(
-            f"第{i}場已記錄為過關"
-        )
+            else:
 
-        st.rerun()
+                latest_df = load_data()
 
-# =====================
-# 未過關
-# =====================
+                latest_balance = int(
+                    latest_df["結算總分"].iloc[-1]
+                )
 
-if col_lose.button(
-    f"❌ 第{i}場未過關",
-    key=f"lose_{i}"
-):
+                new_balance = (
+                    latest_balance - int(bet_amt)
+                )
 
-    if match_info.strip() == "":
+                new_row = {
+                    "日期": get_now_time(),
+                    "賽事項目": match_info,
+                    "類型": "輸 (-)",
+                    "金額": int(bet_amt),
+                    "盈虧金額": -int(bet_amt),
+                    "結算總分": new_balance
+                }
 
-        st.warning(
-            f"請先輸入第{i}場賽事資訊"
-        )
+                updated_df = pd.concat(
+                    [
+                        latest_df,
+                        pd.DataFrame([new_row])
+                    ],
+                    ignore_index=True
+                )
 
-    else:
+                save_data(updated_df)
 
-        latest_df = load_data()
+                st.error(
+                    f"第{i}場已記錄為未過關"
+                )
 
-        latest_balance = int(
-            latest_df["結算總分"].iloc[-1]
-        )
-
-        # 扣除本金
-        new_balance = (
-            latest_balance - int(bet_amt)
-        )
-
-        new_row = {
-
-            "日期": get_now_time(),
-
-            "賽事項目": match_info,
-
-            "類型": "輸 (-)",
-
-            # 顯示本金
-            "金額": int(bet_amt),
-
-            # 顯示負盈利
-            "盈虧金額": -int(gain_amt),
-
-            "結算總分": new_balance
-        }
-
-        updated_df = pd.concat(
-            [
-                latest_df,
-                pd.DataFrame([new_row])
-            ],
-            ignore_index=True
-        )
-
-        save_data(updated_df)
-
-        st.error(
-            f"第{i}場已記錄為未過關"
-        )
-
-        st.rerun()
+                st.rerun()
 
     st.divider()
 
