@@ -400,10 +400,7 @@ updateClock();
 </script>
 """, height=65)
        
-    st.markdown(
-    '<div id="top_page"></div>',
-    unsafe_allow_html=True
-)
+    st.markdown('<div id="top_page"></div>', unsafe_allow_html=True)
 
     try:
         balance = int(main_df["結算總分"].iloc[-1])
